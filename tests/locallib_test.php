@@ -28,6 +28,7 @@ namespace local_courseplanner;
 #[\PHPUnit\Framework\Attributes\CoversFunction('local_courseplanner_auto_populate')]
 #[\PHPUnit\Framework\Attributes\CoversFunction('local_courseplanner_rank_calendars')]
 #[\PHPUnit\Framework\Attributes\CoversFunction('local_courseplanner_delete_course_data')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('xmldb_local_courseplanner_uninstall')]
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_courseplanner\local\hook_callbacks::class)]
 final class locallib_test extends \advanced_testcase {
     #[\Override]
@@ -239,5 +240,21 @@ final class locallib_test extends \advanced_testcase {
             $DB->count_records('local_courseplanner_rules', ['calendarid' => $keepid])
         );
         $this->assertTrue($DB->record_exists('local_courseplanner_blueprints', ['id' => $blueprint->id]));
+    }
+
+    /**
+     * Uninstalling removes the plugin's user tours.
+     */
+    public function test_uninstall_removes_tours(): void {
+        global $CFG, $DB;
+        require_once($CFG->dirroot . '/local/courseplanner/db/uninstall.php');
+        $this->resetAfterTest();
+        $select = $DB->sql_like('pathmatch', ':path');
+        $params = ['path' => '/local/courseplanner/%'];
+        local_courseplanner_install_user_tours();
+        $this->assertSame(3, $DB->count_records_select('tool_usertours_tours', $select, $params));
+
+        xmldb_local_courseplanner_uninstall();
+        $this->assertSame(0, $DB->count_records_select('tool_usertours_tours', $select, $params));
     }
 }
