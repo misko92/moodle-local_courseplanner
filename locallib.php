@@ -455,42 +455,52 @@ function local_courseplanner_move_topic(stdClass $topic, int $direction): bool {
 function local_courseplanner_get_topic_usage_rows(int $topicid): array {
     global $DB;
 
-    $sql = "SELECT sc.id, sc.courseid, sc.year, sc.semester, sc.title
+    $sql = "SELECT sc.id, sc.courseid, sc.title
               FROM {local_courseplanner_blocks} cb
               JOIN {local_courseplanner_calendars} sc
                 ON sc.id = cb.calendarid
              WHERE cb.topicid = :topicid
-          GROUP BY sc.id, sc.courseid, sc.year, sc.semester, sc.title
-          ORDER BY sc.year DESC, sc.semester ASC, sc.id ASC";
+          GROUP BY sc.id, sc.courseid, sc.title
+          ORDER BY sc.id DESC";
 
     return $DB->get_records_sql($sql, ['topicid' => $topicid]);
 }
 
 /**
- * Supported semester values.
+ * Suggest a title for a new calendar: the school year containing the given time.
  *
- * @return string[]
- */
-function local_courseplanner_get_semesters(): array {
-    return ['FALL', 'WINTER', 'SUMMER'];
-}
-
-/**
- * Validate and normalize semester value.
+ * School years are assumed to start in July, so September 2026 and March 2027
+ * both give "2026-27".
  *
- * @param string $semester
+ * @param int $time Unix timestamp.
  * @return string
  */
-function local_courseplanner_normalise_semester(string $semester): string {
-    $semester = core_text::strtoupper(trim($semester));
-    if (!in_array($semester, local_courseplanner_get_semesters(), true)) {
-        throw new moodle_exception('invalidsemester', 'local_courseplanner');
+function local_courseplanner_suggest_calendar_title(int $time): string {
+    $date = new DateTime('@' . $time);
+    $date->setTimezone(core_date::get_user_timezone_object());
+    $year = (int)$date->format('Y');
+    if ((int)$date->format('n') < 7) {
+        $year--;
     }
-    return $semester;
+    return $year . '-' . substr((string)($year + 1), -2);
 }
 
 /**
- * Return all semester calendars for a course.
+ * Display label for a calendar.
+ *
+ * @param stdClass $calendar Calendar record.
+ * @return string Formatted, HTML-safe label.
+ */
+function local_courseplanner_calendar_label(stdClass $calendar): string {
+    $title = trim((string)$calendar->title);
+    if ($title === '') {
+        return get_string('calendarfallbacktitle', 'local_courseplanner', (int)$calendar->id);
+    }
+    return format_string($title, true, ['context' => context_course::instance((int)$calendar->courseid)]);
+}
+
+/**
+ * Return all calendars for a course, newest first.
  *
  * @param int $courseid
  * @return array
@@ -501,12 +511,92 @@ function local_courseplanner_get_course_calendars(int $courseid): array {
     return $DB->get_records(
         'local_courseplanner_calendars',
         ['courseid' => $courseid],
-        'year DESC, semester ASC, id DESC'
+        'timecreated DESC, id DESC'
     );
 }
 
 /**
- * Require a semester calendar for this course.
+ * Order a course's calendars so the one a teacher most likely wants comes first.
+ *
+ * Preference, strongest first: the active calendar; one whose class dates contain
+ * the course start date; one whose class dates contain today; the nearest upcoming
+ * one; then the newest.
+ *
+ * @param stdClass $course Course record (uses startdate).
+ * @param stdClass[] $calendars Calendar records keyed by id.
+ * @param int $now Current time.
+ * @return array [stdClass[] $sorted, string $reasonkey] Reason string key for the first calendar ('' if none).
+ */
+function local_courseplanner_rank_calendars(stdClass $course, array $calendars, int $now): array {
+    if (empty($calendars)) {
+        return [[], ''];
+    }
+
+    $coursestart = (int)($course->startdate ?? 0);
+    $scores = [];
+    foreach ($calendars as $calendar) {
+        [$startdate, $enddate] = local_courseplanner_get_calendar_date_range((int)$calendar->id);
+
+        // Each tier outweighs all lower tiers combined.
+        $score = 0;
+        $reasonkey = 'calendarrecommend_reason_newest';
+        if ($startdate && $startdate > $now) {
+            $score += max(0, 1000 - (int)(($startdate - $now) / DAYSECS));
+            $reasonkey = 'calendarrecommend_reason_upcoming';
+        }
+        if ($startdate && $enddate && $now >= $startdate && $now <= $enddate) {
+            $score += 2000;
+            $reasonkey = 'calendarrecommend_reason_currentdate';
+        }
+        // Course start dates are usually set a few days before classes begin.
+        if (
+            $coursestart && $startdate && $enddate
+                && $coursestart >= $startdate - 14 * DAYSECS && $coursestart <= $enddate
+        ) {
+            $score += 4000;
+            $reasonkey = 'calendarrecommend_reason_courseconfig';
+        }
+        if ((int)$calendar->isactive === 1) {
+            $score += 8000;
+            $reasonkey = 'calendarrecommend_reason_active';
+        }
+        $scores[(int)$calendar->id] = ['score' => $score, 'reasonkey' => $reasonkey];
+    }
+
+    uasort($calendars, static function (stdClass $left, stdClass $right) use ($scores): int {
+        $leftscore = $scores[(int)$left->id]['score'];
+        $rightscore = $scores[(int)$right->id]['score'];
+        if ($leftscore === $rightscore) {
+            return [(int)$right->timecreated, (int)$right->id] <=> [(int)$left->timecreated, (int)$left->id];
+        }
+        return $rightscore <=> $leftscore;
+    });
+
+    $first = reset($calendars);
+    return [$calendars, $scores[(int)$first->id]['reasonkey']];
+}
+
+/**
+ * First and last day of classes for a calendar, from its active START/END rules.
+ *
+ * @param int $calendarid
+ * @return array [?int $startdate, ?int $enddate]
+ */
+function local_courseplanner_get_calendar_date_range(int $calendarid): array {
+    $startdate = null;
+    $enddate = null;
+    foreach (local_courseplanner_get_calendar_rules($calendarid, true) as $rule) {
+        if ($rule->ruletype === 'START') {
+            $startdate = (int)$rule->ruledate;
+        } else if ($rule->ruletype === 'END') {
+            $enddate = (int)$rule->ruledate;
+        }
+    }
+    return [$startdate, $enddate];
+}
+
+/**
+ * Require a calendar belonging to this course.
  *
  * @param int $calendarid
  * @param int $courseid
@@ -772,7 +862,7 @@ function local_courseplanner_remove_last_week_row(int $calendarid): bool {
  * @return string[]
  */
 function local_courseplanner_get_rule_types(): array {
-    return ['SEMESTER_START', 'SEMESTER_END', 'NO_CLASS', 'DAY_SWAP', 'OTHER'];
+    return ['START', 'END', 'NO_CLASS', 'DAY_SWAP', 'OTHER'];
 }
 
 /**
@@ -934,10 +1024,10 @@ function local_courseplanner_apply_rules(int $calendarid, int $userid): array {
 
     foreach ($rules as $rule) {
         switch ($rule->ruletype) {
-            case 'SEMESTER_START':
+            case 'START':
                 $startdate = (int)$rule->ruledate;
                 break;
-            case 'SEMESTER_END':
+            case 'END':
                 $enddate = (int)$rule->ruledate;
                 break;
             case 'NO_CLASS':
@@ -1121,8 +1211,8 @@ function local_courseplanner_apply_rules(int $calendarid, int $userid): array {
     }
 
     // Step 4b: Grey out day cells that fall outside the teaching term -- the
-    // days before the semester start in week 1, and the days after the semester
-    // end in the final week. These BLANK cells are rule-generated (so they are
+    // days before the first day of classes in week 1, and the days after the
+    // last day of classes in the final week. These BLANK cells are rule-generated (so they are
     // refreshed on every apply) and, because they occupy the cell, they make
     // auto-populate skip non-teaching days automatically.
     $daytooffset = [
@@ -1802,7 +1892,7 @@ function local_courseplanner_date_to_cell(array $blocksmap, int $maxrow, int $ti
 }
 
 /**
- * Return the active semester calendar for a course, if any.
+ * Return the active calendar for a course, if any.
  *
  * @param int $courseid
  * @return stdClass|null The active calendar record, or null when none is active.
@@ -1823,7 +1913,7 @@ function local_courseplanner_get_active_course_calendar(int $courseid): ?stdClas
  * Shared by the embeddable page (embed.php) and the course block so the grid
  * markup stays in one place.
  *
- * @param stdClass $calendar Semester calendar record.
+ * @param stdClass $calendar Calendar record.
  * @param bool $autoscroll When true, emit a script that scrolls the nearest/today row into view.
  * @return string Grid HTML, or '' when the calendar has no content.
  */
@@ -1840,8 +1930,7 @@ function local_courseplanner_render_calendar_grid(stdClass $calendar, bool $auto
     $columns = local_courseplanner_get_grid_columns($blocksmap);
 
     // Compute today/nearest cell for highlighting.
-    $now = new DateTime('now', new DateTimeZone('America/Toronto'));
-    $todaycell = local_courseplanner_date_to_cell($blocksmap, $maxrow, $now->getTimestamp());
+    $todaycell = local_courseplanner_date_to_cell($blocksmap, $maxrow, time());
     $todayrow = $todaycell ? ($todaycell['row'] ?? null) : null;
     $todaycol = $todaycell ? ($todaycell['col'] ?? null) : null;
     $nearestonly = $todaycell && !empty($todaycell['nearest']);
@@ -1966,7 +2055,7 @@ function local_courseplanner_seed_topics_from_html(string $html, string $layout,
         '/^\s*labou?r\s+day/i',
         '/^\s*spring\s+break/i',
         '/^\s*reading\s+week/i',
-        '/semester\s+(hasn.?t\s+started|has\s+ended)/i',
+        '/(semester|classes)\s+(hasn.?t\s+started|has\s+ended|haven.?t\s+started|have\s+ended)/i',
     ];
 
     // The layout describes the lecture/lab content columns only. In the pasted
@@ -2473,4 +2562,30 @@ function local_courseplanner_install_user_tours(): void {
             $tour->persist();
         }
     }
+}
+
+/**
+ * Delete everything stored for a course: calendars with their grid, dates and
+ * apply history, the blueprint link and course info. Blueprints are kept.
+ *
+ * @param int $courseid
+ */
+function local_courseplanner_delete_course_data(int $courseid): void {
+    global $DB;
+
+    $calendarids = $DB->get_fieldset_select(
+        'local_courseplanner_calendars',
+        'id',
+        'courseid = :courseid',
+        ['courseid' => $courseid]
+    );
+    if (!empty($calendarids)) {
+        [$calsql, $calparams] = $DB->get_in_or_equal($calendarids, SQL_PARAMS_NAMED, 'cal');
+        $DB->delete_records_select('local_courseplanner_blocks', "calendarid $calsql", $calparams);
+        $DB->delete_records_select('local_courseplanner_rules', "calendarid $calsql", $calparams);
+        $DB->delete_records_select('local_courseplanner_ruleruns', "calendarid $calsql", $calparams);
+        $DB->delete_records_select('local_courseplanner_calendars', "id $calsql", $calparams);
+    }
+    $DB->delete_records('local_courseplanner_courselink', ['courseid' => $courseid]);
+    $DB->delete_records('local_courseplanner_courseinfo', ['courseid' => $courseid]);
 }

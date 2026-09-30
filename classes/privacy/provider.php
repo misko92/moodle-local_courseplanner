@@ -75,8 +75,6 @@ class provider implements
         ], 'privacy:metadata:local_courseplanner_courselink');
 
         $collection->add_database_table('local_courseplanner_calendars', [
-            'year' => 'privacy:metadata:local_courseplanner_calendars:year',
-            'semester' => 'privacy:metadata:local_courseplanner_calendars:semester',
             'title' => 'privacy:metadata:local_courseplanner_calendars:title',
             'usermodified' => 'privacy:metadata:local_courseplanner_calendars:usermodified',
             'timemodified' => 'privacy:metadata:local_courseplanner_calendars:timemodified',
@@ -359,8 +357,6 @@ class provider implements
 
             $calendardata[] = [
                 'title' => $calendar->title,
-                'year' => $calendar->year,
-                'semester' => $calendar->semester,
                 'lastmodifiedbyyou' => transform::yesno($touchedcalendar),
                 'blocksyoumodified' => count($blocks),
                 'datesrulesyoumodified' => count($rules),
@@ -505,23 +501,9 @@ class provider implements
      * @return void
      */
     protected static function delete_all_course_calendar_data(int $courseid): void {
-        global $DB;
-
-        $calendarids = $DB->get_fieldset_select(
-            'local_courseplanner_calendars',
-            'id',
-            'courseid = :courseid',
-            ['courseid' => $courseid]
-        );
-        if (!empty($calendarids)) {
-            [$calsql, $calparams] = $DB->get_in_or_equal($calendarids, SQL_PARAMS_NAMED, 'cal');
-            $DB->delete_records_select('local_courseplanner_blocks', "calendarid $calsql", $calparams);
-            $DB->delete_records_select('local_courseplanner_rules', "calendarid $calsql", $calparams);
-            $DB->delete_records_select('local_courseplanner_ruleruns', "calendarid $calsql", $calparams);
-            $DB->delete_records_select('local_courseplanner_calendars', "id $calsql", $calparams);
-        }
-        $DB->delete_records('local_courseplanner_courselink', ['courseid' => $courseid]);
-        $DB->delete_records('local_courseplanner_courseinfo', ['courseid' => $courseid]);
+        global $CFG;
+        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
+        local_courseplanner_delete_course_data($courseid);
     }
 
     /**

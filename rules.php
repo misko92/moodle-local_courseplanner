@@ -65,7 +65,7 @@ if ($action !== '' && data_submitted()) {
             $fromday = trim(optional_param('fromday', '', PARAM_TEXT)) ?: null;
             $today = trim(optional_param('today', '', PARAM_TEXT)) ?: null;
 
-            if (in_array($ruletype, ['SEMESTER_START', 'SEMESTER_END'], true)) {
+            if (in_array($ruletype, ['START', 'END'], true)) {
                 $existing = $DB->get_record('local_courseplanner_rules', [
                     'calendarid' => (int)$calendar->id,
                     'ruletype' => $ruletype,
@@ -165,7 +165,7 @@ echo html_writer::link($builderurl, get_string('backtobuilder', 'local_coursepla
 
 echo html_writer::div(get_string('intro_rules', 'local_courseplanner'), 'local-courseplanner-intro alert alert-info');
 
-$calendarlabel = s($calendar->semester) . ' ' . (int)$calendar->year;
+$calendarlabel = local_courseplanner_calendar_label($calendar);
 echo html_writer::div(get_string('buildercontextlabel', 'local_courseplanner', $calendarlabel), 'local-courseplanner-shell mb-3');
 
 echo html_writer::tag(
@@ -215,8 +215,8 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'calendarid'
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'createrule']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
-echo html_writer::tag('label', get_string('ruletypelabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
-echo html_writer::start_tag('select', ['name' => 'ruletype', 'class' => 'custom-select mb-2']);
+echo html_writer::tag('label', get_string('ruletypelabel', 'local_courseplanner'), ['class' => 'fw-bold']);
+echo html_writer::start_tag('select', ['name' => 'ruletype', 'class' => 'form-select mb-2']);
 foreach ($ruletypes as $rt) {
     $ruletypekey = 'ruletype_' . $rt;
     $ruletypelabel = get_string_manager()->string_exists($ruletypekey, 'local_courseplanner')
@@ -226,7 +226,7 @@ foreach ($ruletypes as $rt) {
 }
 echo html_writer::end_tag('select');
 
-echo html_writer::tag('label', get_string('ruledatelabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('ruledatelabel', 'local_courseplanner'), ['class' => 'fw-bold']);
 echo html_writer::empty_tag('input', [
     'type' => 'date',
     'name' => 'ruledate',
@@ -234,7 +234,7 @@ echo html_writer::empty_tag('input', [
     'required' => 'required',
 ]);
 
-echo html_writer::tag('label', get_string('rulelabellabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('rulelabellabel', 'local_courseplanner'), ['class' => 'fw-bold']);
 echo html_writer::empty_tag('input', [
     'type' => 'text',
     'name' => 'label',
@@ -242,7 +242,7 @@ echo html_writer::empty_tag('input', [
     'placeholder' => get_string('rulelabelplaceholder', 'local_courseplanner'),
 ]);
 
-echo html_writer::tag('label', get_string('ruledescriptionlabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('ruledescriptionlabel', 'local_courseplanner'), ['class' => 'fw-bold']);
 echo html_writer::tag('textarea', '', [
     'name' => 'description',
     'class' => 'form-control mb-2',
@@ -252,16 +252,16 @@ echo html_writer::tag('textarea', '', [
 
 echo html_writer::tag('div', get_string('dayswapfieldshelp', 'local_courseplanner'), ['class' => 'text-muted small mb-2']);
 
-echo html_writer::tag('label', get_string('fromdaylabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
-echo html_writer::start_tag('select', ['name' => 'fromday', 'class' => 'custom-select mb-2']);
+echo html_writer::tag('label', get_string('fromdaylabel', 'local_courseplanner'), ['class' => 'fw-bold']);
+echo html_writer::start_tag('select', ['name' => 'fromday', 'class' => 'form-select mb-2']);
 echo html_writer::tag('option', '—', ['value' => '']);
 foreach ($weekdays as $wd) {
     echo html_writer::tag('option', $wd, ['value' => $wd]);
 }
 echo html_writer::end_tag('select');
 
-echo html_writer::tag('label', get_string('todaylabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
-echo html_writer::start_tag('select', ['name' => 'today', 'class' => 'custom-select mb-2']);
+echo html_writer::tag('label', get_string('todaylabel', 'local_courseplanner'), ['class' => 'fw-bold']);
+echo html_writer::start_tag('select', ['name' => 'today', 'class' => 'form-select mb-2']);
 echo html_writer::tag('option', '—', ['value' => '']);
 foreach ($weekdays as $wd) {
     echo html_writer::tag('option', $wd, ['value' => $wd]);
@@ -332,12 +332,12 @@ if (empty($rules)) {
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
         echo html_writer::start_div('mb-2');
-        echo html_writer::tag('label', get_string('ruletypelabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
+        echo html_writer::tag('label', get_string('ruletypelabel', 'local_courseplanner'), ['class' => 'fw-bold']);
         echo html_writer::div($ruletypelabel, 'form-control-plaintext');
         echo html_writer::end_div();
 
         echo html_writer::start_div('mb-2');
-        echo html_writer::tag('label', get_string('ruledatelabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
+        echo html_writer::tag('label', get_string('ruledatelabel', 'local_courseplanner'), ['class' => 'fw-bold']);
         echo html_writer::empty_tag('input', [
             'type' => 'date',
             'name' => 'ruledate',
@@ -348,7 +348,7 @@ if (empty($rules)) {
         echo html_writer::end_div();
 
         echo html_writer::start_div('mb-2');
-        echo html_writer::tag('label', get_string('rulelabellabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
+        echo html_writer::tag('label', get_string('rulelabellabel', 'local_courseplanner'), ['class' => 'fw-bold']);
         echo html_writer::empty_tag('input', [
             'type' => 'text',
             'name' => 'label',
@@ -359,7 +359,7 @@ if (empty($rules)) {
         echo html_writer::end_div();
 
         echo html_writer::start_div('mb-2');
-        echo html_writer::tag('label', get_string('ruledescriptionlabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
+        echo html_writer::tag('label', get_string('ruledescriptionlabel', 'local_courseplanner'), ['class' => 'fw-bold']);
         echo html_writer::tag('textarea', s((string)$rule->description), [
             'name' => 'description',
             'class' => 'form-control',
@@ -376,8 +376,8 @@ if (empty($rules)) {
             );
 
             echo html_writer::start_div('mb-2');
-            echo html_writer::tag('label', get_string('fromdaylabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
-            echo html_writer::start_tag('select', ['name' => 'fromday', 'class' => 'custom-select']);
+            echo html_writer::tag('label', get_string('fromdaylabel', 'local_courseplanner'), ['class' => 'fw-bold']);
+            echo html_writer::start_tag('select', ['name' => 'fromday', 'class' => 'form-select']);
             echo html_writer::tag('option', '—', ['value' => '']);
             foreach ($weekdays as $wd) {
                 $attrs = ['value' => $wd];
@@ -390,8 +390,8 @@ if (empty($rules)) {
             echo html_writer::end_div();
 
             echo html_writer::start_div('mb-2');
-            echo html_writer::tag('label', get_string('todaylabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
-            echo html_writer::start_tag('select', ['name' => 'today', 'class' => 'custom-select']);
+            echo html_writer::tag('label', get_string('todaylabel', 'local_courseplanner'), ['class' => 'fw-bold']);
+            echo html_writer::start_tag('select', ['name' => 'today', 'class' => 'form-select']);
             echo html_writer::tag('option', '—', ['value' => '']);
             foreach ($weekdays as $wd) {
                 $attrs = ['value' => $wd];

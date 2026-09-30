@@ -15,18 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version information.
+ * Hook callbacks.
  *
  * @package    local_courseplanner
- * @copyright  2026 Greg Mulcair
+ * @copyright  2026 misko92
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_courseplanner';
-$plugin->version   = 2026093000;
-$plugin->requires  = 2025041400; // Moodle 5.0 (Bootstrap 5).
-$plugin->supported = [500, 502];
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.1.0';
+$callbacks = [
+    [
+        'hook' => \core_course\hook\before_course_deleted::class,
+        'callback' => [\local_courseplanner\local\hook_callbacks::class, 'before_course_deleted'],
+    ],
+];

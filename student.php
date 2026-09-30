@@ -32,9 +32,9 @@ $context = context_course::instance($courseid);
 require_login($course);
 require_capability('local/courseplanner:view', $context);
 
-$courseplanners = local_courseplanner_get_course_calendars($courseid);
+$calendars = local_courseplanner_get_course_calendars($courseid);
 $activecalendar = null;
-foreach ($courseplanners as $calendar) {
+foreach ($calendars as $calendar) {
     if ((int)$calendar->isactive === 1) {
         $activecalendar = $calendar;
         break;

@@ -11,7 +11,7 @@
   "steps": [
     {
       "title": "Timeline rules",
-      "content": "<p>Rules describe your semester dates: when the semester starts and ends, which days there is no class, day swaps, and any other notes. Once rules exist you can apply them to generate week labels and closed-day markers on the builder grid.</p>",
+      "content": "<p>Rules describe your school-year dates: when classes start and end, which days there is no class, day swaps, and any other notes. Once rules exist you can apply them to generate week labels and closed-day markers on the builder grid.</p>",
       "contentformat": "1",
       "targettype": "2",
       "targetvalue": "",
@@ -20,7 +20,7 @@
     },
     {
       "title": "Create a rule",
-      "content": "<p>Use this form when you want to add dates manually. At minimum you need a <strong>Semester start date</strong> and a <strong>Semester end date</strong>. Add as many <strong>No class</strong> rules as you need for holidays and closures, and use <strong>Day swap</strong> for days that follow a different weekday's schedule.</p><p>The create-new form appears after the existing rules list so you can review what's already there before adding more.</p>",
+      "content": "<p>Use this form when you want to add dates manually. At minimum you need a <strong>First day of classes</strong> and a <strong>Last day of classes</strong>. Add as many <strong>No class</strong> rules as you need for holidays and closures, and use <strong>Day swap</strong> for days that follow a different weekday's schedule.</p><p>The create-new form appears after the existing rules list so you can review what's already there before adding more.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-createrule",
@@ -29,7 +29,7 @@
     },
     {
       "title": "Existing rules",
-      "content": "<p>All your rules appear here. Toggle any rule off to exclude it from the next Apply without deleting it. Delete removes it permanently.</p><p>This list is the source of truth for the semester dates that will be applied to the calendar.</p>",
+      "content": "<p>All your rules appear here. Toggle any rule off to exclude it from the next Apply without deleting it. Delete removes it permanently.</p><p>This list is the source of truth for the school-year dates that will be applied to the calendar.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-existingrules",

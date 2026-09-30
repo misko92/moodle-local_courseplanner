@@ -122,7 +122,7 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'blueprintid
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'seedtopics']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
-echo html_writer::tag('label', get_string('importtopicshtmllabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('importtopicshtmllabel', 'local_courseplanner'), ['class' => 'fw-bold']);
 echo html_writer::tag('textarea', '', [
     'name' => 'importhtml',
     'class' => 'form-control mb-2',
@@ -130,8 +130,8 @@ echo html_writer::tag('textarea', '', [
     'required' => 'required',
 ]);
 
-echo html_writer::tag('label', get_string('importtopicslayoutlabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
-echo html_writer::start_tag('select', ['name' => 'layout', 'class' => 'custom-select mb-2']);
+echo html_writer::tag('label', get_string('importtopicslayoutlabel', 'local_courseplanner'), ['class' => 'fw-bold']);
+echo html_writer::start_tag('select', ['name' => 'layout', 'class' => 'form-select mb-2']);
 foreach ($layoutoptions as $key => $label) {
     echo html_writer::tag('option', $label, ['value' => $key]);
 }

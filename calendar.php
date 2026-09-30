@@ -401,17 +401,17 @@ echo html_writer::start_tag(
 echo html_writer::link(
     $managecontenturl,
     get_string('managecontentlink', 'local_courseplanner'),
-    ['class' => 'btn btn-sm btn-outline-primary mr-2']
+    ['class' => 'btn btn-sm btn-outline-primary me-2']
 );
 echo html_writer::link(
     $rulesurl,
     get_string('manageruleslink', 'local_courseplanner'),
-    ['class' => 'btn btn-sm btn-outline-warning mr-2']
+    ['class' => 'btn btn-sm btn-outline-warning me-2']
 );
 echo html_writer::link(
     $previewurl,
     get_string('openpreviewlink', 'local_courseplanner'),
-    ['class' => 'btn btn-sm btn-outline-info mr-2', 'target' => '_blank']
+    ['class' => 'btn btn-sm btn-outline-info me-2', 'target' => '_blank']
 );
 $coverageurl = new moodle_url('/local/courseplanner/coverage.php', [
     'id' => $courseid,
@@ -420,7 +420,7 @@ $coverageurl = new moodle_url('/local/courseplanner/coverage.php', [
 echo html_writer::link(
     $coverageurl,
     get_string('coveragechecklink', 'local_courseplanner'),
-    ['class' => 'btn btn-sm btn-outline-info ml-2']
+    ['class' => 'btn btn-sm btn-outline-info ms-2']
 );
 echo html_writer::end_tag('div');
 
@@ -493,18 +493,18 @@ echo html_writer::tag(
 echo html_writer::start_tag('div', ['class' => 'local-courseplanner-toolbar', 'id' => 'local-courseplanner-toolbar']);
 echo html_writer::tag('span', get_string('unsavedchangesbadge', 'local_courseplanner'), [
     'id' => 'local-courseplanner-unsaved-badge',
-    'class' => 'badge badge-warning mr-2',
+    'class' => 'badge bg-warning text-dark me-2',
     'style' => 'display:none',
 ]);
 echo html_writer::tag('button', get_string('saveallsubmit', 'local_courseplanner'), [
     'type' => 'button',
     'id' => 'local-courseplanner-saveall',
-    'class' => 'btn btn-sm btn-success mr-2',
+    'class' => 'btn btn-sm btn-success me-2',
 ]);
 echo html_writer::tag('button', get_string('undobtn', 'local_courseplanner'), [
     'type' => 'button',
     'id' => 'local-courseplanner-undo',
-    'class' => 'btn btn-sm btn-outline-secondary mr-1',
+    'class' => 'btn btn-sm btn-outline-secondary me-1',
     'disabled' => 'disabled',
 ]);
 echo html_writer::tag('button', get_string('redobtn', 'local_courseplanner'), [
@@ -515,10 +515,7 @@ echo html_writer::tag('button', get_string('redobtn', 'local_courseplanner'), [
 ]);
 echo html_writer::end_tag('div');
 
-$calendarlabel = s($calendar->semester) . ' ' . (int)$calendar->year;
-if (!empty($calendar->title)) {
-    $calendarlabel .= ' - ' . format_string($calendar->title);
-}
+$calendarlabel = local_courseplanner_calendar_label($calendar);
 echo html_writer::div(get_string('buildercontextlabel', 'local_courseplanner', $calendarlabel), 'local-courseplanner-shell');
 
 echo html_writer::tag(
@@ -539,7 +536,7 @@ echo html_writer::start_div('local-courseplanner-introtexts-grid');
 echo html_writer::start_div('local-courseplanner-introtext-panel');
 echo html_writer::tag('label', get_string('courseinfointroleftlabel', 'local_courseplanner'), [
     'for' => 'local-courseplanner-intro-left',
-    'class' => 'font-weight-bold',
+    'class' => 'fw-bold',
 ]);
 echo html_writer::tag('textarea', $courseinfo ? s((string)$courseinfo->introhtml) : '', [
     'id' => 'local-courseplanner-intro-left',
@@ -552,7 +549,7 @@ echo html_writer::end_div();
 echo html_writer::start_div('local-courseplanner-introtext-panel');
 echo html_writer::tag('label', get_string('courseinfointrorightlabel', 'local_courseplanner'), [
     'for' => 'local-courseplanner-intro-right',
-    'class' => 'font-weight-bold',
+    'class' => 'fw-bold',
 ]);
 echo html_writer::tag('textarea', $courseinfo ? s((string)$courseinfo->linkshtml) : '', [
     'id' => 'local-courseplanner-intro-right',
@@ -657,7 +654,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
                 'class' => 'form-control mb-2',
             ]);
             $htmleditor->use_editor($headercontentid, $htmleditoroptions);
-            echo html_writer::start_tag('select', ['name' => 'headerday', 'class' => 'custom-select mb-2']);
+            echo html_writer::start_tag('select', ['name' => 'headerday', 'class' => 'form-select mb-2']);
             foreach ($headerdayoptions as $option) {
                 $attrs = ['value' => $option];
                 if ($option === $headerday) {
@@ -666,7 +663,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
                 echo html_writer::tag('option', $option, $attrs);
             }
             echo html_writer::end_tag('select');
-            echo html_writer::start_tag('select', ['name' => 'headermode', 'class' => 'custom-select mb-2']);
+            echo html_writer::start_tag('select', ['name' => 'headermode', 'class' => 'form-select mb-2']);
             foreach ($headermodeoptions as $option) {
                 $attrs = ['value' => $option];
                 if ($option === $headermode) {
@@ -733,7 +730,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             continue;
         }
         if ($cell && (string)$cell->blocktype === 'BLANK') {
-            // Out-of-term day (before the semester start or after the end).
+            // Out-of-term day (before the first or after the last day of classes).
             // Rendered greyed and non-editable; refreshed by Apply Dates.
             echo html_writer::start_tag($tag, [
                 'class' => 'local-courseplanner-grid-cell local-courseplanner-blank-cell',
@@ -783,7 +780,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
                 $inactivetag = ' ' . html_writer::tag(
                     'span',
                     get_string('topicinactive', 'local_courseplanner'),
-                    ['class' => 'badge badge-warning']
+                    ['class' => 'badge bg-warning text-dark']
                 );
             }
             echo local_courseplanner_topic_heading_html($selectedtopic, $inactivetag);
@@ -810,7 +807,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'rownum', 'value' => $row]);
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'colnum', 'value' => $col]);
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-        echo html_writer::start_tag('select', ['name' => 'blocktype', 'class' => 'custom-select mb-2']);
+        echo html_writer::start_tag('select', ['name' => 'blocktype', 'class' => 'form-select mb-2']);
         $textattrs = ['value' => 'TEXT'];
         if ($blocktype === 'TEXT') {
             $textattrs['selected'] = 'selected';
@@ -822,7 +819,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
         }
         echo html_writer::tag('option', get_string('blocktypetopic', 'local_courseplanner'), $topicattrs);
         echo html_writer::end_tag('select');
-        echo html_writer::start_tag('select', ['name' => 'topicid', 'class' => 'custom-select mb-2']);
+        echo html_writer::start_tag('select', ['name' => 'topicid', 'class' => 'form-select mb-2']);
         echo html_writer::tag('option', get_string('selecttopicplaceholder', 'local_courseplanner'), ['value' => '']);
         foreach ($activetopics as $topic) {
             $optiontext = s($topic->title) . ' (' . s($topic->type) . ')';
@@ -868,7 +865,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             'name' => 'highlighted',
             'value' => '1',
             'id' => $highlightid,
-            'class' => 'mr-1',
+            'class' => 'me-1',
         ];
         if ($highlighted) {
             $highlightattrs['checked'] = 'checked';
@@ -878,7 +875,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             'name' => 'verticallycentred',
             'value' => '1',
             'id' => $vcenterid,
-            'class' => 'mr-1',
+            'class' => 'me-1',
         ];
         if ($verticallycentred) {
             $vcenterattrs['checked'] = 'checked';
@@ -887,7 +884,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
         echo html_writer::empty_tag('input', $highlightattrs);
         echo html_writer::tag('label', get_string('cellhighlightedlabel', 'local_courseplanner'), [
             'for' => $highlightid,
-            'class' => 'mr-3',
+            'class' => 'me-3',
         ]);
         echo html_writer::empty_tag('input', $vcenterattrs);
         echo html_writer::tag('label', get_string('cellverticalcentredlabel', 'local_courseplanner'), [
@@ -898,7 +895,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             'type' => 'submit',
             'name' => 'action',
             'value' => 'savecell',
-            'class' => 'btn btn-sm btn-outline-secondary mr-2',
+            'class' => 'btn btn-sm btn-outline-secondary me-2',
         ]);
         echo html_writer::end_tag('form');
 
@@ -953,7 +950,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             $topictypeid = 'local-courseplanner-shared-topic-type-' . $row . '-' . $col;
             echo html_writer::start_div('mb-2');
             echo html_writer::tag('label', get_string('topictypelabel', 'local_courseplanner'), ['for' => $topictypeid]);
-            echo html_writer::start_tag('select', ['id' => $topictypeid, 'name' => 'topictype', 'class' => 'custom-select']);
+            echo html_writer::start_tag('select', ['id' => $topictypeid, 'name' => 'topictype', 'class' => 'form-select']);
             foreach (local_courseplanner_get_topic_types() as $topictype) {
                 $attrs = ['value' => $topictype];
                 if ($selectedtopic->type === $topictype) {

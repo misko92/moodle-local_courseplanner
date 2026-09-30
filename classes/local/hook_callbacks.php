@@ -14,19 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_courseplanner\local;
+
+use core_course\hook\before_course_deleted;
+
 /**
- * Plugin version information.
+ * Hook callbacks for local_courseplanner.
  *
  * @package    local_courseplanner
- * @copyright  2026 Greg Mulcair
+ * @copyright  2026 misko92
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'local_courseplanner';
-$plugin->version   = 2026093000;
-$plugin->requires  = 2025041400; // Moodle 5.0 (Bootstrap 5).
-$plugin->supported = [500, 502];
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.1.0';
+class hook_callbacks {
+    /**
+     * Remove a course's calendars, grid, dates, blueprint link and info when the course is deleted.
+     *
+     * Blueprints are owned by teachers, not courses, so they are kept.
+     *
+     * @param before_course_deleted $hook
+     */
+    public static function before_course_deleted(before_course_deleted $hook): void {
+        global $CFG;
+        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
+        local_courseplanner_delete_course_data((int)$hook->course->id);
+    }
+}

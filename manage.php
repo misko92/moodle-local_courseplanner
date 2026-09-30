@@ -225,24 +225,12 @@ if ($action !== '' && data_submitted()) {
         case 'createcalendar':
             $blueprintid = required_param('blueprintid', PARAM_INT);
             $blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
-            $year = required_param('year', PARAM_INT);
-            $semester = local_courseplanner_normalise_semester(required_param('semester', PARAM_ALPHANUMEXT));
             $title = trim(optional_param('title', '', PARAM_TEXT));
 
-            if ($year < 2000 || $year > 2200) {
+            if ($title === '') {
                 redirect(
                     $redirecturl,
-                    get_string('errorinvalidyear', 'local_courseplanner'),
-                    null,
-                    \core\output\notification::NOTIFY_ERROR
-                );
-            }
-
-            $dupconds = ['courseid' => $courseid, 'year' => $year, 'semester' => $semester];
-            if ($DB->record_exists('local_courseplanner_calendars', $dupconds)) {
-                redirect(
-                    $redirecturl,
-                    get_string('errorcalendarduplicate', 'local_courseplanner'),
+                    get_string('calendartitlerequired', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
@@ -252,8 +240,6 @@ if ($action !== '' && data_submitted()) {
             $record = (object)[
                 'courseid' => $courseid,
                 'blueprintid' => (int)$blueprint->id,
-                'year' => $year,
-                'semester' => $semester,
                 'title' => $title,
                 'isactive' => 1,
                 'timecreated' => $now,
@@ -429,7 +415,7 @@ if ($action !== '' && data_submitted()) {
             if (!empty($usagerows)) {
                 $examples = [];
                 foreach (array_slice(array_values($usagerows), 0, 3) as $row) {
-                    $examples[] = '#' . (int)$row->id . ' (' . s((string)$row->semester) . ' ' . (int)$row->year . ')';
+                    $examples[] = '#' . (int)$row->id . ' (' . local_courseplanner_calendar_label($row) . ')';
                 }
                 $detail = implode(', ', $examples);
                 $redirecturl->param('blueprintctx', (int)$topic->blueprintid);
@@ -514,7 +500,7 @@ if ($linkrecord) {
 }
 
 $suggestion = local_courseplanner_get_autolink_suggestion($course, (int)$USER->id);
-$courseplanners = local_courseplanner_get_course_calendars($courseid);
+$calendars = local_courseplanner_get_course_calendars($courseid);
 
 if ($selectedblueprintid <= 0) {
     if ($linkedblueprint) {
@@ -551,95 +537,8 @@ if (!$linkedblueprint && !empty($suggestion) && empty($suggestion['ambiguous']) 
 $hasblueprints = !empty($allblueprints);
 $hasactiveblueprints = !empty($activeblueprints);
 
-$recommendedcalendar = null;
-$recommendedreasonkey = '';
-if (!empty($courseplanners)) {
-    $coursemarkers = core_text::strtoupper(
-        implode(' ', [
-            (string)$course->shortname,
-            (string)$course->fullname,
-            (string)$course->idnumber,
-        ])
-    );
-    $now = time();
-    $currentyear = (int)date('Y', $now);
-    $courseconfigsemester = null;
-    $courseconfigyear = null;
-    if (!empty($course->startdate)) {
-        $coursestartmonth = (int)date('n', (int)$course->startdate);
-        $courseconfigyear = (int)date('Y', (int)$course->startdate);
-        if ($coursestartmonth >= 8) {
-            $courseconfigsemester = 'FALL';
-        } else if ($coursestartmonth >= 5) {
-            $courseconfigsemester = 'SUMMER';
-        } else {
-            $courseconfigsemester = 'WINTER';
-        }
-    }
-    $scores = [];
-    foreach ($courseplanners as $calendar) {
-        $calendarid = (int)$calendar->id;
-        $semesteryear = (int)$calendar->year;
-        $semester = core_text::strtoupper((string)$calendar->semester);
-        $semesterprefix = substr($semester, 0, 1);
-        $semesterpattern = '/' . preg_quote($semester, '/') . '\s*' . $semesteryear
-            . '|' . $semesteryear . '\s*' . preg_quote($semester, '/')
-            . '|' . preg_quote($semesterprefix, '/') . '\s*' . $semesteryear
-            . '|' . $semesteryear . '\s*' . preg_quote($semesterprefix, '/') . '/';
-
-        $rules = local_courseplanner_get_calendar_rules($calendarid, true);
-        $startdate = null;
-        $enddate = null;
-        foreach ($rules as $rule) {
-            if ($rule->ruletype === 'SEMESTER_START') {
-                $startdate = (int)$rule->ruledate;
-            } else if ($rule->ruletype === 'SEMESTER_END') {
-                $enddate = (int)$rule->ruledate;
-            }
-        }
-
-        $score = 0;
-        $reasonkey = 'calendarrecommend_reason_newest';
-        if ((int)$calendar->isactive === 1) {
-            $score += 1000000;
-            $reasonkey = 'calendarrecommend_reason_active';
-        }
-        if (preg_match($semesterpattern, $coursemarkers) === 1) {
-            $score += 750000;
-            $reasonkey = 'calendarrecommend_reason_coursematch';
-        }
-        if ($courseconfigsemester === $semester && $courseconfigyear === $semesteryear) {
-            $score += 850000;
-            $reasonkey = 'calendarrecommend_reason_courseconfig';
-        }
-        if ($startdate && $enddate && $now >= $startdate && $now <= $enddate) {
-            $score += 500000;
-            $reasonkey = 'calendarrecommend_reason_currentdate';
-        } else if ($startdate && $startdate > $now) {
-            $score += max(0, 250000 - (int)(($startdate - $now) / DAYSECS));
-            $reasonkey = 'calendarrecommend_reason_upcoming';
-        }
-        if ($semesteryear === $currentyear) {
-            $score += 25000;
-        }
-        $score += min((int)$calendar->timemodified, 2147483647) / 100000;
-        $score += ($semesteryear * 10);
-        $scores[$calendarid] = ['score' => $score, 'reasonkey' => $reasonkey];
-    }
-
-    uasort($courseplanners, static function (stdClass $left, stdClass $right) use ($scores): int {
-        $leftscore = $scores[(int)$left->id]['score'] ?? 0;
-        $rightscore = $scores[(int)$right->id]['score'] ?? 0;
-        if ($leftscore === $rightscore) {
-            return (int)$right->id <=> (int)$left->id;
-        }
-        return ($rightscore <=> $leftscore);
-    });
-    $recommendedcalendar = reset($courseplanners) ?: null;
-    if ($recommendedcalendar) {
-        $recommendedreasonkey = $scores[(int)$recommendedcalendar->id]['reasonkey'] ?? 'calendarrecommend_reason_newest';
-    }
-}
+[$calendars, $recommendedreasonkey] = local_courseplanner_rank_calendars($course, $calendars, time());
+$recommendedcalendar = reset($calendars) ?: null;
 
 $linkedtopiccount = null;
 if ($linkedblueprint) {
@@ -755,7 +654,7 @@ if (!$hasblueprints) {
     $nextstepbody = get_string('setupnext_addtopics_body', 'local_courseplanner', format_string($linkedblueprint->name));
     $nextstepaction = '#local-courseplanner-section-topics';
     $nextstepbutton = get_string('setupnext_addtopics_action', 'local_courseplanner');
-} else if (empty($courseplanners)) {
+} else if (empty($calendars)) {
     $nextsteptitle = get_string('setupnext_createcalendar_title', 'local_courseplanner');
     $nextstepbody = get_string('setupnext_createcalendar_body', 'local_courseplanner');
     $nextstepaction = '#local-courseplanner-createcalendar';
@@ -877,7 +776,7 @@ if (!empty($activeblueprints) && !$linkedblueprint) {
     );
     echo html_writer::start_tag(
         'select',
-        ['id' => 'local-courseplanner-blueprintid', 'name' => 'blueprintid', 'class' => 'custom-select']
+        ['id' => 'local-courseplanner-blueprintid', 'name' => 'blueprintid', 'class' => 'form-select']
     );
     foreach ($activeblueprints as $blueprint) {
         $attrs = ['value' => $blueprint->id];
@@ -908,7 +807,6 @@ echo $OUTPUT->heading(
 if (!$linkedblueprint) {
     echo $OUTPUT->notification(get_string('calendarneedslink', 'local_courseplanner'), 'notifywarning');
 } else {
-    $currentyear = (int)date('Y');
     $createcalendarhtml = '';
     if ($linkedtopiccount === 0) {
         echo $OUTPUT->notification(get_string('calendarneedstopics', 'local_courseplanner'), 'notifyinfo');
@@ -938,40 +836,6 @@ if (!$linkedblueprint) {
         echo html_writer::start_div('mb-2');
         echo html_writer::tag(
             'label',
-            get_string('calendaryearlabel', 'local_courseplanner'),
-            ['for' => 'local-courseplanner-year-new']
-        );
-        echo html_writer::empty_tag('input', [
-            'type' => 'number',
-            'id' => 'local-courseplanner-year-new',
-            'name' => 'year',
-            'class' => 'form-control',
-            'min' => 2000,
-            'max' => 2200,
-            'value' => $currentyear,
-            'required' => 'required',
-        ]);
-        echo html_writer::end_div();
-
-        echo html_writer::start_div('mb-2');
-        echo html_writer::tag(
-            'label',
-            get_string('calendarsemesterlabel', 'local_courseplanner'),
-            ['for' => 'local-courseplanner-semester-new']
-        );
-        echo html_writer::start_tag(
-            'select',
-            ['id' => 'local-courseplanner-semester-new', 'name' => 'semester', 'class' => 'custom-select']
-        );
-        foreach (local_courseplanner_get_semesters() as $semesteroption) {
-            echo html_writer::tag('option', $semesteroption, ['value' => $semesteroption]);
-        }
-        echo html_writer::end_tag('select');
-        echo html_writer::end_div();
-
-        echo html_writer::start_div('mb-2');
-        echo html_writer::tag(
-            'label',
             get_string('calendartitlelabel', 'local_courseplanner'),
             ['for' => 'local-courseplanner-title-new']
         );
@@ -981,7 +845,9 @@ if (!$linkedblueprint) {
             'name' => 'title',
             'class' => 'form-control',
             'maxlength' => 255,
+            'value' => local_courseplanner_suggest_calendar_title(time()),
             'placeholder' => get_string('calendartitleplaceholder', 'local_courseplanner'),
+            'required' => 'required',
         ]);
         echo html_writer::end_div();
 
@@ -995,19 +861,16 @@ if (!$linkedblueprint) {
         $createcalendarhtml = ob_get_clean();
     }
 
-    if (empty($courseplanners)) {
+    if (empty($calendars)) {
         echo $OUTPUT->notification(get_string('nocalendars', 'local_courseplanner'), 'notifyinfo');
     } else {
         echo html_writer::start_tag('ul', ['class' => 'local-courseplanner-blueprint-list']);
-        foreach ($courseplanners as $calendar) {
+        foreach ($calendars as $calendar) {
             $isactive = ((int)$calendar->isactive === 1);
             $badgekey = $isactive ? 'calendarbadgeactive' : 'calendarbadgeinactive';
             $badgeclass = $isactive ? 'local-courseplanner-badge--active' : 'local-courseplanner-badge--archived';
             $isrecommended = $recommendedcalendar && (int)$recommendedcalendar->id === (int)$calendar->id;
-            $heading = s((string)$calendar->semester) . ' ' . (int)$calendar->year;
-            if (!empty($calendar->title)) {
-                $heading .= ' - ' . format_string($calendar->title);
-            }
+            $heading = local_courseplanner_calendar_label($calendar);
 
             echo html_writer::start_tag('li', ['class' => 'local-courseplanner-blueprint-item']);
             echo html_writer::start_tag('details', ['class' => 'local-courseplanner-blueprint-details']);
@@ -1184,7 +1047,7 @@ if (empty($allblueprints)) {
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'updateblueprint']);
         echo html_writer::empty_tag('input', [
             'type' => 'submit',
-            'class' => 'btn btn-secondary mr-2',
+            'class' => 'btn btn-secondary me-2',
             'value' => get_string('saveblueprintsubmit', 'local_courseplanner'),
         ]);
         echo html_writer::end_tag('form');
@@ -1240,7 +1103,7 @@ echo html_writer::tag(
 );
 echo html_writer::start_tag(
     'select',
-    ['id' => 'local-courseplanner-blueprintctx', 'name' => 'blueprintctx', 'class' => 'custom-select']
+    ['id' => 'local-courseplanner-blueprintctx', 'name' => 'blueprintctx', 'class' => 'form-select']
 );
 foreach ($allblueprints as $blueprint) {
     $attrs = ['value' => $blueprint->id];
@@ -1264,7 +1127,7 @@ echo html_writer::tag(
 );
 echo html_writer::start_tag(
     'select',
-    ['id' => 'local-courseplanner-topicfilter', 'name' => 'topicfilter', 'class' => 'custom-select']
+    ['id' => 'local-courseplanner-topicfilter', 'name' => 'topicfilter', 'class' => 'form-select']
 );
 $filteroptions = array_merge(['ALL'], local_courseplanner_get_topic_types());
 foreach ($filteroptions as $filteroption) {
@@ -1323,7 +1186,7 @@ echo html_writer::tag(
     get_string('topictypelabel', 'local_courseplanner'),
     ['for' => 'local-courseplanner-topictype-new']
 );
-echo html_writer::start_tag('select', ['id' => 'local-courseplanner-topictype-new', 'name' => 'type', 'class' => 'custom-select']);
+echo html_writer::start_tag('select', ['id' => 'local-courseplanner-topictype-new', 'name' => 'type', 'class' => 'form-select']);
 foreach (local_courseplanner_get_topic_types() as $topictype) {
     echo html_writer::tag('option', $topictype, ['value' => $topictype]);
 }
@@ -1422,7 +1285,7 @@ if (empty($topics)) {
 
         echo html_writer::start_div('mb-2');
         echo html_writer::tag('label', get_string('topictypelabel', 'local_courseplanner'));
-        echo html_writer::start_tag('select', ['name' => 'type', 'class' => 'custom-select']);
+        echo html_writer::start_tag('select', ['name' => 'type', 'class' => 'form-select']);
         foreach (local_courseplanner_get_topic_types() as $topictype) {
             $attrs = ['value' => $topictype];
             if ($topic->type === $topictype) {

@@ -26,25 +26,19 @@ defined('MOODLE_INTERNAL') || die();
 
 $functions = [
     'local_courseplanner_save_builder_grid' => [
-        'classname' => 'local_courseplanner_external',
-        'methodname' => 'save_builder_grid',
-        'classpath' => 'local/courseplanner/externallib.php',
+        'classname' => 'local_courseplanner\\external\\save_builder_grid',
         'description' => 'Batch-save calendar builder grid blocks.',
         'type' => 'write',
         'ajax' => true,
     ],
     'local_courseplanner_swap_builder_cells' => [
-        'classname' => 'local_courseplanner_external',
-        'methodname' => 'swap_builder_cells',
-        'classpath' => 'local/courseplanner/externallib.php',
+        'classname' => 'local_courseplanner\\external\\swap_builder_cells',
         'description' => 'Swap or move two calendar builder cells.',
         'type' => 'write',
         'ajax' => true,
     ],
     'local_courseplanner_reorder_blueprint_topics' => [
-        'classname' => 'local_courseplanner_external',
-        'methodname' => 'reorder_blueprint_topics',
-        'classpath' => 'local/courseplanner/externallib.php',
+        'classname' => 'local_courseplanner\\external\\reorder_blueprint_topics',
         'description' => 'Persist a new sortorder for blueprint topics (drag-and-drop).',
         'type' => 'write',
         'ajax' => true,

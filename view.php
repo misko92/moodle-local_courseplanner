@@ -54,19 +54,14 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
 
 // Compute today cell.
-$now = new DateTime('now', new DateTimeZone('America/Toronto'));
-$todaytimestamp = $now->getTimestamp();
-$todaycell = local_courseplanner_date_to_cell($blocksmap, $maxrow, $todaytimestamp);
+$todaycell = local_courseplanner_date_to_cell($blocksmap, $maxrow, time());
 $todayrow = $todaycell ? ($todaycell['row'] ?? null) : null;
 $todaycol = $todaycell ? ($todaycell['col'] ?? null) : null;
 $nearestonly = $todaycell && !empty($todaycell['nearest']);
 
 echo $OUTPUT->header();
 
-$calendarlabel = s($calendar->semester) . ' ' . (int)$calendar->year;
-if (!empty($calendar->title)) {
-    $calendarlabel .= ' &ndash; ' . format_string($calendar->title);
-}
+$calendarlabel = local_courseplanner_calendar_label($calendar);
 echo $OUTPUT->heading(get_string('studentviewheading', 'local_courseplanner'));
 echo html_writer::div($calendarlabel, 'local-courseplanner-shell mb-3');
 

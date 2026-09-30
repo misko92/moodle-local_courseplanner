@@ -10,7 +10,7 @@
   "version": "3",
   "steps": [
     {
-      "title": "The semester builder",
+      "title": "The calendar builder",
       "content": "<p>This is where you build the week-by-week grid students will see. You can manage related tools, add optional intro text, arrange topics, and edit individual cells from one page.</p>",
       "contentformat": "1",
       "targettype": "2",
@@ -20,7 +20,7 @@
     },
     {
       "title": "Quick links",
-      "content": "<p>Jump to related tools from here: <em>Manage Content</em> for blueprint topics, <em>Manage Dates</em> for semester dates and holidays, <em>Open Semester Preview</em> for the student view, and <em>Coverage Check</em> to compare what is placed vs missing.</p>",
+      "content": "<p>Jump to related tools from here: <em>Manage Content</em> for blueprint topics, <em>Manage Dates</em> for school-year dates and holidays, <em>Open Student Preview</em> for the student view, and <em>Coverage Check</em> to compare what is placed vs missing.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-builder-actions",
@@ -55,7 +55,7 @@
       "configdata": "{\"placement\":\"top\"}"
     },
     {
-      "title": "The semester grid",
+      "title": "The calendar grid",
       "content": "<p>The top row is the <strong>header</strong>: columns 1-3 are class days, and column 4 is homework. Each row below is one week.</p><p><strong>Drag</strong> any content cell onto another cell to swap them. Click <em>Edit cell</em> to change text content, choose a topic block, set a cell heading, or toggle highlighting and vertical centering.</p>",
       "contentformat": "1",
       "targettype": "0",
@@ -74,7 +74,7 @@
     },
     {
       "title": "You're ready to build",
-      "content": "<p>Start by adding semester dates from <em>Manage Rules</em>, or use the auto-fill helpers once your blueprint topics are ready. Any time you want a refresher, click this <strong>Show walkthrough</strong> button to run the tour again.</p>",
+      "content": "<p>Start by adding school-year dates from <em>Manage Rules</em>, or use the auto-fill helpers once your blueprint topics are ready. Any time you want a refresher, click this <strong>Show walkthrough</strong> button to run the tour again.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-showtour",

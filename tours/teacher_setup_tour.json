@@ -20,7 +20,7 @@
     },
     {
       "title": "Recommended next step",
-      "content": "<p>This card is the best place to start. It looks at your current state and suggests the next useful action: create a blueprint, link this course, add topics, create a semester calendar, or open the recommended calendar.</p><p>When more than one semester calendar exists, the recommendation favors the active calendar and then calendar dates that best match the course and current semester.</p>",
+      "content": "<p>This card is the best place to start. It looks at your current state and suggests the next useful action: create a blueprint, link this course, add topics, create a course calendar, or open the recommended calendar.</p><p>When more than one course calendar exists, the recommendation favors the active calendar and then calendar dates that best match the course and current year.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": ".local-courseplanner-nextstep-card",
@@ -29,7 +29,7 @@
     },
     {
       "title": "Course blueprint",
-      "content": "<p>A <strong>blueprint</strong> is your reusable master list of topics for a class. This section shows which blueprint this Moodle course is using and lets you change or unlink it.</p><p>The linked-blueprint row is intentionally compact, with the unlink action aligned to the right like the semester calendar rows.</p>",
+      "content": "<p>A <strong>blueprint</strong> is your reusable master list of topics for a class. This section shows which blueprint this Moodle course is using and lets you change or unlink it.</p><p>The linked-blueprint row is intentionally compact, with the unlink action aligned to the right like the course calendar rows.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-section-linkcourse",
@@ -37,8 +37,8 @@
       "configdata": "{\"placement\":\"top\"}"
     },
     {
-      "title": "Semester calendars",
-      "content": "<p>Semester calendars are the week-by-week schedules students actually see. You can keep multiple calendars for this course, but only one should be active at a time.</p><p>Use the recommended or active row to open the builder. The <strong>Create new semester calendar</strong> control lives at the bottom of the list so existing calendars stay easy to scan first.</p>",
+      "title": "Course calendars",
+      "content": "<p>Course calendars are the week-by-week schedules students actually see. You can keep multiple calendars for this course, but only one should be active at a time.</p><p>Use the recommended or active row to open the builder. The <strong>Create new course calendar</strong> control lives at the bottom of the list so existing calendars stay easy to scan first.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-section-calendars",
@@ -47,7 +47,7 @@
     },
     {
       "title": "Blueprint library",
-      "content": "<p>Blueprints live here. Create one blueprint per class you teach - topics you add to it will be available on every future semester calendar built from it. Only you can edit the blueprints you own.</p><p>The create-new form is placed after the list, matching the rest of the app's list-first pattern.</p>",
+      "content": "<p>Blueprints live here. Create one blueprint per class you teach - topics you add to it will be available on every future course calendar built from it. Only you can edit the blueprints you own.</p><p>The create-new form is placed after the list, matching the rest of the app's list-first pattern.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-section-blueprints",
@@ -56,7 +56,7 @@
     },
     {
       "title": "Blueprint topics",
-      "content": "<p>Topics are the lectures, labs, eLessons, tests, and homework that make up a class. Add them once to the blueprint and they are available on every semester calendar using it.</p><p>Use <strong>Import Topics</strong> to seed topics from pasted HTML. Topic content uses Moodle's standard editor, and topic-block cells in the builder can now edit the shared topic directly with a clear warning.</p>",
+      "content": "<p>Topics are the lectures, labs, eLessons, tests, and homework that make up a class. Add them once to the blueprint and they are available on every course calendar using it.</p><p>Use <strong>Import Topics</strong> to seed topics from pasted HTML. Topic content uses Moodle's standard editor, and topic-block cells in the builder can now edit the shared topic directly with a clear warning.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-section-topics",
@@ -65,7 +65,7 @@
     },
     {
       "title": "You're ready to go",
-      "content": "<p>Once your blueprint has topics and a semester calendar is created, open the <strong>builder</strong> from the recommended action or the calendar row to arrange topics into weeks.</p><p>Any time you want a refresher, click this <strong>Show walkthrough</strong> button to run the tour again.</p>",
+      "content": "<p>Once your blueprint has topics and a course calendar is created, open the <strong>builder</strong> from the recommended action or the calendar row to arrange topics into weeks.</p><p>Any time you want a refresher, click this <strong>Show walkthrough</strong> button to run the tour again.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-showtour",
