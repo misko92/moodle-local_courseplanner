@@ -17,7 +17,7 @@
 /**
  * External web services.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,9 +27,9 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/externallib.php');
 
 /**
- * External functions for local_coursecalendar.
+ * External functions for local_courseplanner.
  */
-class local_coursecalendar_external extends external_api {
+class local_courseplanner_external extends external_api {
     // Builder batch-save.
 
     /**
@@ -80,10 +80,10 @@ class local_coursecalendar_external extends external_api {
         $context = context_course::instance($course->id);
         require_login($course);
         self::validate_context($context);
-        require_capability('local/coursecalendar:managecalendar', $context);
+        require_capability('local/courseplanner:manage', $context);
 
-        $calendar = local_coursecalendar_require_course_calendar($params['calendarid'], (int)$course->id);
-        $blueprint = local_coursecalendar_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+        $calendar = local_courseplanner_require_course_calendar($params['calendarid'], (int)$course->id);
+        $blueprint = local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
 
         $saved = 0;
         foreach ($params['blocks'] as $block) {
@@ -93,7 +93,7 @@ class local_coursecalendar_external extends external_api {
             }
             $topicid = null;
             if ($blocktype === 'TOPIC' && !empty($block['topicid'])) {
-                $topic = local_coursecalendar_require_owned_topic((int)$block['topicid'], (int)$USER->id);
+                $topic = local_courseplanner_require_owned_topic((int)$block['topicid'], (int)$USER->id);
                 if ((int)$topic->blueprintid !== (int)$blueprint->id) {
                     continue;
                 }
@@ -101,7 +101,7 @@ class local_coursecalendar_external extends external_api {
             }
             $headerday = !empty($block['headerday']) ? trim($block['headerday']) : null;
             $headermode = !empty($block['headermode']) ? trim($block['headermode']) : null;
-            local_coursecalendar_upsert_block(
+            local_courseplanner_upsert_block(
                 (int)$calendar->id,
                 (int)$block['rownum'],
                 (int)$block['colnum'],
@@ -183,10 +183,10 @@ class local_coursecalendar_external extends external_api {
         $context = context_course::instance($course->id);
         require_login($course);
         self::validate_context($context);
-        require_capability('local/coursecalendar:managecalendar', $context);
+        require_capability('local/courseplanner:manage', $context);
 
-        $calendar = local_coursecalendar_require_course_calendar($params['calendarid'], (int)$course->id);
-        local_coursecalendar_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+        $calendar = local_courseplanner_require_course_calendar($params['calendarid'], (int)$course->id);
+        local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
 
         if (
             $params['fromrow'] <= 0 || $params['torow'] <= 0 ||
@@ -197,10 +197,10 @@ class local_coursecalendar_external extends external_api {
         }
 
         $calid = (int)$calendar->id;
-        $blocka = $DB->get_record('local_coursecalendar_calendar_blocks', [
+        $blocka = $DB->get_record('local_courseplanner_blocks', [
             'calendarid' => $calid, 'rownum' => $params['fromrow'], 'colnum' => $params['fromcol'],
         ], '*', IGNORE_MISSING);
-        $blockb = $DB->get_record('local_coursecalendar_calendar_blocks', [
+        $blockb = $DB->get_record('local_courseplanner_blocks', [
             'calendarid' => $calid, 'rownum' => $params['torow'], 'colnum' => $params['tocol'],
         ], '*', IGNORE_MISSING);
 
@@ -216,20 +216,20 @@ class local_coursecalendar_external extends external_api {
             $blockb->colnum = $tmpcol;
             $blockb->timemodified = $now;
             $blockb->usermodified = (int)$USER->id;
-            $DB->update_record('local_coursecalendar_calendar_blocks', $blocka);
-            $DB->update_record('local_coursecalendar_calendar_blocks', $blockb);
+            $DB->update_record('local_courseplanner_blocks', $blocka);
+            $DB->update_record('local_courseplanner_blocks', $blockb);
         } else if ($blocka) {
             $blocka->rownum = $params['torow'];
             $blocka->colnum = $params['tocol'];
             $blocka->timemodified = $now;
             $blocka->usermodified = (int)$USER->id;
-            $DB->update_record('local_coursecalendar_calendar_blocks', $blocka);
+            $DB->update_record('local_courseplanner_blocks', $blocka);
         } else if ($blockb) {
             $blockb->rownum = $params['fromrow'];
             $blockb->colnum = $params['fromcol'];
             $blockb->timemodified = $now;
             $blockb->usermodified = (int)$USER->id;
-            $DB->update_record('local_coursecalendar_calendar_blocks', $blockb);
+            $DB->update_record('local_courseplanner_blocks', $blockb);
         }
 
         return ['status' => 'ok', 'message' => 'Cells swapped'];
@@ -287,9 +287,9 @@ class local_coursecalendar_external extends external_api {
         $context = context_course::instance($course->id);
         require_login($course);
         self::validate_context($context);
-        require_capability('local/coursecalendar:managecalendar', $context);
+        require_capability('local/courseplanner:manage', $context);
 
-        $blueprint = local_coursecalendar_require_owned_blueprint((int)$params['blueprintid'], (int)$USER->id);
+        $blueprint = local_courseplanner_require_owned_blueprint((int)$params['blueprintid'], (int)$USER->id);
 
         $submittedids = array_values(array_map('intval', $params['topicids']));
         if (empty($submittedids)) {
@@ -300,7 +300,7 @@ class local_coursecalendar_external extends external_api {
         }
 
         $existing = $DB->get_records(
-            'local_coursecalendar_blueprint_topics',
+            'local_courseplanner_topics',
             ['blueprintid' => (int)$blueprint->id],
             'sortorder ASC',
             'id, sortorder'
@@ -317,7 +317,7 @@ class local_coursecalendar_external extends external_api {
         $now = time();
         $order = 1;
         foreach ($submittedids as $topicid) {
-            $DB->update_record('local_coursecalendar_blueprint_topics', (object)[
+            $DB->update_record('local_courseplanner_topics', (object)[
                 'id' => $topicid,
                 'sortorder' => $order,
                 'timemodified' => $now,

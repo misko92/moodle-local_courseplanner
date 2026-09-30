@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy Subsystem implementation for local_coursecalendar.
+ * Privacy Subsystem implementation for local_courseplanner.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_coursecalendar\privacy;
+namespace local_courseplanner\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
@@ -50,66 +50,66 @@ class provider implements
      * @return collection the updated collection
      */
     public static function get_metadata(collection $collection): collection {
-        $collection->add_database_table('local_coursecalendar_blueprints', [
-            'owneruserid' => 'privacy:metadata:local_coursecalendar_blueprints:owneruserid',
-            'name' => 'privacy:metadata:local_coursecalendar_blueprints:name',
-            'description' => 'privacy:metadata:local_coursecalendar_blueprints:description',
-            'usermodified' => 'privacy:metadata:local_coursecalendar_blueprints:usermodified',
-            'timemodified' => 'privacy:metadata:local_coursecalendar_blueprints:timemodified',
-        ], 'privacy:metadata:local_coursecalendar_blueprints');
+        $collection->add_database_table('local_courseplanner_blueprints', [
+            'owneruserid' => 'privacy:metadata:local_courseplanner_blueprints:owneruserid',
+            'name' => 'privacy:metadata:local_courseplanner_blueprints:name',
+            'description' => 'privacy:metadata:local_courseplanner_blueprints:description',
+            'usermodified' => 'privacy:metadata:local_courseplanner_blueprints:usermodified',
+            'timemodified' => 'privacy:metadata:local_courseplanner_blueprints:timemodified',
+        ], 'privacy:metadata:local_courseplanner_blueprints');
 
-        $collection->add_database_table('local_coursecalendar_blueprint_topics', [
-            'title' => 'privacy:metadata:local_coursecalendar_blueprint_topics:title',
-            'type' => 'privacy:metadata:local_coursecalendar_blueprint_topics:type',
-            'contenthtml' => 'privacy:metadata:local_coursecalendar_blueprint_topics:contenthtml',
-            'usermodified' => 'privacy:metadata:local_coursecalendar_blueprint_topics:usermodified',
-            'timemodified' => 'privacy:metadata:local_coursecalendar_blueprint_topics:timemodified',
-        ], 'privacy:metadata:local_coursecalendar_blueprint_topics');
+        $collection->add_database_table('local_courseplanner_topics', [
+            'title' => 'privacy:metadata:local_courseplanner_topics:title',
+            'type' => 'privacy:metadata:local_courseplanner_topics:type',
+            'contenthtml' => 'privacy:metadata:local_courseplanner_topics:contenthtml',
+            'usermodified' => 'privacy:metadata:local_courseplanner_topics:usermodified',
+            'timemodified' => 'privacy:metadata:local_courseplanner_topics:timemodified',
+        ], 'privacy:metadata:local_courseplanner_topics');
 
-        $collection->add_database_table('local_coursecalendar_course_blueprint_link', [
-            'courseid' => 'privacy:metadata:local_coursecalendar_course_blueprint_link:courseid',
-            'blueprintid' => 'privacy:metadata:local_coursecalendar_course_blueprint_link:blueprintid',
-            'linknotes' => 'privacy:metadata:local_coursecalendar_course_blueprint_link:linknotes',
-            'usermodified' => 'privacy:metadata:local_coursecalendar_course_blueprint_link:usermodified',
-            'timemodified' => 'privacy:metadata:local_coursecalendar_course_blueprint_link:timemodified',
-        ], 'privacy:metadata:local_coursecalendar_course_blueprint_link');
+        $collection->add_database_table('local_courseplanner_courselink', [
+            'courseid' => 'privacy:metadata:local_courseplanner_courselink:courseid',
+            'blueprintid' => 'privacy:metadata:local_courseplanner_courselink:blueprintid',
+            'linknotes' => 'privacy:metadata:local_courseplanner_courselink:linknotes',
+            'usermodified' => 'privacy:metadata:local_courseplanner_courselink:usermodified',
+            'timemodified' => 'privacy:metadata:local_courseplanner_courselink:timemodified',
+        ], 'privacy:metadata:local_courseplanner_courselink');
 
-        $collection->add_database_table('local_coursecalendar_semester_calendars', [
-            'year' => 'privacy:metadata:local_coursecalendar_semester_calendars:year',
-            'semester' => 'privacy:metadata:local_coursecalendar_semester_calendars:semester',
-            'title' => 'privacy:metadata:local_coursecalendar_semester_calendars:title',
-            'usermodified' => 'privacy:metadata:local_coursecalendar_semester_calendars:usermodified',
-            'timemodified' => 'privacy:metadata:local_coursecalendar_semester_calendars:timemodified',
-        ], 'privacy:metadata:local_coursecalendar_semester_calendars');
+        $collection->add_database_table('local_courseplanner_calendars', [
+            'year' => 'privacy:metadata:local_courseplanner_calendars:year',
+            'semester' => 'privacy:metadata:local_courseplanner_calendars:semester',
+            'title' => 'privacy:metadata:local_courseplanner_calendars:title',
+            'usermodified' => 'privacy:metadata:local_courseplanner_calendars:usermodified',
+            'timemodified' => 'privacy:metadata:local_courseplanner_calendars:timemodified',
+        ], 'privacy:metadata:local_courseplanner_calendars');
 
-        $collection->add_database_table('local_coursecalendar_timeline_exception_rules', [
-            'label' => 'privacy:metadata:local_coursecalendar_timeline_exception_rules:label',
-            'description' => 'privacy:metadata:local_coursecalendar_timeline_exception_rules:description',
-            'ruledate' => 'privacy:metadata:local_coursecalendar_timeline_exception_rules:ruledate',
-            'usermodified' => 'privacy:metadata:local_coursecalendar_timeline_exception_rules:usermodified',
-            'timemodified' => 'privacy:metadata:local_coursecalendar_timeline_exception_rules:timemodified',
-        ], 'privacy:metadata:local_coursecalendar_timeline_exception_rules');
+        $collection->add_database_table('local_courseplanner_rules', [
+            'label' => 'privacy:metadata:local_courseplanner_rules:label',
+            'description' => 'privacy:metadata:local_courseplanner_rules:description',
+            'ruledate' => 'privacy:metadata:local_courseplanner_rules:ruledate',
+            'usermodified' => 'privacy:metadata:local_courseplanner_rules:usermodified',
+            'timemodified' => 'privacy:metadata:local_courseplanner_rules:timemodified',
+        ], 'privacy:metadata:local_courseplanner_rules');
 
-        $collection->add_database_table('local_coursecalendar_calendar_blocks', [
-            'blocktype' => 'privacy:metadata:local_coursecalendar_calendar_blocks:blocktype',
-            'contenthtml' => 'privacy:metadata:local_coursecalendar_calendar_blocks:contenthtml',
-            'cellheading' => 'privacy:metadata:local_coursecalendar_calendar_blocks:cellheading',
-            'usermodified' => 'privacy:metadata:local_coursecalendar_calendar_blocks:usermodified',
-            'timemodified' => 'privacy:metadata:local_coursecalendar_calendar_blocks:timemodified',
-        ], 'privacy:metadata:local_coursecalendar_calendar_blocks');
+        $collection->add_database_table('local_courseplanner_blocks', [
+            'blocktype' => 'privacy:metadata:local_courseplanner_blocks:blocktype',
+            'contenthtml' => 'privacy:metadata:local_courseplanner_blocks:contenthtml',
+            'cellheading' => 'privacy:metadata:local_courseplanner_blocks:cellheading',
+            'usermodified' => 'privacy:metadata:local_courseplanner_blocks:usermodified',
+            'timemodified' => 'privacy:metadata:local_courseplanner_blocks:timemodified',
+        ], 'privacy:metadata:local_courseplanner_blocks');
 
-        $collection->add_database_table('local_coursecalendar_rule_apply_runs', [
-            'appliedbyuserid' => 'privacy:metadata:local_coursecalendar_rule_apply_runs:appliedbyuserid',
-            'summaryjson' => 'privacy:metadata:local_coursecalendar_rule_apply_runs:summaryjson',
-            'timecreated' => 'privacy:metadata:local_coursecalendar_rule_apply_runs:timecreated',
-        ], 'privacy:metadata:local_coursecalendar_rule_apply_runs');
+        $collection->add_database_table('local_courseplanner_ruleruns', [
+            'appliedbyuserid' => 'privacy:metadata:local_courseplanner_ruleruns:appliedbyuserid',
+            'summaryjson' => 'privacy:metadata:local_courseplanner_ruleruns:summaryjson',
+            'timecreated' => 'privacy:metadata:local_courseplanner_ruleruns:timecreated',
+        ], 'privacy:metadata:local_courseplanner_ruleruns');
 
-        $collection->add_database_table('local_coursecalendar_course_info', [
-            'introhtml' => 'privacy:metadata:local_coursecalendar_course_info:introhtml',
-            'linkshtml' => 'privacy:metadata:local_coursecalendar_course_info:linkshtml',
-            'usermodified' => 'privacy:metadata:local_coursecalendar_course_info:usermodified',
-            'timemodified' => 'privacy:metadata:local_coursecalendar_course_info:timemodified',
-        ], 'privacy:metadata:local_coursecalendar_course_info');
+        $collection->add_database_table('local_courseplanner_courseinfo', [
+            'introhtml' => 'privacy:metadata:local_courseplanner_courseinfo:introhtml',
+            'linkshtml' => 'privacy:metadata:local_courseplanner_courseinfo:linkshtml',
+            'usermodified' => 'privacy:metadata:local_courseplanner_courseinfo:usermodified',
+            'timemodified' => 'privacy:metadata:local_courseplanner_courseinfo:timemodified',
+        ], 'privacy:metadata:local_courseplanner_courseinfo');
 
         return $collection;
     }
@@ -138,25 +138,25 @@ class provider implements
                   FROM {context} ctx
                   JOIN {course} c ON c.id = ctx.instanceid AND ctx.contextlevel = :courselevel
                  WHERE c.id IN (
-                        SELECT courseid FROM {local_coursecalendar_course_blueprint_link} WHERE usermodified = :u1
+                        SELECT courseid FROM {local_courseplanner_courselink} WHERE usermodified = :u1
                         UNION
-                        SELECT courseid FROM {local_coursecalendar_semester_calendars} WHERE usermodified = :u2
+                        SELECT courseid FROM {local_courseplanner_calendars} WHERE usermodified = :u2
                         UNION
-                        SELECT courseid FROM {local_coursecalendar_course_info} WHERE usermodified = :u3
+                        SELECT courseid FROM {local_courseplanner_courseinfo} WHERE usermodified = :u3
                         UNION
                         SELECT cal.courseid
-                          FROM {local_coursecalendar_calendar_blocks} bl
-                          JOIN {local_coursecalendar_semester_calendars} cal ON cal.id = bl.calendarid
+                          FROM {local_courseplanner_blocks} bl
+                          JOIN {local_courseplanner_calendars} cal ON cal.id = bl.calendarid
                          WHERE bl.usermodified = :u4
                         UNION
                         SELECT cal.courseid
-                          FROM {local_coursecalendar_timeline_exception_rules} r
-                          JOIN {local_coursecalendar_semester_calendars} cal ON cal.id = r.calendarid
+                          FROM {local_courseplanner_rules} r
+                          JOIN {local_courseplanner_calendars} cal ON cal.id = r.calendarid
                          WHERE r.usermodified = :u5
                         UNION
                         SELECT cal.courseid
-                          FROM {local_coursecalendar_rule_apply_runs} ar
-                          JOIN {local_coursecalendar_semester_calendars} cal ON cal.id = ar.calendarid
+                          FROM {local_courseplanner_ruleruns} ar
+                          JOIN {local_courseplanner_calendars} cal ON cal.id = ar.calendarid
                          WHERE ar.appliedbyuserid = :u6
                  )";
         $params = [
@@ -185,22 +185,22 @@ class provider implements
             $userlist->add_from_sql(
                 'owneruserid',
                 "SELECT owneruserid
-                   FROM {local_coursecalendar_blueprints}
+                   FROM {local_courseplanner_blueprints}
                   WHERE owneruserid = :uid",
                 $params
             );
             $userlist->add_from_sql(
                 'usermodified',
                 "SELECT usermodified
-                   FROM {local_coursecalendar_blueprints}
+                   FROM {local_courseplanner_blueprints}
                   WHERE owneruserid = :uid AND usermodified IS NOT NULL",
                 $params
             );
             $userlist->add_from_sql(
                 'usermodified',
                 "SELECT t.usermodified
-                   FROM {local_coursecalendar_blueprint_topics} t
-                   JOIN {local_coursecalendar_blueprints} b ON b.id = t.blueprintid
+                   FROM {local_courseplanner_topics} t
+                   JOIN {local_courseplanner_blueprints} b ON b.id = t.blueprintid
                   WHERE b.owneruserid = :uid AND t.usermodified IS NOT NULL",
                 $params
             );
@@ -213,45 +213,45 @@ class provider implements
             $userlist->add_from_sql(
                 'usermodified',
                 "SELECT usermodified
-                   FROM {local_coursecalendar_course_blueprint_link}
+                   FROM {local_courseplanner_courselink}
                   WHERE courseid = :courseid AND usermodified IS NOT NULL",
                 $params
             );
             $userlist->add_from_sql(
                 'usermodified',
                 "SELECT usermodified
-                   FROM {local_coursecalendar_semester_calendars}
+                   FROM {local_courseplanner_calendars}
                   WHERE courseid = :courseid AND usermodified IS NOT NULL",
                 $params
             );
             $userlist->add_from_sql(
                 'usermodified',
                 "SELECT usermodified
-                   FROM {local_coursecalendar_course_info}
+                   FROM {local_courseplanner_courseinfo}
                   WHERE courseid = :courseid AND usermodified IS NOT NULL",
                 $params
             );
             $userlist->add_from_sql(
                 'usermodified',
                 "SELECT bl.usermodified
-                   FROM {local_coursecalendar_calendar_blocks} bl
-                   JOIN {local_coursecalendar_semester_calendars} cal ON cal.id = bl.calendarid
+                   FROM {local_courseplanner_blocks} bl
+                   JOIN {local_courseplanner_calendars} cal ON cal.id = bl.calendarid
                   WHERE cal.courseid = :courseid AND bl.usermodified IS NOT NULL",
                 $params
             );
             $userlist->add_from_sql(
                 'usermodified',
                 "SELECT r.usermodified
-                   FROM {local_coursecalendar_timeline_exception_rules} r
-                   JOIN {local_coursecalendar_semester_calendars} cal ON cal.id = r.calendarid
+                   FROM {local_courseplanner_rules} r
+                   JOIN {local_courseplanner_calendars} cal ON cal.id = r.calendarid
                   WHERE cal.courseid = :courseid AND r.usermodified IS NOT NULL",
                 $params
             );
             $userlist->add_from_sql(
                 'appliedbyuserid',
                 "SELECT ar.appliedbyuserid
-                   FROM {local_coursecalendar_rule_apply_runs} ar
-                   JOIN {local_coursecalendar_semester_calendars} cal ON cal.id = ar.calendarid
+                   FROM {local_courseplanner_ruleruns} ar
+                   JOIN {local_courseplanner_calendars} cal ON cal.id = ar.calendarid
                   WHERE cal.courseid = :courseid",
                 $params
             );
@@ -286,7 +286,7 @@ class provider implements
     protected static function export_blueprints_for_user(\context $context, int $userid): void {
         global $DB;
 
-        $blueprints = $DB->get_records('local_coursecalendar_blueprints', ['owneruserid' => $userid]);
+        $blueprints = $DB->get_records('local_courseplanner_blueprints', ['owneruserid' => $userid]);
         if (empty($blueprints)) {
             return;
         }
@@ -294,7 +294,7 @@ class provider implements
         $data = [];
         foreach ($blueprints as $blueprint) {
             $topics = $DB->get_records(
-                'local_coursecalendar_blueprint_topics',
+                'local_courseplanner_topics',
                 ['blueprintid' => $blueprint->id],
                 'sortorder ASC'
             );
@@ -318,7 +318,7 @@ class provider implements
         }
 
         writer::with_context($context)->export_data(
-            [get_string('privacy:blueprintspath', 'local_coursecalendar')],
+            [get_string('privacy:blueprintspath', 'local_courseplanner')],
             (object) ['blueprints' => $data]
         );
     }
@@ -334,21 +334,21 @@ class provider implements
         global $DB;
 
         $courseid = $context->instanceid;
-        $subcontext = [get_string('privacy:calendarspath', 'local_coursecalendar')];
+        $subcontext = [get_string('privacy:calendarspath', 'local_courseplanner')];
 
-        $calendars = $DB->get_records('local_coursecalendar_semester_calendars', ['courseid' => $courseid]);
+        $calendars = $DB->get_records('local_courseplanner_calendars', ['courseid' => $courseid]);
         $calendardata = [];
         foreach ($calendars as $calendar) {
             $blocks = $DB->get_records(
-                'local_coursecalendar_calendar_blocks',
+                'local_courseplanner_blocks',
                 ['calendarid' => $calendar->id, 'usermodified' => $userid]
             );
             $rules = $DB->get_records(
-                'local_coursecalendar_timeline_exception_rules',
+                'local_courseplanner_rules',
                 ['calendarid' => $calendar->id, 'usermodified' => $userid]
             );
             $runs = $DB->get_records(
-                'local_coursecalendar_rule_apply_runs',
+                'local_courseplanner_ruleruns',
                 ['calendarid' => $calendar->id, 'appliedbyuserid' => $userid]
             );
 
@@ -369,11 +369,11 @@ class provider implements
         }
 
         $link = $DB->get_record(
-            'local_coursecalendar_course_blueprint_link',
+            'local_courseplanner_courselink',
             ['courseid' => $courseid, 'usermodified' => $userid]
         );
         $info = $DB->get_record(
-            'local_coursecalendar_course_info',
+            'local_courseplanner_courseinfo',
             ['courseid' => $courseid, 'usermodified' => $userid]
         );
 
@@ -458,14 +458,14 @@ class provider implements
 
         if (
             $DB->record_exists_select(
-                'local_coursecalendar_blueprints',
+                'local_courseplanner_blueprints',
                 'owneruserid = :o OR usermodified = :m',
                 ['o' => $userid, 'm' => $userid]
             )
         ) {
             return true;
         }
-        return $DB->record_exists('local_coursecalendar_blueprint_topics', ['usermodified' => $userid]);
+        return $DB->record_exists('local_courseplanner_topics', ['usermodified' => $userid]);
     }
 
     /**
@@ -484,7 +484,7 @@ class provider implements
 
         [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'own');
         $blueprintids = $DB->get_fieldset_select(
-            'local_coursecalendar_blueprints',
+            'local_courseplanner_blueprints',
             'id',
             "owneruserid $insql",
             $params
@@ -494,8 +494,8 @@ class provider implements
         }
 
         [$bpsql, $bpparams] = $DB->get_in_or_equal($blueprintids, SQL_PARAMS_NAMED, 'bp');
-        $DB->delete_records_select('local_coursecalendar_blueprint_topics', "blueprintid $bpsql", $bpparams);
-        $DB->delete_records_select('local_coursecalendar_blueprints', "id $bpsql", $bpparams);
+        $DB->delete_records_select('local_courseplanner_topics', "blueprintid $bpsql", $bpparams);
+        $DB->delete_records_select('local_courseplanner_blueprints', "id $bpsql", $bpparams);
     }
 
     /**
@@ -508,20 +508,20 @@ class provider implements
         global $DB;
 
         $calendarids = $DB->get_fieldset_select(
-            'local_coursecalendar_semester_calendars',
+            'local_courseplanner_calendars',
             'id',
             'courseid = :courseid',
             ['courseid' => $courseid]
         );
         if (!empty($calendarids)) {
             [$calsql, $calparams] = $DB->get_in_or_equal($calendarids, SQL_PARAMS_NAMED, 'cal');
-            $DB->delete_records_select('local_coursecalendar_calendar_blocks', "calendarid $calsql", $calparams);
-            $DB->delete_records_select('local_coursecalendar_timeline_exception_rules', "calendarid $calsql", $calparams);
-            $DB->delete_records_select('local_coursecalendar_rule_apply_runs', "calendarid $calsql", $calparams);
-            $DB->delete_records_select('local_coursecalendar_semester_calendars', "id $calsql", $calparams);
+            $DB->delete_records_select('local_courseplanner_blocks', "calendarid $calsql", $calparams);
+            $DB->delete_records_select('local_courseplanner_rules', "calendarid $calsql", $calparams);
+            $DB->delete_records_select('local_courseplanner_ruleruns', "calendarid $calsql", $calparams);
+            $DB->delete_records_select('local_courseplanner_calendars', "id $calsql", $calparams);
         }
-        $DB->delete_records('local_coursecalendar_course_blueprint_link', ['courseid' => $courseid]);
-        $DB->delete_records('local_coursecalendar_course_info', ['courseid' => $courseid]);
+        $DB->delete_records('local_courseplanner_courselink', ['courseid' => $courseid]);
+        $DB->delete_records('local_courseplanner_courseinfo', ['courseid' => $courseid]);
     }
 
     /**
@@ -540,7 +540,7 @@ class provider implements
         }
 
         $calendarids = $DB->get_fieldset_select(
-            'local_coursecalendar_semester_calendars',
+            'local_courseplanner_calendars',
             'id',
             'courseid = :courseid',
             ['courseid' => $courseid]
@@ -552,21 +552,21 @@ class provider implements
         $courseparams = $userparams;
         $courseparams['courseid'] = $courseid;
         $DB->set_field_select(
-            'local_coursecalendar_course_blueprint_link',
+            'local_courseplanner_courselink',
             'usermodified',
             null,
             "courseid = :courseid AND usermodified $usersql",
             $courseparams
         );
         $DB->set_field_select(
-            'local_coursecalendar_course_info',
+            'local_courseplanner_courseinfo',
             'usermodified',
             null,
             "courseid = :courseid AND usermodified $usersql",
             $courseparams
         );
         $DB->set_field_select(
-            'local_coursecalendar_semester_calendars',
+            'local_courseplanner_calendars',
             'usermodified',
             null,
             "courseid = :courseid AND usermodified $usersql",
@@ -581,14 +581,14 @@ class provider implements
         [$calsql, $calparams] = $DB->get_in_or_equal($calendarids, SQL_PARAMS_NAMED, 'cal');
         $blockparams = array_merge($userparams, $calparams);
         $DB->set_field_select(
-            'local_coursecalendar_calendar_blocks',
+            'local_courseplanner_blocks',
             'usermodified',
             null,
             "calendarid $calsql AND usermodified $usersql",
             $blockparams
         );
         $DB->set_field_select(
-            'local_coursecalendar_timeline_exception_rules',
+            'local_courseplanner_rules',
             'usermodified',
             null,
             "calendarid $calsql AND usermodified $usersql",
@@ -597,7 +597,7 @@ class provider implements
 
         // Apply runs require an author (NOT NULL), so the trace rows are removed.
         $DB->delete_records_select(
-            'local_coursecalendar_rule_apply_runs',
+            'local_courseplanner_ruleruns',
             "calendarid $calsql AND appliedbyuserid $usersql",
             $blockparams
         );

@@ -17,85 +17,19 @@
 /**
  * Database upgrade routines.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Upgrade hook for local_coursecalendar.
+ * Upgrade hook for local_courseplanner.
  *
  * @param int $oldversion
  * @return bool
  */
-function xmldb_local_coursecalendar_upgrade(int $oldversion): bool {
-    global $DB, $CFG;
-    require_once($CFG->dirroot . '/local/coursecalendar/locallib.php');
-
-    if ($oldversion < 2026022601) {
-        // Initial savepoint; no schema changes yet.
-        upgrade_plugin_savepoint(true, 2026022601, 'local', 'coursecalendar');
-    }
-
-    if ($oldversion < 2026022701) {
-        $dbman = $DB->get_manager();
-
-        $table = new xmldb_table('local_coursecalendar_course_info');
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('introhtml', XMLDB_TYPE_TEXT, null, null, null, null, null);
-        $table->add_field('linkshtml', XMLDB_TYPE_TEXT, null, null, null, null, null);
-        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $table->add_key('courseid_fk', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
-        $table->add_key('usermodified_fk', XMLDB_KEY_FOREIGN, ['usermodified'], 'user', ['id']);
-        $table->add_key('courseid_uq', XMLDB_KEY_UNIQUE, ['courseid']);
-
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        upgrade_plugin_savepoint(true, 2026022701, 'local', 'coursecalendar');
-    }
-
-    if ($oldversion < 2026042401) {
-        local_coursecalendar_install_user_tours();
-        upgrade_plugin_savepoint(true, 2026042401, 'local', 'coursecalendar');
-    }
-
-    if ($oldversion < 2026042402) {
-        local_coursecalendar_install_user_tours();
-        upgrade_plugin_savepoint(true, 2026042402, 'local', 'coursecalendar');
-    }
-
-    if ($oldversion < 2026042403) {
-        local_coursecalendar_install_user_tours();
-        upgrade_plugin_savepoint(true, 2026042403, 'local', 'coursecalendar');
-    }
-
-    if ($oldversion < 2026042406) {
-        local_coursecalendar_install_user_tours();
-        upgrade_plugin_savepoint(true, 2026042406, 'local', 'coursecalendar');
-    }
-
-    if ($oldversion < 2026052800) {
-        local_coursecalendar_install_user_tours();
-        upgrade_plugin_savepoint(true, 2026052800, 'local', 'coursecalendar');
-    }
-
-    if ($oldversion < 2026053001) {
-        // Blueprint matching is now name-based; drop the obsolete shortcode column.
-        $dbman = $DB->get_manager();
-        $table = new xmldb_table('local_coursecalendar_blueprints');
-        $field = new xmldb_field('shortcode');
-        if ($dbman->field_exists($table, $field)) {
-            $dbman->drop_field($table, $field);
-        }
-        upgrade_plugin_savepoint(true, 2026053001, 'local', 'coursecalendar');
-    }
+function xmldb_local_courseplanner_upgrade(int $oldversion): bool {
+    // Upgrade steps for versions after 2026093000 (initial fork) go here.
 
     return true;
 }

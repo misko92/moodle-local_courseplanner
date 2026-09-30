@@ -1,17 +1,17 @@
 /**
- * "Show walkthrough" button shim for local_coursecalendar.
+ * "Show walkthrough" button shim for local_courseplanner.
  *
  * Wires a user-visible button to Moodle's tool_usertours reset-tour API so
  * teachers can re-trigger the guided walkthrough on any page that ships one.
  * If tool_usertours is unavailable or the tour cannot be resolved, the
  * button is hidden so we fail gracefully.
  *
- * @module local_coursecalendar/showtour
+ * @module local_courseplanner/showtour
  */
 define(['core/log'], function(log) {
     'use strict';
 
-    var SCROLL_CLASS = 'local-coursecalendar-tour-active';
+    var SCROLL_CLASS = 'local-courseplanner-tour-active';
 
     /**
      * Moodle's user tour clamps scrollTop to [0, maxScroll], so when a step
@@ -134,10 +134,10 @@ define(['core/log'], function(log) {
                 if (userTours && typeof userTours.resetTourState === 'function') {
                     userTours.resetTourState(tourId);
                 } else {
-                    log.error('local_coursecalendar/showtour: tool_usertours/usertours.resetTourState not available');
+                    log.error('local_courseplanner/showtour: tool_usertours/usertours.resetTourState not available');
                 }
             }, function(err) {
-                log.error('local_coursecalendar/showtour: failed to load tool_usertours/usertours', err);
+                log.error('local_courseplanner/showtour: failed to load tool_usertours/usertours', err);
                 button.style.display = 'none';
             });
         });

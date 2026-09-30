@@ -17,7 +17,7 @@
 /**
  * Helper library.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -29,7 +29,7 @@
  * @param bool $includearchived
  * @return array
  */
-function local_coursecalendar_get_teacher_blueprints(int $userid, bool $includearchived = true): array {
+function local_courseplanner_get_teacher_blueprints(int $userid, bool $includearchived = true): array {
     global $DB;
 
     $conditions = ['owneruserid' => $userid];
@@ -38,7 +38,7 @@ function local_coursecalendar_get_teacher_blueprints(int $userid, bool $includea
     }
 
     return $DB->get_records(
-        'local_coursecalendar_blueprints',
+        'local_courseplanner_blueprints',
         $conditions,
         'isarchived ASC, name ASC, id ASC'
     );
@@ -50,10 +50,10 @@ function local_coursecalendar_get_teacher_blueprints(int $userid, bool $includea
  * @param int $courseid
  * @return stdClass|null
  */
-function local_coursecalendar_get_course_link_record(int $courseid): ?stdClass {
+function local_courseplanner_get_course_link_record(int $courseid): ?stdClass {
     global $DB;
 
-    $record = $DB->get_record('local_coursecalendar_course_blueprint_link', ['courseid' => $courseid], '*', IGNORE_MISSING);
+    $record = $DB->get_record('local_courseplanner_courselink', ['courseid' => $courseid], '*', IGNORE_MISSING);
     return $record ?: null;
 }
 
@@ -64,12 +64,12 @@ function local_coursecalendar_get_course_link_record(int $courseid): ?stdClass {
  * @param int $userid
  * @return stdClass
  */
-function local_coursecalendar_require_owned_blueprint(int $blueprintid, int $userid): stdClass {
+function local_courseplanner_require_owned_blueprint(int $blueprintid, int $userid): stdClass {
     global $DB;
 
-    $blueprint = $DB->get_record('local_coursecalendar_blueprints', ['id' => $blueprintid], '*', MUST_EXIST);
+    $blueprint = $DB->get_record('local_courseplanner_blueprints', ['id' => $blueprintid], '*', MUST_EXIST);
     if ((int)$blueprint->owneruserid !== $userid) {
-        throw new moodle_exception('invalidblueprintownership', 'local_coursecalendar');
+        throw new moodle_exception('invalidblueprintownership', 'local_courseplanner');
     }
 
     return $blueprint;
@@ -86,7 +86,7 @@ function local_coursecalendar_require_owned_blueprint(int $blueprintid, int $use
  * @param int $userid
  * @return void
  */
-function local_coursecalendar_upsert_course_blueprint_link(
+function local_courseplanner_upsert_course_blueprint_link(
     int $courseid,
     int $blueprintid,
     string $mode,
@@ -97,7 +97,7 @@ function local_coursecalendar_upsert_course_blueprint_link(
     global $DB;
 
     $now = time();
-    $existing = local_coursecalendar_get_course_link_record($courseid);
+    $existing = local_courseplanner_get_course_link_record($courseid);
     if ($existing) {
         $existing->blueprintid = $blueprintid;
         $existing->linkmode = $mode;
@@ -105,7 +105,7 @@ function local_coursecalendar_upsert_course_blueprint_link(
         $existing->linknotes = $notes;
         $existing->timemodified = $now;
         $existing->usermodified = $userid;
-        $DB->update_record('local_coursecalendar_course_blueprint_link', $existing);
+        $DB->update_record('local_courseplanner_courselink', $existing);
         return;
     }
 
@@ -118,7 +118,7 @@ function local_coursecalendar_upsert_course_blueprint_link(
     $record->timecreated = $now;
     $record->timemodified = $now;
     $record->usermodified = $userid;
-    $DB->insert_record('local_coursecalendar_course_blueprint_link', $record);
+    $DB->insert_record('local_courseplanner_courselink', $record);
 }
 
 /**
@@ -128,16 +128,16 @@ function local_coursecalendar_upsert_course_blueprint_link(
  * @param int $userid
  * @return array|null
  */
-function local_coursecalendar_get_autolink_suggestion(stdClass $course, int $userid): ?array {
-    $blueprints = local_coursecalendar_get_teacher_blueprints($userid, false);
+function local_courseplanner_get_autolink_suggestion(stdClass $course, int $userid): ?array {
+    $blueprints = local_courseplanner_get_teacher_blueprints($userid, false);
     if (empty($blueprints)) {
         return null;
     }
 
-    $coursematchtext = local_coursecalendar_get_course_match_text($course);
+    $coursematchtext = local_courseplanner_get_course_match_text($course);
     $scored = [];
     foreach ($blueprints as $blueprint) {
-        $score = local_coursecalendar_score_blueprint_match($blueprint, $coursematchtext);
+        $score = local_courseplanner_score_blueprint_match($blueprint, $coursematchtext);
         if ($score <= 0) {
             continue;
         }
@@ -180,7 +180,7 @@ function local_coursecalendar_get_autolink_suggestion(stdClass $course, int $use
  * @param stdClass $course
  * @return string
  */
-function local_coursecalendar_get_course_match_text(stdClass $course): string {
+function local_courseplanner_get_course_match_text(stdClass $course): string {
     $parts = [
         (string)$course->shortname,
         (string)$course->idnumber,
@@ -206,10 +206,10 @@ function local_coursecalendar_get_course_match_text(stdClass $course): string {
  * "SN3".
  *
  * @param stdClass $blueprint
- * @param string $coursematchtext Uppercased course metadata (see {@see local_coursecalendar_course_match_text()}).
+ * @param string $coursematchtext Uppercased course metadata (see {@see local_courseplanner_course_match_text()}).
  * @return int Confidence score from 0-100.
  */
-function local_coursecalendar_score_blueprint_match(stdClass $blueprint, string $coursematchtext): int {
+function local_courseplanner_score_blueprint_match(stdClass $blueprint, string $coursematchtext): int {
     $name = core_text::strtoupper(trim((string)$blueprint->name));
     if ($name === '' || trim($coursematchtext) === '') {
         return 0;
@@ -248,7 +248,7 @@ function local_coursecalendar_score_blueprint_match(stdClass $blueprint, string 
  *
  * @return string[]
  */
-function local_coursecalendar_get_topic_types(): array {
+function local_courseplanner_get_topic_types(): array {
     return ['LECTURE', 'LAB', 'ELESSON', 'TEST', 'HOMEWORK'];
 }
 
@@ -258,10 +258,10 @@ function local_coursecalendar_get_topic_types(): array {
  * @param string $type
  * @return string
  */
-function local_coursecalendar_normalise_topic_type(string $type): string {
+function local_courseplanner_normalise_topic_type(string $type): string {
     $type = core_text::strtoupper(trim($type));
-    if (!in_array($type, local_coursecalendar_get_topic_types(), true)) {
-        throw new moodle_exception('invalidtopictype', 'local_coursecalendar');
+    if (!in_array($type, local_courseplanner_get_topic_types(), true)) {
+        throw new moodle_exception('invalidtopictype', 'local_courseplanner');
     }
     return $type;
 }
@@ -276,7 +276,7 @@ function local_coursecalendar_normalise_topic_type(string $type): string {
  * @param string $type Topic type code.
  * @return bool True when the heading should be suppressed.
  */
-function local_coursecalendar_topic_heading_is_hidden(string $type): bool {
+function local_courseplanner_topic_heading_is_hidden(string $type): bool {
     return in_array(core_text::strtoupper($type), ['LECTURE', 'LAB'], true);
 }
 
@@ -284,30 +284,30 @@ function local_coursecalendar_topic_heading_is_hidden(string $type): bool {
  * Build the heading line (type badge + title) shown above a placed topic's content.
  *
  * Returns an empty string for topic types whose heading is hidden (see
- * {@see local_coursecalendar_topic_heading_is_hidden()}), unless a $suffix is
+ * {@see local_courseplanner_topic_heading_is_hidden()}), unless a $suffix is
  * supplied (e.g. an "inactive" flag in the builder) which must always be shown.
  *
  * @param stdClass $topic Topic record (uses ->type and ->title).
  * @param string $suffix Optional trailing HTML always rendered when present.
  * @return string HTML for the heading div, or '' when nothing should be shown.
  */
-function local_coursecalendar_topic_heading_html(stdClass $topic, string $suffix = ''): string {
+function local_courseplanner_topic_heading_html(stdClass $topic, string $suffix = ''): string {
     $type = (string)$topic->type;
 
-    if (local_coursecalendar_topic_heading_is_hidden($type)) {
+    if (local_courseplanner_topic_heading_is_hidden($type)) {
         if (trim($suffix) === '') {
             return '';
         }
-        return html_writer::tag('div', $suffix, ['class' => 'local-coursecalendar-topic-display']);
+        return html_writer::tag('div', $suffix, ['class' => 'local-courseplanner-topic-display']);
     }
 
     $badge = html_writer::tag('span', s($type), [
-        'class' => 'local-coursecalendar-type-badge local-coursecalendar-type-' . strtolower($type),
+        'class' => 'local-courseplanner-type-badge local-courseplanner-type-' . strtolower($type),
     ]);
     return html_writer::tag(
         'div',
         $badge . ' ' . format_string($topic->title) . $suffix,
-        ['class' => 'local-coursecalendar-topic-display']
+        ['class' => 'local-courseplanner-topic-display']
     );
 }
 
@@ -318,7 +318,7 @@ function local_coursecalendar_topic_heading_html(stdClass $topic, string $suffix
  * @param bool $includeinactive
  * @return array
  */
-function local_coursecalendar_get_blueprint_topics(int $blueprintid, bool $includeinactive = true): array {
+function local_courseplanner_get_blueprint_topics(int $blueprintid, bool $includeinactive = true): array {
     global $DB;
 
     $conditions = ['blueprintid' => $blueprintid];
@@ -327,7 +327,7 @@ function local_coursecalendar_get_blueprint_topics(int $blueprintid, bool $inclu
     }
 
     return $DB->get_records(
-        'local_coursecalendar_blueprint_topics',
+        'local_courseplanner_topics',
         $conditions,
         'sortorder ASC, id ASC'
     );
@@ -340,11 +340,11 @@ function local_coursecalendar_get_blueprint_topics(int $blueprintid, bool $inclu
  * @param int $userid
  * @return stdClass
  */
-function local_coursecalendar_require_owned_topic(int $topicid, int $userid): stdClass {
+function local_courseplanner_require_owned_topic(int $topicid, int $userid): stdClass {
     global $DB;
 
-    $topic = $DB->get_record('local_coursecalendar_blueprint_topics', ['id' => $topicid], '*', MUST_EXIST);
-    local_coursecalendar_require_owned_blueprint((int)$topic->blueprintid, $userid);
+    $topic = $DB->get_record('local_courseplanner_topics', ['id' => $topicid], '*', MUST_EXIST);
+    local_courseplanner_require_owned_blueprint((int)$topic->blueprintid, $userid);
     return $topic;
 }
 
@@ -354,10 +354,10 @@ function local_coursecalendar_require_owned_topic(int $topicid, int $userid): st
  * @param int $blueprintid
  * @return void
  */
-function local_coursecalendar_normalise_topic_sortorder(int $blueprintid): void {
+function local_courseplanner_normalise_topic_sortorder(int $blueprintid): void {
     global $DB;
 
-    $topics = local_coursecalendar_get_blueprint_topics($blueprintid, true);
+    $topics = local_courseplanner_get_blueprint_topics($blueprintid, true);
     $changed = [];
     $sort = 1;
     foreach ($topics as $topic) {
@@ -376,12 +376,12 @@ function local_coursecalendar_normalise_topic_sortorder(int $blueprintid): void 
 
     foreach ($changed as $index => $item) {
         $item['topic']->sortorder = 100000 + $index;
-        $DB->update_record('local_coursecalendar_blueprint_topics', $item['topic']);
+        $DB->update_record('local_courseplanner_topics', $item['topic']);
     }
 
     foreach ($changed as $item) {
         $item['topic']->sortorder = $item['sortorder'];
-        $DB->update_record('local_coursecalendar_blueprint_topics', $item['topic']);
+        $DB->update_record('local_courseplanner_topics', $item['topic']);
     }
 }
 
@@ -392,10 +392,10 @@ function local_coursecalendar_normalise_topic_sortorder(int $blueprintid): void 
  * @param int $direction -1 for up, +1 for down
  * @return bool
  */
-function local_coursecalendar_move_topic(stdClass $topic, int $direction): bool {
+function local_courseplanner_move_topic(stdClass $topic, int $direction): bool {
     global $DB;
 
-    $topics = array_values(local_coursecalendar_get_blueprint_topics((int)$topic->blueprintid, true));
+    $topics = array_values(local_courseplanner_get_blueprint_topics((int)$topic->blueprintid, true));
     $index = null;
     foreach ($topics as $i => $item) {
         if ((int)$item->id === (int)$topic->id) {
@@ -435,12 +435,12 @@ function local_coursecalendar_move_topic(stdClass $topic, int $direction): bool 
 
     foreach ($changed as $i => $item) {
         $item['topic']->sortorder = 100000 + $i;
-        $DB->update_record('local_coursecalendar_blueprint_topics', $item['topic']);
+        $DB->update_record('local_courseplanner_topics', $item['topic']);
     }
 
     foreach ($changed as $item) {
         $item['topic']->sortorder = $item['sortorder'];
-        $DB->update_record('local_coursecalendar_blueprint_topics', $item['topic']);
+        $DB->update_record('local_courseplanner_topics', $item['topic']);
     }
 
     return true;
@@ -452,12 +452,12 @@ function local_coursecalendar_move_topic(stdClass $topic, int $direction): bool 
  * @param int $topicid
  * @return array
  */
-function local_coursecalendar_get_topic_usage_rows(int $topicid): array {
+function local_courseplanner_get_topic_usage_rows(int $topicid): array {
     global $DB;
 
     $sql = "SELECT sc.id, sc.courseid, sc.year, sc.semester, sc.title
-              FROM {local_coursecalendar_calendar_blocks} cb
-              JOIN {local_coursecalendar_semester_calendars} sc
+              FROM {local_courseplanner_blocks} cb
+              JOIN {local_courseplanner_calendars} sc
                 ON sc.id = cb.calendarid
              WHERE cb.topicid = :topicid
           GROUP BY sc.id, sc.courseid, sc.year, sc.semester, sc.title
@@ -471,7 +471,7 @@ function local_coursecalendar_get_topic_usage_rows(int $topicid): array {
  *
  * @return string[]
  */
-function local_coursecalendar_get_semesters(): array {
+function local_courseplanner_get_semesters(): array {
     return ['FALL', 'WINTER', 'SUMMER'];
 }
 
@@ -481,10 +481,10 @@ function local_coursecalendar_get_semesters(): array {
  * @param string $semester
  * @return string
  */
-function local_coursecalendar_normalise_semester(string $semester): string {
+function local_courseplanner_normalise_semester(string $semester): string {
     $semester = core_text::strtoupper(trim($semester));
-    if (!in_array($semester, local_coursecalendar_get_semesters(), true)) {
-        throw new moodle_exception('invalidsemester', 'local_coursecalendar');
+    if (!in_array($semester, local_courseplanner_get_semesters(), true)) {
+        throw new moodle_exception('invalidsemester', 'local_courseplanner');
     }
     return $semester;
 }
@@ -495,11 +495,11 @@ function local_coursecalendar_normalise_semester(string $semester): string {
  * @param int $courseid
  * @return array
  */
-function local_coursecalendar_get_course_calendars(int $courseid): array {
+function local_courseplanner_get_course_calendars(int $courseid): array {
     global $DB;
 
     return $DB->get_records(
-        'local_coursecalendar_semester_calendars',
+        'local_courseplanner_calendars',
         ['courseid' => $courseid],
         'year DESC, semester ASC, id DESC'
     );
@@ -512,12 +512,12 @@ function local_coursecalendar_get_course_calendars(int $courseid): array {
  * @param int $courseid
  * @return stdClass
  */
-function local_coursecalendar_require_course_calendar(int $calendarid, int $courseid): stdClass {
+function local_courseplanner_require_course_calendar(int $calendarid, int $courseid): stdClass {
     global $DB;
 
-    $calendar = $DB->get_record('local_coursecalendar_semester_calendars', ['id' => $calendarid], '*', MUST_EXIST);
+    $calendar = $DB->get_record('local_courseplanner_calendars', ['id' => $calendarid], '*', MUST_EXIST);
     if ((int)$calendar->courseid !== $courseid) {
-        throw new moodle_exception('invalidcalendarcontext', 'local_coursecalendar');
+        throw new moodle_exception('invalidcalendarcontext', 'local_courseplanner');
     }
 
     return $calendar;
@@ -529,11 +529,11 @@ function local_coursecalendar_require_course_calendar(int $calendarid, int $cour
  * @param int $calendarid
  * @return array
  */
-function local_coursecalendar_get_blocks_map(int $calendarid): array {
+function local_courseplanner_get_blocks_map(int $calendarid): array {
     global $DB;
 
     $records = $DB->get_records(
-        'local_coursecalendar_calendar_blocks',
+        'local_courseplanner_blocks',
         ['calendarid' => $calendarid],
         'rownum ASC, colnum ASC, id ASC'
     );
@@ -566,7 +566,7 @@ function local_coursecalendar_get_blocks_map(int $calendarid): array {
  * @param int $verticallycentred
  * @return void
  */
-function local_coursecalendar_upsert_block(
+function local_courseplanner_upsert_block(
     int $calendarid,
     int $rownum,
     int $colnum,
@@ -583,7 +583,7 @@ function local_coursecalendar_upsert_block(
     global $DB;
 
     $now = time();
-    $record = $DB->get_record('local_coursecalendar_calendar_blocks', [
+    $record = $DB->get_record('local_courseplanner_blocks', [
         'calendarid' => $calendarid,
         'rownum' => $rownum,
         'colnum' => $colnum,
@@ -600,7 +600,7 @@ function local_coursecalendar_upsert_block(
         $record->verticallycentred = $verticallycentred;
         $record->timemodified = $now;
         $record->usermodified = $userid;
-        $DB->update_record('local_coursecalendar_calendar_blocks', $record);
+        $DB->update_record('local_courseplanner_blocks', $record);
         return;
     }
 
@@ -622,7 +622,7 @@ function local_coursecalendar_upsert_block(
         'timemodified' => $now,
         'usermodified' => $userid,
     ];
-    $DB->insert_record('local_coursecalendar_calendar_blocks', $insert);
+    $DB->insert_record('local_courseplanner_blocks', $insert);
 }
 
 /**
@@ -632,13 +632,13 @@ function local_coursecalendar_upsert_block(
  * @param int $userid
  * @return void
  */
-function local_coursecalendar_ensure_base_grid(int $calendarid, int $userid): void {
+function local_courseplanner_ensure_base_grid(int $calendarid, int $userid): void {
     global $DB;
 
     // Only seed the default header row for a brand-new calendar. Once any header
     // cell exists we respect the current set of columns so teacher-deleted columns
     // are not silently recreated on the next page load.
-    $hasheader = $DB->record_exists('local_coursecalendar_calendar_blocks', [
+    $hasheader = $DB->record_exists('local_courseplanner_blocks', [
         'calendarid' => $calendarid,
         'rownum' => 0,
     ]);
@@ -655,7 +655,7 @@ function local_coursecalendar_ensure_base_grid(int $calendarid, int $userid): vo
     ];
 
     foreach ($defaults as $col => $config) {
-        local_coursecalendar_upsert_block(
+        local_courseplanner_upsert_block(
             $calendarid,
             0,
             $col,
@@ -677,7 +677,7 @@ function local_coursecalendar_ensure_base_grid(int $calendarid, int $userid): vo
  * @param array $blocksmap Block map keyed by [rownum][colnum].
  * @return int[] Sorted list of column numbers.
  */
-function local_coursecalendar_get_grid_columns(array $blocksmap): array {
+function local_courseplanner_get_grid_columns(array $blocksmap): array {
     if (empty($blocksmap[0]) || !is_array($blocksmap[0])) {
         return [0, 1, 2, 3, 4];
     }
@@ -698,14 +698,14 @@ function local_coursecalendar_get_grid_columns(array $blocksmap): array {
  * @param int $colnum
  * @return bool True if the column existed and was deleted.
  */
-function local_coursecalendar_delete_column(int $calendarid, int $colnum): bool {
+function local_courseplanner_delete_column(int $calendarid, int $colnum): bool {
     global $DB;
 
     if ($colnum < 1) {
         return false;
     }
 
-    $exists = $DB->record_exists('local_coursecalendar_calendar_blocks', [
+    $exists = $DB->record_exists('local_courseplanner_blocks', [
         'calendarid' => $calendarid,
         'colnum' => $colnum,
     ]);
@@ -713,7 +713,7 @@ function local_coursecalendar_delete_column(int $calendarid, int $colnum): bool 
         return false;
     }
 
-    $DB->delete_records('local_coursecalendar_calendar_blocks', [
+    $DB->delete_records('local_courseplanner_blocks', [
         'calendarid' => $calendarid,
         'colnum' => $colnum,
     ]);
@@ -727,15 +727,15 @@ function local_coursecalendar_delete_column(int $calendarid, int $colnum): bool 
  * @param int $userid
  * @return int
  */
-function local_coursecalendar_add_week_row(int $calendarid, int $userid): int {
+function local_courseplanner_add_week_row(int $calendarid, int $userid): int {
     global $DB;
 
     $maxrow = (int)$DB->get_field_sql(
-        'SELECT COALESCE(MAX(rownum), 0) FROM {local_coursecalendar_calendar_blocks} WHERE calendarid = :calendarid',
+        'SELECT COALESCE(MAX(rownum), 0) FROM {local_courseplanner_blocks} WHERE calendarid = :calendarid',
         ['calendarid' => $calendarid]
     );
     $newrow = max(1, $maxrow + 1);
-    local_coursecalendar_upsert_block($calendarid, $newrow, 0, 'TEXT', 'Week ' . $newrow, $userid);
+    local_courseplanner_upsert_block($calendarid, $newrow, 0, 'TEXT', 'Week ' . $newrow, $userid);
     return $newrow;
 }
 
@@ -745,11 +745,11 @@ function local_coursecalendar_add_week_row(int $calendarid, int $userid): int {
  * @param int $calendarid
  * @return bool
  */
-function local_coursecalendar_remove_last_week_row(int $calendarid): bool {
+function local_courseplanner_remove_last_week_row(int $calendarid): bool {
     global $DB;
 
     $maxrow = (int)$DB->get_field_sql(
-        'SELECT COALESCE(MAX(rownum), 0) FROM {local_coursecalendar_calendar_blocks} WHERE calendarid = :calendarid',
+        'SELECT COALESCE(MAX(rownum), 0) FROM {local_courseplanner_blocks} WHERE calendarid = :calendarid',
         ['calendarid' => $calendarid]
     );
 
@@ -757,7 +757,7 @@ function local_coursecalendar_remove_last_week_row(int $calendarid): bool {
         return false;
     }
 
-    $DB->delete_records('local_coursecalendar_calendar_blocks', [
+    $DB->delete_records('local_courseplanner_blocks', [
         'calendarid' => $calendarid,
         'rownum' => $maxrow,
     ]);
@@ -771,7 +771,7 @@ function local_coursecalendar_remove_last_week_row(int $calendarid): bool {
  *
  * @return string[]
  */
-function local_coursecalendar_get_rule_types(): array {
+function local_courseplanner_get_rule_types(): array {
     return ['SEMESTER_START', 'SEMESTER_END', 'NO_CLASS', 'DAY_SWAP', 'OTHER'];
 }
 
@@ -782,14 +782,14 @@ function local_coursecalendar_get_rule_types(): array {
  * @param bool $activeonly If true, only return rules with isactive=1.
  * @return array Ordered rule records.
  */
-function local_coursecalendar_get_calendar_rules(int $calendarid, bool $activeonly = false): array {
+function local_courseplanner_get_calendar_rules(int $calendarid, bool $activeonly = false): array {
     global $DB;
     $conditions = ['calendarid' => $calendarid];
     if ($activeonly) {
         $conditions['isactive'] = 1;
     }
     return $DB->get_records(
-        'local_coursecalendar_timeline_exception_rules',
+        'local_courseplanner_rules',
         $conditions,
         'ruledate ASC, sortorder ASC, id ASC'
     );
@@ -799,7 +799,7 @@ function local_coursecalendar_get_calendar_rules(int $calendarid, bool $activeon
  * Create a new timeline exception rule.
  *
  * @param int $calendarid Calendar the rule belongs to.
- * @param string $ruletype One of the values returned by {@see local_coursecalendar_get_rule_types()}.
+ * @param string $ruletype One of the values returned by {@see local_courseplanner_get_rule_types()}.
  * @param int $ruledate Epoch timestamp for the rule date.
  * @param string $label Short label shown in the UI.
  * @param string $description Longer description.
@@ -808,7 +808,7 @@ function local_coursecalendar_get_calendar_rules(int $calendarid, bool $activeon
  * @param int $userid User creating the rule.
  * @return int ID of the inserted rule.
  */
-function local_coursecalendar_create_rule(
+function local_courseplanner_create_rule(
     int $calendarid,
     string $ruletype,
     int $ruledate,
@@ -820,8 +820,8 @@ function local_coursecalendar_create_rule(
 ): int {
     global $DB;
     $ruletype = core_text::strtoupper(trim($ruletype));
-    if (!in_array($ruletype, local_coursecalendar_get_rule_types(), true)) {
-        throw new moodle_exception('invalidruletype', 'local_coursecalendar');
+    if (!in_array($ruletype, local_courseplanner_get_rule_types(), true)) {
+        throw new moodle_exception('invalidruletype', 'local_courseplanner');
     }
     $now = time();
     $record = (object)[
@@ -838,7 +838,7 @@ function local_coursecalendar_create_rule(
         'timemodified' => $now,
         'usermodified' => $userid,
     ];
-    return $DB->insert_record('local_coursecalendar_timeline_exception_rules', $record);
+    return $DB->insert_record('local_courseplanner_rules', $record);
 }
 
 /**
@@ -853,7 +853,7 @@ function local_coursecalendar_create_rule(
  * @param int $userid User making the change.
  * @return void
  */
-function local_coursecalendar_update_rule(
+function local_courseplanner_update_rule(
     int $ruleid,
     int $ruledate,
     string $label,
@@ -863,7 +863,7 @@ function local_coursecalendar_update_rule(
     int $userid
 ): void {
     global $DB;
-    $record = $DB->get_record('local_coursecalendar_timeline_exception_rules', ['id' => $ruleid], '*', MUST_EXIST);
+    $record = $DB->get_record('local_courseplanner_rules', ['id' => $ruleid], '*', MUST_EXIST);
     $record->ruledate = $ruledate;
     $record->label = trim($label);
     $record->description = trim($description);
@@ -871,7 +871,7 @@ function local_coursecalendar_update_rule(
     $record->today = $today ? trim($today) : null;
     $record->timemodified = time();
     $record->usermodified = $userid;
-    $DB->update_record('local_coursecalendar_timeline_exception_rules', $record);
+    $DB->update_record('local_courseplanner_rules', $record);
 }
 
 /**
@@ -880,9 +880,9 @@ function local_coursecalendar_update_rule(
  * @param int $ruleid Rule ID to delete.
  * @return void
  */
-function local_coursecalendar_delete_rule(int $ruleid): void {
+function local_courseplanner_delete_rule(int $ruleid): void {
     global $DB;
-    $DB->delete_records('local_coursecalendar_timeline_exception_rules', ['id' => $ruleid]);
+    $DB->delete_records('local_courseplanner_rules', ['id' => $ruleid]);
 }
 
 /**
@@ -892,13 +892,13 @@ function local_coursecalendar_delete_rule(int $ruleid): void {
  * @param int $userid User performing the toggle.
  * @return bool New active state.
  */
-function local_coursecalendar_toggle_rule(int $ruleid, int $userid): bool {
+function local_courseplanner_toggle_rule(int $ruleid, int $userid): bool {
     global $DB;
-    $record = $DB->get_record('local_coursecalendar_timeline_exception_rules', ['id' => $ruleid], '*', MUST_EXIST);
+    $record = $DB->get_record('local_courseplanner_rules', ['id' => $ruleid], '*', MUST_EXIST);
     $record->isactive = (int)$record->isactive === 1 ? 0 : 1;
     $record->timemodified = time();
     $record->usermodified = $userid;
-    $DB->update_record('local_coursecalendar_timeline_exception_rules', $record);
+    $DB->update_record('local_courseplanner_rules', $record);
     return (int)$record->isactive === 1;
 }
 
@@ -908,7 +908,7 @@ function local_coursecalendar_toggle_rule(int $ruleid, int $userid): bool {
  * @param int $timestamp Unix timestamp.
  * @return int Unix timestamp of that week's Monday (midnight local time).
  */
-function local_coursecalendar_get_week_monday(int $timestamp): int {
+function local_courseplanner_get_week_monday(int $timestamp): int {
     // PHP date('N'): 1 = Monday ... 7 = Sunday.
     $dow = (int)date('N', $timestamp);
     return strtotime('-' . ($dow - 1) . ' days', strtotime(date('Y-m-d', $timestamp)));
@@ -921,10 +921,10 @@ function local_coursecalendar_get_week_monday(int $timestamp): int {
  * @param int $userid
  * @return array Summary of the apply run.
  */
-function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
+function local_courseplanner_apply_rules(int $calendarid, int $userid): array {
     global $DB;
 
-    $rules = local_coursecalendar_get_calendar_rules($calendarid, true);
+    $rules = local_courseplanner_get_calendar_rules($calendarid, true);
 
     $startdate = null;
     $enddate = null;
@@ -953,28 +953,28 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
     }
 
     if (!$startdate || !$enddate) {
-        throw new moodle_exception('errorrulesmissingstartend', 'local_coursecalendar');
+        throw new moodle_exception('errorrulesmissingstartend', 'local_courseplanner');
     }
     if ($enddate <= $startdate) {
-        throw new moodle_exception('errorrulesendbeforestart', 'local_coursecalendar');
+        throw new moodle_exception('errorrulesendbeforestart', 'local_courseplanner');
     }
 
     // Compute run hash for idempotency check.
-    $ruleshash = local_coursecalendar_compute_rules_hash($rules);
+    $ruleshash = local_courseplanner_compute_rules_hash($rules);
 
     // Step 1: Delete all blocks where generatedbyrule = 1.
-    $deleted = $DB->count_records('local_coursecalendar_calendar_blocks', [
+    $deleted = $DB->count_records('local_courseplanner_blocks', [
         'calendarid' => $calendarid,
         'generatedbyrule' => 1,
     ]);
-    $DB->delete_records('local_coursecalendar_calendar_blocks', [
+    $DB->delete_records('local_courseplanner_blocks', [
         'calendarid' => $calendarid,
         'generatedbyrule' => 1,
     ]);
 
     // Step 2: Generate week rows.
-    $startmonday = local_coursecalendar_get_week_monday($startdate);
-    $endmonday = local_coursecalendar_get_week_monday($enddate);
+    $startmonday = local_courseplanner_get_week_monday($startdate);
+    $endmonday = local_courseplanner_get_week_monday($enddate);
 
     $weekmondays = [];
     $current = $startmonday;
@@ -985,7 +985,7 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
     $totalweeks = count($weekmondays);
 
     // Ensure header row exists.
-    local_coursecalendar_ensure_base_grid($calendarid, $userid);
+    local_courseplanner_ensure_base_grid($calendarid, $userid);
 
     // Build a lookup of week monday -> row number, and annotations per row.
     $mondaytorow = [];
@@ -1004,15 +1004,15 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
 
         if ($i === 0) {
             $startdatefmt = date('M j', $startdate);
-            $label .= '<div class="local-coursecalendar-week-note">Classes begin ' . $startdatefmt . '</div>';
+            $label .= '<div class="local-courseplanner-week-note">Classes begin ' . $startdatefmt . '</div>';
         }
         if ($i === $totalweeks - 1) {
             $enddatefmt = date('M j', $enddate);
-            $label .= '<div class="local-coursecalendar-week-note">Last day of classes is ' . $enddatefmt . '</div>';
+            $label .= '<div class="local-courseplanner-week-note">Last day of classes is ' . $enddatefmt . '</div>';
         }
 
         // Check if a non-rule-generated block already exists at col 0.
-        $existing = $DB->get_record('local_coursecalendar_calendar_blocks', [
+        $existing = $DB->get_record('local_courseplanner_blocks', [
             'calendarid' => $calendarid,
             'rownum' => $rownum,
             'colnum' => 0,
@@ -1039,20 +1039,20 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
         ];
         if ($existing) {
             $block->id = $existing->id;
-            $DB->update_record('local_coursecalendar_calendar_blocks', $block);
+            $DB->update_record('local_courseplanner_blocks', $block);
         } else {
-            $DB->insert_record('local_coursecalendar_calendar_blocks', $block);
+            $DB->insert_record('local_courseplanner_blocks', $block);
         }
         $inserted++;
     }
 
     // Remove excess rows beyond total weeks.
     $maxrow = (int)$DB->get_field_sql(
-        'SELECT COALESCE(MAX(rownum), 0) FROM {local_coursecalendar_calendar_blocks} WHERE calendarid = :calendarid',
+        'SELECT COALESCE(MAX(rownum), 0) FROM {local_courseplanner_blocks} WHERE calendarid = :calendarid',
         ['calendarid' => $calendarid]
     );
     for ($r = $totalweeks + 1; $r <= $maxrow; $r++) {
-        $DB->delete_records('local_coursecalendar_calendar_blocks', [
+        $DB->delete_records('local_courseplanner_blocks', [
             'calendarid' => $calendarid,
             'rownum' => $r,
         ]);
@@ -1062,7 +1062,7 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
     // Weekday name => colnum.
     $headerdaymap = [];
     for ($c = 1; $c <= 3; $c++) {
-        $header = $DB->get_record('local_coursecalendar_calendar_blocks', [
+        $header = $DB->get_record('local_courseplanner_blocks', [
             'calendarid' => $calendarid,
             'rownum' => 0,
             'colnum' => $c,
@@ -1075,7 +1075,7 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
     // Step 4: NO_CLASS markers.
     $noclassplaced = 0;
     foreach ($noclassrules as $rule) {
-        $rulemonday = local_coursecalendar_get_week_monday((int)$rule->ruledate);
+        $rulemonday = local_courseplanner_get_week_monday((int)$rule->ruledate);
         if (!isset($mondaytorow[$rulemonday])) {
             continue;
         }
@@ -1087,7 +1087,7 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
         $colnum = $headerdaymap[$weekday];
 
         // Only place if no manual block exists there.
-        $existingcell = $DB->get_record('local_coursecalendar_calendar_blocks', [
+        $existingcell = $DB->get_record('local_courseplanner_blocks', [
             'calendarid' => $calendarid,
             'rownum' => $rownum,
             'colnum' => $colnum,
@@ -1113,9 +1113,9 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
         ];
         if ($existingcell) {
             $cellblock->id = $existingcell->id;
-            $DB->update_record('local_coursecalendar_calendar_blocks', $cellblock);
+            $DB->update_record('local_courseplanner_blocks', $cellblock);
         } else {
-            $DB->insert_record('local_coursecalendar_calendar_blocks', $cellblock);
+            $DB->insert_record('local_courseplanner_blocks', $cellblock);
         }
         $noclassplaced++;
     }
@@ -1152,7 +1152,7 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
             }
 
             // Never overwrite a teacher-placed block.
-            $existingcell = $DB->get_record('local_coursecalendar_calendar_blocks', [
+            $existingcell = $DB->get_record('local_courseplanner_blocks', [
                 'calendarid' => $calendarid,
                 'rownum' => $rownum,
                 'colnum' => $colnum,
@@ -1167,7 +1167,7 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
                 'rownum' => $rownum,
                 'colnum' => $colnum,
                 'blocktype' => 'BLANK',
-                'contenthtml' => get_string($labelkey, 'local_coursecalendar'),
+                'contenthtml' => get_string($labelkey, 'local_courseplanner'),
                 'verticallycentred' => 1,
                 'highlighted' => 0,
                 'generatedbyrule' => 1,
@@ -1178,9 +1178,9 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
             ];
             if ($existingcell) {
                 $blankblock->id = $existingcell->id;
-                $DB->update_record('local_coursecalendar_calendar_blocks', $blankblock);
+                $DB->update_record('local_courseplanner_blocks', $blankblock);
             } else {
-                $DB->insert_record('local_coursecalendar_calendar_blocks', $blankblock);
+                $DB->insert_record('local_courseplanner_blocks', $blankblock);
             }
             $blankplaced++;
         }
@@ -1188,25 +1188,25 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
 
     // Step 5: DAY_SWAP annotations on week labels.
     foreach ($dayswaprules as $rule) {
-        $rulemonday = local_coursecalendar_get_week_monday((int)$rule->ruledate);
+        $rulemonday = local_courseplanner_get_week_monday((int)$rule->ruledate);
         if (!isset($mondaytorow[$rulemonday])) {
             continue;
         }
         $rownum = $mondaytorow[$rulemonday];
-        $note = '<div class="local-coursecalendar-week-note">Note: ' . s($rule->fromday) .
+        $note = '<div class="local-courseplanner-week-note">Note: ' . s($rule->fromday) .
                 ' is a ' . s($rule->today) . ' schedule this week</div>';
-        local_coursecalendar_append_week_label_note($calendarid, $rownum, $note, (int)$rule->id, $userid);
+        local_courseplanner_append_week_label_note($calendarid, $rownum, $note, (int)$rule->id, $userid);
     }
 
     // Step 6: OTHER annotations on week labels.
     foreach ($otherrules as $rule) {
-        $rulemonday = local_coursecalendar_get_week_monday((int)$rule->ruledate);
+        $rulemonday = local_courseplanner_get_week_monday((int)$rule->ruledate);
         if (!isset($mondaytorow[$rulemonday])) {
             continue;
         }
         $rownum = $mondaytorow[$rulemonday];
-        $note = '<div class="local-coursecalendar-week-note">' . s($rule->label) . '</div>';
-        local_coursecalendar_append_week_label_note($calendarid, $rownum, $note, (int)$rule->id, $userid);
+        $note = '<div class="local-courseplanner-week-note">' . s($rule->label) . '</div>';
+        local_courseplanner_append_week_label_note($calendarid, $rownum, $note, (int)$rule->id, $userid);
     }
 
     // Step 7: Record apply run.
@@ -1219,7 +1219,7 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
         'dayswap_rules' => count($dayswaprules),
         'other_rules' => count($otherrules),
     ];
-    $DB->insert_record('local_coursecalendar_rule_apply_runs', (object)[
+    $DB->insert_record('local_courseplanner_ruleruns', (object)[
         'calendarid' => $calendarid,
         'appliedbyuserid' => $userid,
         'runhash' => $ruleshash,
@@ -1240,7 +1240,7 @@ function local_coursecalendar_apply_rules(int $calendarid, int $userid): array {
  * @param int $userid
  * @return void
  */
-function local_coursecalendar_append_week_label_note(
+function local_courseplanner_append_week_label_note(
     int $calendarid,
     int $rownum,
     string $note,
@@ -1248,7 +1248,7 @@ function local_coursecalendar_append_week_label_note(
     int $userid
 ): void {
     global $DB;
-    $block = $DB->get_record('local_coursecalendar_calendar_blocks', [
+    $block = $DB->get_record('local_courseplanner_blocks', [
         'calendarid' => $calendarid,
         'rownum' => $rownum,
         'colnum' => 0,
@@ -1266,7 +1266,7 @@ function local_coursecalendar_append_week_label_note(
     $block->contenthtml .= $note;
     $block->timemodified = time();
     $block->usermodified = $userid;
-    $DB->update_record('local_coursecalendar_calendar_blocks', $block);
+    $DB->update_record('local_courseplanner_blocks', $block);
 }
 
 /**
@@ -1275,7 +1275,7 @@ function local_coursecalendar_append_week_label_note(
  * @param array $rules
  * @return string SHA-256 hex digest.
  */
-function local_coursecalendar_compute_rules_hash(array $rules): string {
+function local_courseplanner_compute_rules_hash(array $rules): string {
     $data = [];
     foreach ($rules as $rule) {
         $data[] = [
@@ -1303,10 +1303,10 @@ function local_coursecalendar_compute_rules_hash(array $rules): string {
  * @param int $userid
  * @return array Summary with placed counts.
  */
-function local_coursecalendar_auto_populate(int $calendarid, int $blueprintid, int $userid): array {
+function local_courseplanner_auto_populate(int $calendarid, int $blueprintid, int $userid): array {
     global $DB;
 
-    $blocksmap = local_coursecalendar_get_blocks_map($calendarid);
+    $blocksmap = local_courseplanner_get_blocks_map($calendarid);
     $maxrow = 0;
     foreach (array_keys($blocksmap) as $r) {
         $maxrow = max($maxrow, (int)$r);
@@ -1334,7 +1334,7 @@ function local_coursecalendar_auto_populate(int $calendarid, int $blueprintid, i
 
     // Step 1: Place LECTURE, ELESSON, TEST into Lecture-mode columns.
     $lecturetopics = $DB->get_records_select(
-        'local_coursecalendar_blueprint_topics',
+        'local_courseplanner_topics',
         "blueprintid = :bpid AND type IN ('LECTURE', 'ELESSON', 'TEST') AND isactive = 1",
         ['bpid' => $blueprintid],
         'sortorder ASC'
@@ -1361,7 +1361,7 @@ function local_coursecalendar_auto_populate(int $calendarid, int $blueprintid, i
                 $highlighted = 1;
                 $vcentred = 1;
             }
-            local_coursecalendar_upsert_block(
+            local_courseplanner_upsert_block(
                 $calendarid,
                 $row,
                 $col,
@@ -1384,13 +1384,13 @@ function local_coursecalendar_auto_populate(int $calendarid, int $blueprintid, i
 
     // Step 2: Place LAB topics after their prerequisite lecture row.
     $labtopics = $DB->get_records_select(
-        'local_coursecalendar_blueprint_topics',
+        'local_courseplanner_topics',
         "blueprintid = :bpid AND type = 'LAB' AND isactive = 1",
         ['bpid' => $blueprintid],
         'sortorder ASC'
     );
     $allsorted = $DB->get_records(
-        'local_coursecalendar_blueprint_topics',
+        'local_courseplanner_topics',
         ['blueprintid' => $blueprintid, 'isactive' => 1],
         'sortorder ASC'
     );
@@ -1449,7 +1449,7 @@ function local_coursecalendar_auto_populate(int $calendarid, int $blueprintid, i
                 if ($cellrank($row, $col) <= $prereqrank) {
                     continue;
                 }
-                local_coursecalendar_upsert_block(
+                local_courseplanner_upsert_block(
                     $calendarid,
                     $row,
                     $col,
@@ -1470,7 +1470,7 @@ function local_coursecalendar_auto_populate(int $calendarid, int $blueprintid, i
 
     // Step 3: Place HOMEWORK topics into column 4.
     $homeworktopics = $DB->get_records_select(
-        'local_coursecalendar_blueprint_topics',
+        'local_courseplanner_topics',
         "blueprintid = :bpid AND type = 'HOMEWORK' AND isactive = 1",
         ['bpid' => $blueprintid],
         'sortorder ASC'
@@ -1482,7 +1482,7 @@ function local_coursecalendar_auto_populate(int $calendarid, int $blueprintid, i
             continue;
         }
         $hw = $hwqueue[$hwi];
-        local_coursecalendar_upsert_block(
+        local_courseplanner_upsert_block(
             $calendarid,
             $row,
             4,
@@ -1508,10 +1508,10 @@ function local_coursecalendar_auto_populate(int $calendarid, int $blueprintid, i
  * @param int $userid
  * @return int Number of cells filled.
  */
-function local_coursecalendar_fill_problem_sessions(int $calendarid, int $userid): int {
+function local_courseplanner_fill_problem_sessions(int $calendarid, int $userid): int {
     global $DB;
 
-    $blocksmap = local_coursecalendar_get_blocks_map($calendarid);
+    $blocksmap = local_courseplanner_get_blocks_map($calendarid);
     $maxrow = 0;
     foreach (array_keys($blocksmap) as $r) {
         $maxrow = max($maxrow, (int)$r);
@@ -1531,7 +1531,7 @@ function local_coursecalendar_fill_problem_sessions(int $calendarid, int $userid
             if (isset($blocksmap[$row][$col])) {
                 continue;
             }
-            local_coursecalendar_upsert_block(
+            local_courseplanner_upsert_block(
                 $calendarid,
                 $row,
                 $col,
@@ -1558,16 +1558,16 @@ function local_coursecalendar_fill_problem_sessions(int $calendarid, int $userid
  * @param int $blueprintid
  * @return array
  */
-function local_coursecalendar_coverage_check(int $calendarid, int $blueprintid): array {
+function local_courseplanner_coverage_check(int $calendarid, int $blueprintid): array {
     global $DB;
 
-    $blocksmap = local_coursecalendar_get_blocks_map($calendarid);
+    $blocksmap = local_courseplanner_get_blocks_map($calendarid);
     $maxrow = 0;
     foreach (array_keys($blocksmap) as $r) {
         $maxrow = max($maxrow, (int)$r);
     }
 
-    $activetopics = $DB->get_records('local_coursecalendar_blueprint_topics', [
+    $activetopics = $DB->get_records('local_courseplanner_topics', [
         'blueprintid' => $blueprintid,
         'isactive' => 1,
     ], 'sortorder ASC');
@@ -1639,15 +1639,15 @@ function local_coursecalendar_coverage_check(int $calendarid, int $blueprintid):
  * @param int $calendarid
  * @return int Number of deleted blocks.
  */
-function local_coursecalendar_delete_non_header_blocks(int $calendarid): int {
+function local_courseplanner_delete_non_header_blocks(int $calendarid): int {
     global $DB;
     $count = $DB->count_records_select(
-        'local_coursecalendar_calendar_blocks',
+        'local_courseplanner_blocks',
         'calendarid = :cid AND rownum > 0',
         ['cid' => $calendarid]
     );
     $DB->delete_records_select(
-        'local_coursecalendar_calendar_blocks',
+        'local_courseplanner_blocks',
         'calendarid = :cid AND rownum > 0',
         ['cid' => $calendarid]
     );
@@ -1660,11 +1660,11 @@ function local_coursecalendar_delete_non_header_blocks(int $calendarid): int {
  * @param int $calendarid
  * @return int Number of deleted blocks.
  */
-function local_coursecalendar_delete_non_header_non_text_blocks(int $calendarid): int {
+function local_courseplanner_delete_non_header_non_text_blocks(int $calendarid): int {
     global $DB;
 
     $blocks = $DB->get_records_select(
-        'local_coursecalendar_calendar_blocks',
+        'local_courseplanner_blocks',
         'calendarid = :cid AND rownum > 0',
         ['cid' => $calendarid]
     );
@@ -1678,7 +1678,7 @@ function local_coursecalendar_delete_non_header_non_text_blocks(int $calendarid)
             $shoulddelete = true;
         }
         if ($shoulddelete) {
-            $DB->delete_records('local_coursecalendar_calendar_blocks', ['id' => $block->id]);
+            $DB->delete_records('local_courseplanner_blocks', ['id' => $block->id]);
             $deleted++;
         }
     }
@@ -1693,9 +1693,9 @@ function local_coursecalendar_delete_non_header_non_text_blocks(int $calendarid)
  * @param int $courseid
  * @return stdClass|null
  */
-function local_coursecalendar_get_course_info(int $courseid): ?stdClass {
+function local_courseplanner_get_course_info(int $courseid): ?stdClass {
     global $DB;
-    return $DB->get_record('local_coursecalendar_course_info', ['courseid' => $courseid], '*', IGNORE_MISSING) ?: null;
+    return $DB->get_record('local_courseplanner_courseinfo', ['courseid' => $courseid], '*', IGNORE_MISSING) ?: null;
 }
 
 /**
@@ -1707,18 +1707,18 @@ function local_coursecalendar_get_course_info(int $courseid): ?stdClass {
  * @param int $userid User performing the save.
  * @return void
  */
-function local_coursecalendar_save_course_info(int $courseid, string $introhtml, string $linkshtml, int $userid): void {
+function local_courseplanner_save_course_info(int $courseid, string $introhtml, string $linkshtml, int $userid): void {
     global $DB;
     $now = time();
-    $existing = $DB->get_record('local_coursecalendar_course_info', ['courseid' => $courseid], '*', IGNORE_MISSING);
+    $existing = $DB->get_record('local_courseplanner_courseinfo', ['courseid' => $courseid], '*', IGNORE_MISSING);
     if ($existing) {
         $existing->introhtml = $introhtml;
         $existing->linkshtml = $linkshtml;
         $existing->timemodified = $now;
         $existing->usermodified = $userid;
-        $DB->update_record('local_coursecalendar_course_info', $existing);
+        $DB->update_record('local_courseplanner_courseinfo', $existing);
     } else {
-        $DB->insert_record('local_coursecalendar_course_info', (object)[
+        $DB->insert_record('local_courseplanner_courseinfo', (object)[
             'courseid' => $courseid,
             'introhtml' => $introhtml,
             'linkshtml' => $linkshtml,
@@ -1737,7 +1737,7 @@ function local_coursecalendar_save_course_info(int $courseid, string $introhtml,
  * @param int $timestamp Unix timestamp of the date to locate.
  * @return array|null ['row' => int, 'col' => int] or null if not found.
  */
-function local_coursecalendar_date_to_cell(array $blocksmap, int $maxrow, int $timestamp): ?array {
+function local_courseplanner_date_to_cell(array $blocksmap, int $maxrow, int $timestamp): ?array {
     $daymap = ['monday' => 0, 'tuesday' => 1, 'wednesday' => 2, 'thursday' => 3, 'friday' => 4, 'saturday' => 5, 'sunday' => 6];
 
     // Build header day offsets for cols 1-3.
@@ -1763,13 +1763,13 @@ function local_coursecalendar_date_to_cell(array $blocksmap, int $maxrow, int $t
         if (preg_match('/(\w{3})\s+(\d{1,2})/', $content, $m)) {
             $parsed = strtotime($m[1] . ' ' . $m[2] . ' ' . date('Y', $timestamp));
             if ($parsed) {
-                $rowmondays[$row] = local_coursecalendar_get_week_monday($parsed);
+                $rowmondays[$row] = local_courseplanner_get_week_monday($parsed);
             }
         }
     }
 
     $targetdate = strtotime(date('Y-m-d', $timestamp));
-    $targetmonday = local_coursecalendar_get_week_monday($targetdate);
+    $targetmonday = local_courseplanner_get_week_monday($targetdate);
 
     foreach ($rowmondays as $row => $monday) {
         if ($monday === $targetmonday) {
@@ -1807,8 +1807,8 @@ function local_coursecalendar_date_to_cell(array $blocksmap, int $maxrow, int $t
  * @param int $courseid
  * @return stdClass|null The active calendar record, or null when none is active.
  */
-function local_coursecalendar_get_active_course_calendar(int $courseid): ?stdClass {
-    $calendars = local_coursecalendar_get_course_calendars($courseid);
+function local_courseplanner_get_active_course_calendar(int $courseid): ?stdClass {
+    $calendars = local_courseplanner_get_course_calendars($courseid);
     foreach ($calendars as $calendar) {
         if ((int)$calendar->isactive === 1) {
             return $calendar;
@@ -1827,9 +1827,9 @@ function local_coursecalendar_get_active_course_calendar(int $courseid): ?stdCla
  * @param bool $autoscroll When true, emit a script that scrolls the nearest/today row into view.
  * @return string Grid HTML, or '' when the calendar has no content.
  */
-function local_coursecalendar_render_calendar_grid(stdClass $calendar, bool $autoscroll = true): string {
-    $alltopics = local_coursecalendar_get_blueprint_topics((int)$calendar->blueprintid, true);
-    $blocksmap = local_coursecalendar_get_blocks_map((int)$calendar->id);
+function local_courseplanner_render_calendar_grid(stdClass $calendar, bool $autoscroll = true): string {
+    $alltopics = local_courseplanner_get_blueprint_topics((int)$calendar->blueprintid, true);
+    $blocksmap = local_courseplanner_get_blocks_map((int)$calendar->id);
     $maxrow = 0;
     foreach (array_keys($blocksmap) as $rownum) {
         $maxrow = max($maxrow, (int)$rownum);
@@ -1837,23 +1837,23 @@ function local_coursecalendar_render_calendar_grid(stdClass $calendar, bool $aut
     if ($maxrow === 0 && empty($blocksmap)) {
         return '';
     }
-    $columns = local_coursecalendar_get_grid_columns($blocksmap);
+    $columns = local_courseplanner_get_grid_columns($blocksmap);
 
     // Compute today/nearest cell for highlighting.
     $now = new DateTime('now', new DateTimeZone('America/Toronto'));
-    $todaycell = local_coursecalendar_date_to_cell($blocksmap, $maxrow, $now->getTimestamp());
+    $todaycell = local_courseplanner_date_to_cell($blocksmap, $maxrow, $now->getTimestamp());
     $todayrow = $todaycell ? ($todaycell['row'] ?? null) : null;
     $todaycol = $todaycell ? ($todaycell['col'] ?? null) : null;
     $nearestonly = $todaycell && !empty($todaycell['nearest']);
 
-    $out = html_writer::start_tag('div', ['class' => 'local-coursecalendar-embed']);
+    $out = html_writer::start_tag('div', ['class' => 'local-courseplanner-embed']);
     $out .= html_writer::start_tag('table', [
-        'class' => 'table table-bordered local-coursecalendar-grid local-coursecalendar-preview',
+        'class' => 'table table-bordered local-courseplanner-grid local-courseplanner-preview',
     ]);
     for ($row = 0; $row <= $maxrow; $row++) {
         $rowclasses = [];
         if ($row === $todayrow && ($nearestonly || $todaycol === null)) {
-            $rowclasses[] = 'local-coursecalendar-nearest-row';
+            $rowclasses[] = 'local-courseplanner-nearest-row';
         }
         $out .= html_writer::start_tag('tr', $rowclasses ? ['class' => implode(' ', $rowclasses)] : []);
         foreach ($columns as $col) {
@@ -1869,55 +1869,55 @@ function local_coursecalendar_render_calendar_grid(stdClass $calendar, bool $aut
             $isblank = ($blocktype === 'BLANK');
 
             $tag = ($row === 0) ? 'th' : 'td';
-            $cellclasses = ['local-coursecalendar-grid-cell'];
+            $cellclasses = ['local-courseplanner-grid-cell'];
             if ($isblank) {
-                $cellclasses[] = 'local-coursecalendar-blank-cell';
+                $cellclasses[] = 'local-courseplanner-blank-cell';
             }
             if ($highlighted) {
-                $cellclasses[] = 'local-coursecalendar-highlighted';
+                $cellclasses[] = 'local-courseplanner-highlighted';
             }
             if ($verticallycentred) {
-                $cellclasses[] = 'local-coursecalendar-vcentred';
+                $cellclasses[] = 'local-courseplanner-vcentred';
             }
             if ($row === 0) {
-                $cellclasses[] = 'local-coursecalendar-preview-header';
+                $cellclasses[] = 'local-courseplanner-preview-header';
             }
             if ($row === $todayrow && $col === $todaycol && !$nearestonly) {
-                $cellclasses[] = 'local-coursecalendar-today-cell';
+                $cellclasses[] = 'local-courseplanner-today-cell';
             }
             $out .= html_writer::start_tag($tag, ['class' => implode(' ', $cellclasses)]);
 
             if ($cellheading !== '') {
                 $out .= html_writer::tag('div', format_text($cellheading, FORMAT_HTML), [
-                    'class' => 'local-coursecalendar-cellheading',
+                    'class' => 'local-courseplanner-cellheading',
                 ]);
             }
             if ($isblank) {
                 $out .= html_writer::tag('div', format_text($content, FORMAT_HTML), [
-                    'class' => 'local-coursecalendar-blank-label',
+                    'class' => 'local-courseplanner-blank-label',
                 ]);
             } else if ($blocktype === 'TOPIC' && $selectedtopic) {
-                $out .= local_coursecalendar_topic_heading_html($selectedtopic);
+                $out .= local_courseplanner_topic_heading_html($selectedtopic);
                 if (!empty($selectedtopic->contenthtml)) {
                     $topichtml = format_text($selectedtopic->contenthtml, FORMAT_HTML);
                     $topichtml = preg_replace('/<a\b/', '<a target="_blank"', $topichtml);
-                    $out .= html_writer::tag('div', $topichtml, ['class' => 'local-coursecalendar-topic-preview']);
+                    $out .= html_writer::tag('div', $topichtml, ['class' => 'local-courseplanner-topic-preview']);
                 }
             } else if ($row === 0) {
                 $out .= html_writer::tag('div', format_text($content, FORMAT_HTML), [
-                    'class' => 'local-coursecalendar-readonly-cell',
+                    'class' => 'local-courseplanner-readonly-cell',
                 ]);
                 if ($cell && !empty($cell->headerday)) {
                     $out .= html_writer::tag(
                         'div',
                         s($cell->headerday) . ($cell->headermode ? ' &middot; ' . s($cell->headermode) : ''),
-                        ['class' => 'local-coursecalendar-header-meta']
+                        ['class' => 'local-courseplanner-header-meta']
                     );
                 }
             } else if ($content !== '') {
                 $texthtml = format_text($content, FORMAT_HTML);
                 $texthtml = preg_replace('/<a\b/', '<a target="_blank"', $texthtml);
-                $out .= html_writer::tag('div', $texthtml, ['class' => 'local-coursecalendar-text-preview']);
+                $out .= html_writer::tag('div', $texthtml, ['class' => 'local-courseplanner-text-preview']);
             }
 
             $out .= html_writer::end_tag($tag);
@@ -1931,7 +1931,7 @@ function local_coursecalendar_render_calendar_grid(stdClass $calendar, bool $aut
         $out .= <<<'JS'
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    var selector = ".local-coursecalendar-today-cell,.local-coursecalendar-nearest-row";
+    var selector = ".local-courseplanner-today-cell,.local-courseplanner-nearest-row";
     var target = document.querySelector(selector);
     if (target) {
         target.scrollIntoView({behavior: "smooth", block: "center"});
@@ -1955,7 +1955,7 @@ JS;
  * @param int $userid
  * @return array ['created' => int, 'skipped' => int]
  */
-function local_coursecalendar_seed_topics_from_html(string $html, string $layout, int $blueprintid, int $userid): array {
+function local_courseplanner_seed_topics_from_html(string $html, string $layout, int $blueprintid, int $userid): array {
     global $DB;
 
     $skippatterns = [
@@ -1985,7 +1985,7 @@ function local_coursecalendar_seed_topics_from_html(string $html, string $layout
 
     $created = 0;
     $skipped = 0;
-    $sortorder = (int)local_coursecalendar_next_topic_sortorder($blueprintid);
+    $sortorder = (int)local_courseplanner_next_topic_sortorder($blueprintid);
     $now = time();
 
     for ($ri = 0; $ri < $rows->length; $ri++) {
@@ -1999,7 +1999,7 @@ function local_coursecalendar_seed_topics_from_html(string $html, string $layout
         }
 
         // First column is the week/date label - context only, never imported as a topic.
-        $weeklines = preg_split('/\n+/', local_coursecalendar_cell_plaintext($dom, $cells->item(0))) ?: [];
+        $weeklines = preg_split('/\n+/', local_courseplanner_cell_plaintext($dom, $cells->item(0))) ?: [];
         $weeklines = array_values(array_filter(array_map('trim', $weeklines), static function (string $l): bool {
             return $l !== '';
         }));
@@ -2011,7 +2011,7 @@ function local_coursecalendar_seed_topics_from_html(string $html, string $layout
             foreach ($cell->childNodes as $child) {
                 $innerhtml .= $dom->saveHTML($child);
             }
-            $text = local_coursecalendar_cell_plaintext($dom, $cell);
+            $text = local_courseplanner_cell_plaintext($dom, $cell);
             if ($text === '') {
                 continue;
             }
@@ -2025,15 +2025,15 @@ function local_coursecalendar_seed_topics_from_html(string $html, string $layout
 
             // Content columns are 1..$contentcols; the column right after is homework.
             $colmode = $colmodes[$ci] ?? 'Lecture';
-            $type = local_coursecalendar_detect_topic_type($text, $colmode, $ci, $contentcols);
+            $type = local_courseplanner_detect_topic_type($text, $colmode, $ci, $contentcols);
 
-            $firstlinktext = local_coursecalendar_cell_first_link_text($cell);
-            $title = local_coursecalendar_extract_topic_title($text, $type, $weeklabel, $firstlinktext);
+            $firstlinktext = local_courseplanner_cell_first_link_text($cell);
+            $title = local_courseplanner_extract_topic_title($text, $type, $weeklabel, $firstlinktext);
             if ($title === '') {
-                $title = local_coursecalendar_clip_title($weeklabel !== '' ? $weeklabel : $text);
+                $title = local_courseplanner_clip_title($weeklabel !== '' ? $weeklabel : $text);
             }
 
-            $DB->insert_record('local_coursecalendar_blueprint_topics', (object)[
+            $DB->insert_record('local_courseplanner_topics', (object)[
                 'blueprintid' => $blueprintid,
                 'title' => $title,
                 'type' => $type,
@@ -2060,7 +2060,7 @@ function local_coursecalendar_seed_topics_from_html(string $html, string $layout
  * @param DOMNode|null $cell The cell node.
  * @return string Cleaned, newline-separated plain text.
  */
-function local_coursecalendar_cell_plaintext(DOMDocument $dom, ?DOMNode $cell): string {
+function local_courseplanner_cell_plaintext(DOMDocument $dom, ?DOMNode $cell): string {
     if ($cell === null) {
         return '';
     }
@@ -2096,7 +2096,7 @@ function local_coursecalendar_cell_plaintext(DOMDocument $dom, ?DOMNode $cell): 
  * @param DOMNode|null $cell The cell node.
  * @return string First link text, or '' when there is no link.
  */
-function local_coursecalendar_cell_first_link_text(?DOMNode $cell): string {
+function local_courseplanner_cell_first_link_text(?DOMNode $cell): string {
     if (!($cell instanceof DOMElement)) {
         return '';
     }
@@ -2113,7 +2113,7 @@ function local_coursecalendar_cell_first_link_text(?DOMNode $cell): string {
  * @param string $title Raw title text.
  * @return string Cleaned title.
  */
-function local_coursecalendar_clip_title(string $title): string {
+function local_courseplanner_clip_title(string $title): string {
     $title = trim(preg_replace('/[\s\x{00a0}]+/u', ' ', $title));
     return core_text::substr($title, 0, 120);
 }
@@ -2124,10 +2124,10 @@ function local_coursecalendar_clip_title(string $title): string {
  * @param int $blueprintid Blueprint ID.
  * @return int Next sortorder to use.
  */
-function local_coursecalendar_next_topic_sortorder(int $blueprintid): int {
+function local_courseplanner_next_topic_sortorder(int $blueprintid): int {
     global $DB;
     $max = (int)$DB->get_field_sql(
-        'SELECT COALESCE(MAX(sortorder), -1) FROM {local_coursecalendar_blueprint_topics} WHERE blueprintid = :bpid',
+        'SELECT COALESCE(MAX(sortorder), -1) FROM {local_courseplanner_topics} WHERE blueprintid = :bpid',
         ['bpid' => $blueprintid]
     );
     return $max + 1;
@@ -2142,7 +2142,7 @@ function local_coursecalendar_next_topic_sortorder(int $blueprintid): int {
  * @param int $totalcols Total number of primary columns (excluding homework column).
  * @return string Detected topic type code.
  */
-function local_coursecalendar_detect_topic_type(string $text, string $colmode, int $colindex, int $totalcols): string {
+function local_courseplanner_detect_topic_type(string $text, string $colmode, int $colindex, int $totalcols): string {
     if (preg_match('/^test|^exam|^midterm|^final\s+exam/i', $text)) {
         return 'TEST';
     }
@@ -2176,12 +2176,12 @@ function local_coursecalendar_detect_topic_type(string $text, string $colmode, i
  * name, first link, or first real line) rather than the week label.
  *
  * @param string $text Cleaned, newline-separated cell text.
- * @param string $type Detected topic type (as returned by {@see local_coursecalendar_detect_topic_type()}).
+ * @param string $type Detected topic type (as returned by {@see local_courseplanner_detect_topic_type()}).
  * @param string $weeklabel Week/date label for the row (used only as a last-resort fallback).
  * @param string $firstlinktext Text of the first hyperlink in the cell, if any.
  * @return string Short title suitable for storing on the topic record.
  */
-function local_coursecalendar_extract_topic_title(
+function local_courseplanner_extract_topic_title(
     string $text,
     string $type,
     string $weeklabel = '',
@@ -2215,25 +2215,25 @@ function local_coursecalendar_extract_topic_title(
 
     switch ($type) {
         case 'TEST':
-            return local_coursecalendar_clip_title($lines[0] ?? $week);
+            return local_courseplanner_clip_title($lines[0] ?? $week);
 
         case 'LAB':
             // Prefer the "Lab N - <name>" line (an eLab banner may precede it).
             foreach ($lines as $line) {
                 if (preg_match('/^lab\b/i', $line)) {
-                    return local_coursecalendar_clip_title($line);
+                    return local_courseplanner_clip_title($line);
                 }
             }
-            return local_coursecalendar_clip_title($lines[0] ?? ($firstlinktext ?: $week));
+            return local_courseplanner_clip_title($lines[0] ?? ($firstlinktext ?: $week));
 
         case 'HOMEWORK':
-            return local_coursecalendar_clip_title(
+            return local_courseplanner_clip_title(
                 $firstlinktext !== '' ? $firstlinktext : ($firstcontentline ?: ($lines[0] ?? ''))
             );
 
         case 'ELESSON':
             // The lesson name is the link, not the "Do not come to class" banner.
-            return local_coursecalendar_clip_title(
+            return local_courseplanner_clip_title(
                 $firstlinktext !== '' ? $firstlinktext : ($firstcontentline ?: ($lines[0] ?? 'eLesson'))
             );
 
@@ -2255,7 +2255,7 @@ function local_coursecalendar_extract_topic_title(
             if ($base === '') {
                 $base = $firstlinktext !== '' ? $firstlinktext : ($firstcontentline ?: 'Lecture');
             }
-            return local_coursecalendar_clip_title($base);
+            return local_courseplanner_clip_title($base);
     }
 }
 
@@ -2266,7 +2266,7 @@ function local_coursecalendar_extract_topic_title(
  * @param int $blueprintid
  * @return array ['updated' => int, 'notfound' => int]
  */
-function local_coursecalendar_bulk_update_elesson_links(string $html, int $blueprintid): array {
+function local_courseplanner_bulk_update_elesson_links(string $html, int $blueprintid): array {
     global $DB;
 
     $dom = new DOMDocument();
@@ -2284,7 +2284,7 @@ function local_coursecalendar_bulk_update_elesson_links(string $html, int $bluep
     }
 
     $elessons = $DB->get_records_select(
-        'local_coursecalendar_blueprint_topics',
+        'local_courseplanner_topics',
         "blueprintid = :bpid AND type = 'ELESSON'",
         ['bpid' => $blueprintid],
         'sortorder ASC'
@@ -2332,7 +2332,7 @@ function local_coursecalendar_bulk_update_elesson_links(string $html, int $bluep
                 if ($count > 0) {
                     $topic->contenthtml = $newcontent;
                     $topic->timemodified = time();
-                    $DB->update_record('local_coursecalendar_blueprint_topics', $topic);
+                    $DB->update_record('local_courseplanner_topics', $topic);
                     $updated++;
                     $matched = true;
                     break;
@@ -2354,20 +2354,20 @@ function local_coursecalendar_bulk_update_elesson_links(string $html, int $bluep
  * @param bool $force
  * @return int Number of deleted topics.
  */
-function local_coursecalendar_delete_all_topics(int $blueprintid, bool $force = false): int {
+function local_courseplanner_delete_all_topics(int $blueprintid, bool $force = false): int {
     global $DB;
     if (!$force) {
         $referenced = $DB->count_records_select(
-            'local_coursecalendar_calendar_blocks',
-            "topicid IN (SELECT id FROM {local_coursecalendar_blueprint_topics} WHERE blueprintid = :bpid) AND blocktype = 'TOPIC'",
+            'local_courseplanner_blocks',
+            "topicid IN (SELECT id FROM {local_courseplanner_topics} WHERE blueprintid = :bpid) AND blocktype = 'TOPIC'",
             ['bpid' => $blueprintid]
         );
         if ($referenced > 0) {
             return -1;
         }
     }
-    $count = $DB->count_records('local_coursecalendar_blueprint_topics', ['blueprintid' => $blueprintid]);
-    $DB->delete_records('local_coursecalendar_blueprint_topics', ['blueprintid' => $blueprintid]);
+    $count = $DB->count_records('local_courseplanner_topics', ['blueprintid' => $blueprintid]);
+    $DB->delete_records('local_courseplanner_topics', ['blueprintid' => $blueprintid]);
     return $count;
 }
 
@@ -2379,7 +2379,7 @@ function local_coursecalendar_delete_all_topics(int $blueprintid, bool $force = 
  * @param string $name The tour name (matches tool_usertours_tours.name).
  * @return int|null
  */
-function local_coursecalendar_get_tour_id_by_name(string $name): ?int {
+function local_courseplanner_get_tour_id_by_name(string $name): ?int {
     global $DB;
     if (!class_exists('\\tool_usertours\\manager')) {
         return null;
@@ -2391,12 +2391,12 @@ function local_coursecalendar_get_tour_id_by_name(string $name): ?int {
 /**
  * List of user tours shipped with this plugin.
  *
- * Map of JSON filename (in local/coursecalendar/tours/) to a version integer.
+ * Map of JSON filename (in local/courseplanner/tours/) to a version integer.
  * Bump the version when the JSON changes so the seeder re-imports it.
  *
  * @return array<string, int>
  */
-function local_coursecalendar_shipped_tours(): array {
+function local_courseplanner_shipped_tours(): array {
     return [
         'teacher_setup_tour.json'   => 4,
         'teacher_builder_tour.json' => 3,
@@ -2415,24 +2415,24 @@ function local_coursecalendar_shipped_tours(): array {
  *
  * Safe to call from both db/install.php and db/upgrade.php.
  */
-function local_coursecalendar_install_user_tours(): void {
+function local_courseplanner_install_user_tours(): void {
     global $DB, $CFG;
 
     if (!class_exists('\\tool_usertours\\manager')) {
         return;
     }
 
-    $shipped = local_coursecalendar_shipped_tours();
-    $tourdir = $CFG->dirroot . '/local/coursecalendar/tours/';
+    $shipped = local_courseplanner_shipped_tours();
+    $tourdir = $CFG->dirroot . '/local/courseplanner/tours/';
 
     $existingrecords = $DB->get_recordset('tool_usertours_tours');
     foreach ($existingrecords as $record) {
         $tour = \tool_usertours\tour::load_from_record($record);
-        $filename = $tour->get_config('local_coursecalendar_filename');
+        $filename = $tour->get_config('local_courseplanner_filename');
         if (empty($filename) || !isset($shipped[$filename])) {
             continue;
         }
-        $installedversion = (int)$tour->get_config('local_coursecalendar_version');
+        $installedversion = (int)$tour->get_config('local_courseplanner_version');
         if ($installedversion < $shipped[$filename]) {
             $tour->remove();
         } else {
@@ -2457,12 +2457,12 @@ function local_coursecalendar_install_user_tours(): void {
         try {
             $tour = \tool_usertours\manager::import_tour_from_json($tourjson);
         } catch (\Throwable $e) {
-            debugging('local_coursecalendar: failed to import user tour ' . $filename . ': ' . $e->getMessage());
+            debugging('local_courseplanner: failed to import user tour ' . $filename . ': ' . $e->getMessage());
             continue;
         }
 
-        $tour->set_config('local_coursecalendar_filename', $filename);
-        $tour->set_config('local_coursecalendar_version', $version);
+        $tour->set_config('local_courseplanner_filename', $filename);
+        $tour->set_config('local_courseplanner_version', $version);
         $tour->set_config(\tool_usertours\manager::CONFIG_SHIPPED_TOUR, true);
         $tour->set_config(\tool_usertours\manager::CONFIG_SHIPPED_FILENAME, $filename);
         $tour->set_config(\tool_usertours\manager::CONFIG_SHIPPED_VERSION, $version);

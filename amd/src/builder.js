@@ -4,7 +4,7 @@
  * Provides drag-and-drop, undo/redo, unsaved change tracking,
  * batch save, and beforeunload warning.
  *
- * @module local_coursecalendar/builder
+ * @module local_courseplanner/builder
  */
 define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
     'use strict';
@@ -20,12 +20,12 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
     };
 
     var SELECTORS = {
-        grid: '.local-coursecalendar-grid',
+        grid: '.local-courseplanner-grid',
         cell: '[data-cc-row][data-cc-col]',
-        saveAllBtn: '#local-coursecalendar-saveall',
-        undoBtn: '#local-coursecalendar-undo',
-        redoBtn: '#local-coursecalendar-redo',
-        badge: '#local-coursecalendar-unsaved-badge',
+        saveAllBtn: '#local-courseplanner-saveall',
+        undoBtn: '#local-courseplanner-undo',
+        redoBtn: '#local-courseplanner-redo',
+        badge: '#local-courseplanner-unsaved-badge',
     };
 
     /**
@@ -178,7 +178,7 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
             saveBtn.textContent = 'Saving...';
         }
         Ajax.call([{
-            methodname: 'local_coursecalendar_save_builder_grid',
+            methodname: 'local_courseplanner_save_builder_grid',
             args: {
                 courseid: state.courseid,
                 calendarid: state.calendarid,
@@ -237,7 +237,7 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
             return;
         }
         state.dragSource = cell;
-        cell.classList.add('local-coursecalendar-dragging');
+        cell.classList.add('local-courseplanner-dragging');
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain',
             cell.getAttribute('data-cc-row') + ',' + cell.getAttribute('data-cc-col'));
@@ -255,7 +255,7 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
         }
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        cell.classList.add('local-coursecalendar-dragover');
+        cell.classList.add('local-courseplanner-dragover');
     }
 
     /**
@@ -266,7 +266,7 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
     function handleDragLeave(e) {
         var cell = getEditableCell(e.target);
         if (cell) {
-            cell.classList.remove('local-coursecalendar-dragover');
+            cell.classList.remove('local-courseplanner-dragover');
         }
     }
 
@@ -281,8 +281,8 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
         if (!targetCell || !state.dragSource) {
             return;
         }
-        targetCell.classList.remove('local-coursecalendar-dragover');
-        state.dragSource.classList.remove('local-coursecalendar-dragging');
+        targetCell.classList.remove('local-courseplanner-dragover');
+        state.dragSource.classList.remove('local-courseplanner-dragging');
 
         var fromRow = parseInt(state.dragSource.getAttribute('data-cc-row'), 10);
         var fromCol = parseInt(state.dragSource.getAttribute('data-cc-col'), 10);
@@ -297,7 +297,7 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
         pushUndo();
 
         Ajax.call([{
-            methodname: 'local_coursecalendar_swap_builder_cells',
+            methodname: 'local_courseplanner_swap_builder_cells',
             args: {
                 courseid: state.courseid,
                 calendarid: state.calendarid,
@@ -324,10 +324,10 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
      */
     function handleDragEnd() {
         if (state.dragSource) {
-            state.dragSource.classList.remove('local-coursecalendar-dragging');
+            state.dragSource.classList.remove('local-courseplanner-dragging');
         }
-        document.querySelectorAll('.local-coursecalendar-dragover').forEach(function(el) {
-            el.classList.remove('local-coursecalendar-dragover');
+        document.querySelectorAll('.local-courseplanner-dragover').forEach(function(el) {
+            el.classList.remove('local-courseplanner-dragover');
         });
         state.dragSource = null;
     }

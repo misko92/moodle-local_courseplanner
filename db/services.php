@@ -17,7 +17,7 @@
 /**
  * Web service definitions.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,26 +25,26 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
-    'local_coursecalendar_save_builder_grid' => [
-        'classname' => 'local_coursecalendar_external',
+    'local_courseplanner_save_builder_grid' => [
+        'classname' => 'local_courseplanner_external',
         'methodname' => 'save_builder_grid',
-        'classpath' => 'local/coursecalendar/externallib.php',
+        'classpath' => 'local/courseplanner/externallib.php',
         'description' => 'Batch-save calendar builder grid blocks.',
         'type' => 'write',
         'ajax' => true,
     ],
-    'local_coursecalendar_swap_builder_cells' => [
-        'classname' => 'local_coursecalendar_external',
+    'local_courseplanner_swap_builder_cells' => [
+        'classname' => 'local_courseplanner_external',
         'methodname' => 'swap_builder_cells',
-        'classpath' => 'local/coursecalendar/externallib.php',
+        'classpath' => 'local/courseplanner/externallib.php',
         'description' => 'Swap or move two calendar builder cells.',
         'type' => 'write',
         'ajax' => true,
     ],
-    'local_coursecalendar_reorder_blueprint_topics' => [
-        'classname' => 'local_coursecalendar_external',
+    'local_courseplanner_reorder_blueprint_topics' => [
+        'classname' => 'local_courseplanner_external',
         'methodname' => 'reorder_blueprint_topics',
-        'classpath' => 'local/coursecalendar/externallib.php',
+        'classpath' => 'local/courseplanner/externallib.php',
         'description' => 'Persist a new sortorder for blueprint topics (drag-and-drop).',
         'type' => 'write',
         'ajax' => true,

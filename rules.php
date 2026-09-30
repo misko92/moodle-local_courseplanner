@@ -17,7 +17,7 @@
 /**
  * Timeline exception rules management page.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -33,15 +33,15 @@ $course = get_course($courseid);
 $context = context_course::instance($courseid);
 
 require_login($course);
-require_capability('local/coursecalendar:managecalendar', $context);
+require_capability('local/courseplanner:manage', $context);
 
-$calendar = local_coursecalendar_require_course_calendar($calendarid, $courseid);
-$blueprint = local_coursecalendar_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+$calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
+$blueprint = local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
 
-$pageurl = new moodle_url('/local/coursecalendar/rules.php', ['id' => $courseid, 'calendarid' => $calendarid]);
-$builderurl = new moodle_url('/local/coursecalendar/calendar.php', ['id' => $courseid, 'calendarid' => $calendarid]);
+$pageurl = new moodle_url('/local/courseplanner/rules.php', ['id' => $courseid, 'calendarid' => $calendarid]);
+$builderurl = new moodle_url('/local/courseplanner/calendar.php', ['id' => $courseid, 'calendarid' => $calendarid]);
 
-$ruletypes = local_coursecalendar_get_rule_types();
+$ruletypes = local_courseplanner_get_rule_types();
 $weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 if ($action !== '' && data_submitted()) {
@@ -55,7 +55,7 @@ if ($action !== '' && data_submitted()) {
             if (!$ruledate) {
                 redirect(
                     $pageurl,
-                    get_string('errorinvaliddate', 'local_coursecalendar'),
+                    get_string('errorinvaliddate', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
@@ -66,7 +66,7 @@ if ($action !== '' && data_submitted()) {
             $today = trim(optional_param('today', '', PARAM_TEXT)) ?: null;
 
             if (in_array($ruletype, ['SEMESTER_START', 'SEMESTER_END'], true)) {
-                $existing = $DB->get_record('local_coursecalendar_timeline_exception_rules', [
+                $existing = $DB->get_record('local_courseplanner_rules', [
                     'calendarid' => (int)$calendar->id,
                     'ruletype' => $ruletype,
                     'isactive' => 1,
@@ -74,14 +74,14 @@ if ($action !== '' && data_submitted()) {
                 if ($existing) {
                     redirect(
                         $pageurl,
-                        get_string('errorrulestartendexists', 'local_coursecalendar'),
+                        get_string('errorrulestartendexists', 'local_courseplanner'),
                         null,
                         \core\output\notification::NOTIFY_ERROR
                     );
                 }
             }
 
-            local_coursecalendar_create_rule(
+            local_courseplanner_create_rule(
                 (int)$calendar->id,
                 $ruletype,
                 $ruledate,
@@ -91,7 +91,7 @@ if ($action !== '' && data_submitted()) {
                 $today,
                 (int)$USER->id
             );
-            redirect($pageurl, get_string('rulecreated', 'local_coursecalendar'), null, \core\output\notification::NOTIFY_SUCCESS);
+            redirect($pageurl, get_string('rulecreated', 'local_courseplanner'), null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'updaterule':
@@ -101,7 +101,7 @@ if ($action !== '' && data_submitted()) {
             if (!$ruledate) {
                 redirect(
                     $pageurl,
-                    get_string('errorinvaliddate', 'local_coursecalendar'),
+                    get_string('errorinvaliddate', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
@@ -111,29 +111,29 @@ if ($action !== '' && data_submitted()) {
             $fromday = trim(optional_param('fromday', '', PARAM_TEXT)) ?: null;
             $today = trim(optional_param('today', '', PARAM_TEXT)) ?: null;
 
-            local_coursecalendar_update_rule($ruleid, $ruledate, $label, $description, $fromday, $today, (int)$USER->id);
-            redirect($pageurl, get_string('ruleupdated', 'local_coursecalendar'), null, \core\output\notification::NOTIFY_SUCCESS);
+            local_courseplanner_update_rule($ruleid, $ruledate, $label, $description, $fromday, $today, (int)$USER->id);
+            redirect($pageurl, get_string('ruleupdated', 'local_courseplanner'), null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'deleterule':
             $ruleid = required_param('ruleid', PARAM_INT);
-            local_coursecalendar_delete_rule($ruleid);
-            redirect($pageurl, get_string('ruledeleted', 'local_coursecalendar'), null, \core\output\notification::NOTIFY_SUCCESS);
+            local_courseplanner_delete_rule($ruleid);
+            redirect($pageurl, get_string('ruledeleted', 'local_courseplanner'), null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'togglerule':
             $ruleid = required_param('ruleid', PARAM_INT);
-            $nowactive = local_coursecalendar_toggle_rule($ruleid, (int)$USER->id);
+            $nowactive = local_courseplanner_toggle_rule($ruleid, (int)$USER->id);
             $msg = $nowactive
-                ? get_string('ruleactivated', 'local_coursecalendar')
-                : get_string('ruledeactivated', 'local_coursecalendar');
+                ? get_string('ruleactivated', 'local_courseplanner')
+                : get_string('ruledeactivated', 'local_courseplanner');
             redirect($pageurl, $msg, null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'applyrules':
             try {
-                $summary = local_coursecalendar_apply_rules((int)$calendar->id, (int)$USER->id);
-                $msg = get_string('rulesapplied', 'local_coursecalendar', $summary['total_weeks']);
+                $summary = local_courseplanner_apply_rules((int)$calendar->id, (int)$USER->id);
+                $msg = get_string('rulesapplied', 'local_courseplanner', $summary['total_weeks']);
                 redirect($builderurl, $msg, null, \core\output\notification::NOTIFY_SUCCESS);
             } catch (moodle_exception $e) {
                 redirect($pageurl, $e->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
@@ -142,41 +142,41 @@ if ($action !== '' && data_submitted()) {
     }
 }
 
-$rules = local_coursecalendar_get_calendar_rules((int)$calendar->id);
+$rules = local_courseplanner_get_calendar_rules((int)$calendar->id);
 
 $PAGE->set_url($pageurl);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('incourse');
-$PAGE->set_title(get_string('rulespagetitle', 'local_coursecalendar'));
+$PAGE->set_title(get_string('rulespagetitle', 'local_courseplanner'));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->requires->css(new moodle_url('/local/coursecalendar/styles.css'));
+$PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
 
 echo $OUTPUT->header();
-echo html_writer::start_tag('div', ['class' => 'local-coursecalendar-pageheader']);
-echo $OUTPUT->heading(get_string('rulespagetitle', 'local_coursecalendar'));
-echo html_writer::tag('button', get_string('showtourbtn', 'local_coursecalendar'), [
+echo html_writer::start_tag('div', ['class' => 'local-courseplanner-pageheader']);
+echo $OUTPUT->heading(get_string('rulespagetitle', 'local_courseplanner'));
+echo html_writer::tag('button', get_string('showtourbtn', 'local_courseplanner'), [
     'type' => 'button',
-    'id' => 'local-coursecalendar-showtour',
-    'class' => 'btn btn-sm btn-outline-info local-coursecalendar-showtour',
-    'data-tour-name' => 'local_coursecalendar_rules',
+    'id' => 'local-courseplanner-showtour',
+    'class' => 'btn btn-sm btn-outline-info local-courseplanner-showtour',
+    'data-tour-name' => 'local_courseplanner_rules',
 ]);
 echo html_writer::end_tag('div');
-echo html_writer::link($builderurl, get_string('backtobuilder', 'local_coursecalendar'), ['class' => 'btn btn-secondary mb-3']);
+echo html_writer::link($builderurl, get_string('backtobuilder', 'local_courseplanner'), ['class' => 'btn btn-secondary mb-3']);
 
-echo html_writer::div(get_string('intro_rules', 'local_coursecalendar'), 'local-coursecalendar-intro alert alert-info');
+echo html_writer::div(get_string('intro_rules', 'local_courseplanner'), 'local-courseplanner-intro alert alert-info');
 
 $calendarlabel = s($calendar->semester) . ' ' . (int)$calendar->year;
-echo html_writer::div(get_string('buildercontextlabel', 'local_coursecalendar', $calendarlabel), 'local-coursecalendar-shell mb-3');
+echo html_writer::div(get_string('buildercontextlabel', 'local_courseplanner', $calendarlabel), 'local-courseplanner-shell mb-3');
 
 echo html_writer::tag(
     'h4',
-    get_string('section_rulesapply', 'local_coursecalendar')
-    . ' ' . $OUTPUT->help_icon('section_rulesapply', 'local_coursecalendar'),
-    ['class' => 'local-coursecalendar-section-title']
+    get_string('section_rulesapply', 'local_courseplanner')
+    . ' ' . $OUTPUT->help_icon('section_rulesapply', 'local_courseplanner'),
+    ['class' => 'local-courseplanner-section-title']
 );
 echo html_writer::start_tag(
     'form',
-    ['method' => 'post', 'class' => 'local-coursecalendar-inline-form mb-3', 'id' => 'local-coursecalendar-applyrules-form']
+    ['method' => 'post', 'class' => 'local-courseplanner-inline-form mb-3', 'id' => 'local-courseplanner-applyrules-form']
 );
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'calendarid', 'value' => $calendarid]);
@@ -184,49 +184,49 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'v
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 echo html_writer::empty_tag(
     'input',
-    ['type' => 'submit', 'class' => 'btn btn-primary', 'value' => get_string('applyrulesbtn', 'local_coursecalendar')]
+    ['type' => 'submit', 'class' => 'btn btn-primary', 'value' => get_string('applyrulesbtn', 'local_courseplanner')]
 );
 echo html_writer::end_tag('form');
 
 echo html_writer::tag(
     'h4',
-    get_string('section_rulesexisting', 'local_coursecalendar')
-    . ' ' . $OUTPUT->help_icon('section_rulesexisting', 'local_coursecalendar'),
-    ['class' => 'local-coursecalendar-section-title', 'id' => 'local-coursecalendar-existingrules']
+    get_string('section_rulesexisting', 'local_courseplanner')
+    . ' ' . $OUTPUT->help_icon('section_rulesexisting', 'local_courseplanner'),
+    ['class' => 'local-courseplanner-section-title', 'id' => 'local-courseplanner-existingrules']
 );
 
 // Create-new-rule disclosure.
 $createrulehtml = '';
 ob_start();
 echo html_writer::start_tag('details', [
-    'class' => 'local-coursecalendar-create-blueprint',
-    'id' => 'local-coursecalendar-createrule',
+    'class' => 'local-courseplanner-create-blueprint',
+    'id' => 'local-courseplanner-createrule',
 ]);
-echo html_writer::tag('summary', get_string('createrulebutton', 'local_coursecalendar'), [
-    'class' => 'local-coursecalendar-disclosure-summary local-coursecalendar-disclosure-summary--primary',
+echo html_writer::tag('summary', get_string('createrulebutton', 'local_courseplanner'), [
+    'class' => 'local-courseplanner-disclosure-summary local-courseplanner-disclosure-summary--primary',
 ]);
 echo html_writer::start_tag('form', [
     'method' => 'post',
-    'class' => 'local-coursecalendar-disclosure-body',
-    'id' => 'local-coursecalendar-createrule-form',
+    'class' => 'local-courseplanner-disclosure-body',
+    'id' => 'local-courseplanner-createrule-form',
 ]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'calendarid', 'value' => $calendarid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'createrule']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
-echo html_writer::tag('label', get_string('ruletypelabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('ruletypelabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
 echo html_writer::start_tag('select', ['name' => 'ruletype', 'class' => 'custom-select mb-2']);
 foreach ($ruletypes as $rt) {
     $ruletypekey = 'ruletype_' . $rt;
-    $ruletypelabel = get_string_manager()->string_exists($ruletypekey, 'local_coursecalendar')
-        ? get_string($ruletypekey, 'local_coursecalendar')
+    $ruletypelabel = get_string_manager()->string_exists($ruletypekey, 'local_courseplanner')
+        ? get_string($ruletypekey, 'local_courseplanner')
         : $rt;
     echo html_writer::tag('option', $ruletypelabel, ['value' => $rt]);
 }
 echo html_writer::end_tag('select');
 
-echo html_writer::tag('label', get_string('ruledatelabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('ruledatelabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
 echo html_writer::empty_tag('input', [
     'type' => 'date',
     'name' => 'ruledate',
@@ -234,25 +234,25 @@ echo html_writer::empty_tag('input', [
     'required' => 'required',
 ]);
 
-echo html_writer::tag('label', get_string('rulelabellabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('rulelabellabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
 echo html_writer::empty_tag('input', [
     'type' => 'text',
     'name' => 'label',
     'class' => 'form-control mb-2',
-    'placeholder' => get_string('rulelabelplaceholder', 'local_coursecalendar'),
+    'placeholder' => get_string('rulelabelplaceholder', 'local_courseplanner'),
 ]);
 
-echo html_writer::tag('label', get_string('ruledescriptionlabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('ruledescriptionlabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
 echo html_writer::tag('textarea', '', [
     'name' => 'description',
     'class' => 'form-control mb-2',
     'rows' => 2,
-    'placeholder' => get_string('ruledescriptionplaceholder', 'local_coursecalendar'),
+    'placeholder' => get_string('ruledescriptionplaceholder', 'local_courseplanner'),
 ]);
 
-echo html_writer::tag('div', get_string('dayswapfieldshelp', 'local_coursecalendar'), ['class' => 'text-muted small mb-2']);
+echo html_writer::tag('div', get_string('dayswapfieldshelp', 'local_courseplanner'), ['class' => 'text-muted small mb-2']);
 
-echo html_writer::tag('label', get_string('fromdaylabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('fromdaylabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
 echo html_writer::start_tag('select', ['name' => 'fromday', 'class' => 'custom-select mb-2']);
 echo html_writer::tag('option', '—', ['value' => '']);
 foreach ($weekdays as $wd) {
@@ -260,7 +260,7 @@ foreach ($weekdays as $wd) {
 }
 echo html_writer::end_tag('select');
 
-echo html_writer::tag('label', get_string('todaylabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('todaylabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
 echo html_writer::start_tag('select', ['name' => 'today', 'class' => 'custom-select mb-2']);
 echo html_writer::tag('option', '—', ['value' => '']);
 foreach ($weekdays as $wd) {
@@ -270,24 +270,24 @@ echo html_writer::end_tag('select');
 
 echo html_writer::empty_tag(
     'input',
-    ['type' => 'submit', 'class' => 'btn btn-primary mt-2', 'value' => get_string('createrulesubmit', 'local_coursecalendar')]
+    ['type' => 'submit', 'class' => 'btn btn-primary mt-2', 'value' => get_string('createrulesubmit', 'local_courseplanner')]
 );
 echo html_writer::end_tag('form');
 echo html_writer::end_tag('details');
 $createrulehtml = ob_get_clean();
 
 if (empty($rules)) {
-    echo $OUTPUT->notification(get_string('norules', 'local_coursecalendar'), 'notifyinfo');
+    echo $OUTPUT->notification(get_string('norules', 'local_courseplanner'), 'notifyinfo');
 } else {
-    echo html_writer::start_tag('ul', ['class' => 'local-coursecalendar-blueprint-list']);
+    echo html_writer::start_tag('ul', ['class' => 'local-courseplanner-blueprint-list']);
     foreach ($rules as $rule) {
         $isactive = ((int)$rule->isactive === 1);
         $badgekey = $isactive ? 'ruleactive' : 'ruleinactive';
-        $badgeclass = $isactive ? 'local-coursecalendar-badge--active' : 'local-coursecalendar-badge--archived';
+        $badgeclass = $isactive ? 'local-courseplanner-badge--active' : 'local-courseplanner-badge--archived';
 
         $ruletypekey = 'ruletype_' . $rule->ruletype;
-        $ruletypelabel = get_string_manager()->string_exists($ruletypekey, 'local_coursecalendar')
-            ? get_string($ruletypekey, 'local_coursecalendar')
+        $ruletypelabel = get_string_manager()->string_exists($ruletypekey, 'local_courseplanner')
+            ? get_string($ruletypekey, 'local_courseplanner')
             : s($rule->ruletype);
 
         $labeltext = trim((string)$rule->label);
@@ -298,31 +298,31 @@ if (empty($rules)) {
             $labeltext .= ' (' . s($rule->fromday) . ' → ' . s($rule->today) . ')';
         }
 
-        echo html_writer::start_tag('li', ['class' => 'local-coursecalendar-blueprint-item']);
-        echo html_writer::start_tag('details', ['class' => 'local-coursecalendar-blueprint-details']);
+        echo html_writer::start_tag('li', ['class' => 'local-courseplanner-blueprint-item']);
+        echo html_writer::start_tag('details', ['class' => 'local-courseplanner-blueprint-details']);
 
-        echo html_writer::start_tag('summary', ['class' => 'local-coursecalendar-blueprint-summary']);
-        echo html_writer::start_div('local-coursecalendar-blueprint-summary-main');
-        echo html_writer::tag('span', date('Y-m-d', (int)$rule->ruledate), ['class' => 'local-coursecalendar-blueprint-shortcode']);
-        echo html_writer::tag('span', format_string($labeltext), ['class' => 'local-coursecalendar-blueprint-name']);
+        echo html_writer::start_tag('summary', ['class' => 'local-courseplanner-blueprint-summary']);
+        echo html_writer::start_div('local-courseplanner-blueprint-summary-main');
+        echo html_writer::tag('span', date('Y-m-d', (int)$rule->ruledate), ['class' => 'local-courseplanner-blueprint-shortcode']);
+        echo html_writer::tag('span', format_string($labeltext), ['class' => 'local-courseplanner-blueprint-name']);
         echo html_writer::tag(
             'span',
             $ruletypelabel,
-            ['class' => 'local-coursecalendar-type-badge local-coursecalendar-type-' . strtolower($rule->ruletype)]
+            ['class' => 'local-courseplanner-type-badge local-courseplanner-type-' . strtolower($rule->ruletype)]
         );
         echo html_writer::tag(
             'span',
-            get_string($badgekey, 'local_coursecalendar'),
-            ['class' => 'local-coursecalendar-badge ' . $badgeclass]
+            get_string($badgekey, 'local_courseplanner'),
+            ['class' => 'local-courseplanner-badge ' . $badgeclass]
         );
         echo html_writer::end_div();
-        echo html_writer::tag('span', get_string('editrulebutton', 'local_coursecalendar'), [
-            'class' => 'btn btn-outline-secondary btn-sm local-coursecalendar-edit-indicator',
+        echo html_writer::tag('span', get_string('editrulebutton', 'local_courseplanner'), [
+            'class' => 'btn btn-outline-secondary btn-sm local-courseplanner-edit-indicator',
             'aria-hidden' => 'true',
         ]);
         echo html_writer::end_tag('summary');
 
-        echo html_writer::start_div('local-coursecalendar-disclosure-body');
+        echo html_writer::start_div('local-courseplanner-disclosure-body');
 
         echo html_writer::start_tag('form', ['method' => 'post']);
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
@@ -332,12 +332,12 @@ if (empty($rules)) {
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
         echo html_writer::start_div('mb-2');
-        echo html_writer::tag('label', get_string('ruletypelabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+        echo html_writer::tag('label', get_string('ruletypelabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
         echo html_writer::div($ruletypelabel, 'form-control-plaintext');
         echo html_writer::end_div();
 
         echo html_writer::start_div('mb-2');
-        echo html_writer::tag('label', get_string('ruledatelabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+        echo html_writer::tag('label', get_string('ruledatelabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
         echo html_writer::empty_tag('input', [
             'type' => 'date',
             'name' => 'ruledate',
@@ -348,35 +348,35 @@ if (empty($rules)) {
         echo html_writer::end_div();
 
         echo html_writer::start_div('mb-2');
-        echo html_writer::tag('label', get_string('rulelabellabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+        echo html_writer::tag('label', get_string('rulelabellabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
         echo html_writer::empty_tag('input', [
             'type' => 'text',
             'name' => 'label',
             'class' => 'form-control',
-            'placeholder' => get_string('rulelabelplaceholder', 'local_coursecalendar'),
+            'placeholder' => get_string('rulelabelplaceholder', 'local_courseplanner'),
             'value' => s((string)$rule->label),
         ]);
         echo html_writer::end_div();
 
         echo html_writer::start_div('mb-2');
-        echo html_writer::tag('label', get_string('ruledescriptionlabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+        echo html_writer::tag('label', get_string('ruledescriptionlabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
         echo html_writer::tag('textarea', s((string)$rule->description), [
             'name' => 'description',
             'class' => 'form-control',
             'rows' => 2,
-            'placeholder' => get_string('ruledescriptionplaceholder', 'local_coursecalendar'),
+            'placeholder' => get_string('ruledescriptionplaceholder', 'local_courseplanner'),
         ]);
         echo html_writer::end_div();
 
         if ($rule->ruletype === 'DAY_SWAP') {
             echo html_writer::tag(
                 'div',
-                get_string('dayswapfieldshelp', 'local_coursecalendar'),
+                get_string('dayswapfieldshelp', 'local_courseplanner'),
                 ['class' => 'text-muted small mb-2']
             );
 
             echo html_writer::start_div('mb-2');
-            echo html_writer::tag('label', get_string('fromdaylabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+            echo html_writer::tag('label', get_string('fromdaylabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
             echo html_writer::start_tag('select', ['name' => 'fromday', 'class' => 'custom-select']);
             echo html_writer::tag('option', '—', ['value' => '']);
             foreach ($weekdays as $wd) {
@@ -390,7 +390,7 @@ if (empty($rules)) {
             echo html_writer::end_div();
 
             echo html_writer::start_div('mb-2');
-            echo html_writer::tag('label', get_string('todaylabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+            echo html_writer::tag('label', get_string('todaylabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
             echo html_writer::start_tag('select', ['name' => 'today', 'class' => 'custom-select']);
             echo html_writer::tag('option', '—', ['value' => '']);
             foreach ($weekdays as $wd) {
@@ -407,17 +407,17 @@ if (empty($rules)) {
         echo html_writer::empty_tag('input', [
             'type' => 'submit',
             'class' => 'btn btn-secondary',
-            'value' => get_string('saverulesubmit', 'local_coursecalendar'),
+            'value' => get_string('saverulesubmit', 'local_courseplanner'),
         ]);
         echo html_writer::end_tag('form');
 
-        echo html_writer::start_div('local-coursecalendar-inline-controls');
+        echo html_writer::start_div('local-courseplanner-inline-controls');
         foreach (['togglerule' => 'togglerulesubmit', 'deleterule' => 'deleterulesubmit'] as $ruleaction => $labelkey) {
-            $ruleformattrs = ['method' => 'post', 'class' => 'local-coursecalendar-inline-form'];
+            $ruleformattrs = ['method' => 'post', 'class' => 'local-courseplanner-inline-form'];
             if ($ruleaction === 'deleterule') {
-                $ruleformattrs['data-cc-confirm'] = get_string('deleteruleconfirm', 'local_coursecalendar');
+                $ruleformattrs['data-cc-confirm'] = get_string('deleteruleconfirm', 'local_courseplanner');
                 $ruleformattrs['data-cc-confirm-title'] = get_string('confirm', 'core');
-                $ruleformattrs['data-cc-confirm-action'] = get_string('deleterulesubmit', 'local_coursecalendar');
+                $ruleformattrs['data-cc-confirm-action'] = get_string('deleterulesubmit', 'local_courseplanner');
                 $ruleformattrs['data-cc-confirm-style'] = 'delete';
             }
             echo html_writer::start_tag('form', $ruleformattrs);
@@ -430,7 +430,7 @@ if (empty($rules)) {
             echo html_writer::empty_tag('input', [
                 'type' => 'submit',
                 'class' => $buttonclass,
-                'value' => get_string($labelkey, 'local_coursecalendar'),
+                'value' => get_string($labelkey, 'local_courseplanner'),
             ]);
             echo html_writer::end_tag('form');
         }
@@ -444,12 +444,12 @@ if (empty($rules)) {
 }
 echo $createrulehtml;
 
-$PAGE->requires->js_call_amd('local_coursecalendar/confirmaction', 'init', []);
+$PAGE->requires->js_call_amd('local_courseplanner/confirmaction', 'init', []);
 
-$tourid = local_coursecalendar_get_tour_id_by_name('local_coursecalendar_rules');
-$PAGE->requires->js_call_amd('local_coursecalendar/showtour', 'init', [
+$tourid = local_courseplanner_get_tour_id_by_name('local_courseplanner_rules');
+$PAGE->requires->js_call_amd('local_courseplanner/showtour', 'init', [
     $tourid,
-    '#local-coursecalendar-showtour',
+    '#local-courseplanner-showtour',
 ]);
 
 echo $OUTPUT->footer();

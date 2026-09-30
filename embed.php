@@ -17,7 +17,7 @@
 /**
  * Embeddable calendar view.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -32,16 +32,16 @@ $course = get_course($courseid);
 $context = context_course::instance($courseid);
 
 require_login($course);
-require_capability('local/coursecalendar:viewcalendar', $context);
+require_capability('local/courseplanner:view', $context);
 
-$calendar = local_coursecalendar_require_course_calendar($calendarid, $courseid);
+$calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
 
-$PAGE->set_url(new moodle_url('/local/coursecalendar/embed.php', ['id' => $courseid, 'calendarid' => $calendarid]));
+$PAGE->set_url(new moodle_url('/local/courseplanner/embed.php', ['id' => $courseid, 'calendarid' => $calendarid]));
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('embedded');
-$PAGE->set_title(get_string('embedpagetitle', 'local_coursecalendar'));
-$PAGE->requires->css(new moodle_url('/local/coursecalendar/styles.css'));
+$PAGE->set_title(get_string('embedpagetitle', 'local_courseplanner'));
+$PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
 
 echo $OUTPUT->header();
-echo local_coursecalendar_render_calendar_grid($calendar, true);
+echo local_courseplanner_render_calendar_grid($calendar, true);
 echo $OUTPUT->footer();

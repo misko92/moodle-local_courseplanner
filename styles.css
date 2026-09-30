@@ -1,11 +1,11 @@
-.local-coursecalendar-shell {
+.local-courseplanner-shell {
     margin-top: 1rem;
     padding: 0.75rem 1rem;
     border-left: 4px solid #0f6cbf;
     background: #f8fbff;
 }
 
-.local-coursecalendar-card {
+.local-courseplanner-card {
     margin: 1rem 0;
     padding: 1rem;
     border: 1px solid #d9e2ec;
@@ -13,73 +13,73 @@
     background: #fff;
 }
 
-.local-coursecalendar-inline-form {
+.local-courseplanner-inline-form {
     margin: 0.5rem 0 1rem;
     display: inline-block;
     margin-right: 0.5rem;
 }
 
-.local-coursecalendar-status {
+.local-courseplanner-status {
     font-weight: 600;
     margin-bottom: 0.5rem;
 }
 
-.local-coursecalendar-inline-controls {
+.local-courseplanner-inline-controls {
     margin: 0.5rem 0 1rem;
 }
 
-.local-coursecalendar-grid-cell {
+.local-courseplanner-grid-cell {
     min-width: 220px;
     vertical-align: top;
 }
 
-.local-coursecalendar-readonly-cell {
+.local-courseplanner-readonly-cell {
     min-height: 72px;
     padding: 0.25rem;
     font-weight: 600;
 }
 
-.local-coursecalendar-delete-column-form {
+.local-courseplanner-delete-column-form {
     margin: 0 0 0.25rem;
     text-align: right;
 }
 
-.local-coursecalendar-delete-column-btn {
+.local-courseplanner-delete-column-btn {
     padding: 0 0.25rem;
     line-height: 1;
 }
 
-.local-coursecalendar-weekrow-actions {
+.local-courseplanner-weekrow-actions {
     margin-top: 1rem;
 }
 
-.local-coursecalendar-weekrow-reminder {
+.local-courseplanner-weekrow-reminder {
     margin-bottom: 1rem;
 }
 
-.local-coursecalendar-topic-meta {
+.local-courseplanner-topic-meta {
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
     color: #5f6872;
 }
 
-.local-coursecalendar-checkbox-row {
+.local-courseplanner-checkbox-row {
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
 }
 
-.local-coursecalendar-highlighted {
+.local-courseplanner-highlighted {
     /* stylelint-disable-next-line declaration-no-important */
     background-color: #fff3cd !important;
     border-left: 3px solid #ffc107;
 }
 
-.local-coursecalendar-vcentred {
+.local-courseplanner-vcentred {
     /* stylelint-disable-next-line declaration-no-important */
     vertical-align: middle !important;
 }
 
-.local-coursecalendar-blank-cell {
+.local-courseplanner-blank-cell {
     /* stylelint-disable-next-line declaration-no-important */
     vertical-align: middle !important;
     text-align: center;
@@ -95,14 +95,14 @@
         );
 }
 
-.local-coursecalendar-blank-label {
+.local-courseplanner-blank-label {
     font-size: 0.8rem;
     font-style: italic;
     font-weight: 500;
     color: #98a2b3;
 }
 
-.local-coursecalendar-cellheading {
+.local-courseplanner-cellheading {
     font-weight: 600;
     font-size: 0.8rem;
     color: #495057;
@@ -111,12 +111,12 @@
     margin-bottom: 0.375rem;
 }
 
-.local-coursecalendar-topic-display {
+.local-courseplanner-topic-display {
     padding: 0.375rem 0;
     font-weight: 500;
 }
 
-.local-coursecalendar-type-badge {
+.local-courseplanner-type-badge {
     display: inline-block;
     padding: 0.125rem 0.5rem;
     border-radius: 0.25rem;
@@ -129,27 +129,27 @@
     vertical-align: middle;
 }
 
-.local-coursecalendar-type-lecture {
+.local-courseplanner-type-lecture {
     background: #0d6efd;
 }
 
-.local-coursecalendar-type-lab {
+.local-courseplanner-type-lab {
     background: #198754;
 }
 
-.local-coursecalendar-type-elesson {
+.local-courseplanner-type-elesson {
     background: #6f42c1;
 }
 
-.local-coursecalendar-type-test {
+.local-courseplanner-type-test {
     background: #dc3545;
 }
 
-.local-coursecalendar-type-homework {
+.local-courseplanner-type-homework {
     background: #fd7e14;
 }
 
-.local-coursecalendar-topic-preview {
+.local-courseplanner-topic-preview {
     font-size: 0.8rem;
     color: #6c757d;
     margin-top: 0.25rem;
@@ -157,95 +157,95 @@
     overflow: hidden;
 }
 
-.local-coursecalendar-text-preview {
+.local-courseplanner-text-preview {
     font-size: 0.85rem;
     color: #212529;
 }
 
-.local-coursecalendar-cell-editor {
+.local-courseplanner-cell-editor {
     margin-top: 0.5rem;
     border-top: 1px dashed #dee2e6;
     padding-top: 0.375rem;
 }
 
-.local-coursecalendar-cell-editor > summary {
+.local-courseplanner-cell-editor > summary {
     padding: 0;
     font-size: 0.8rem;
 }
 
-.local-coursecalendar-muted-note {
+.local-courseplanner-muted-note {
     font-size: 0.8rem;
     color: #5f6872;
 }
 
-.local-coursecalendar-shared-topic-editor {
+.local-courseplanner-shared-topic-editor {
     margin-top: 0.75rem;
     padding-top: 0.75rem;
     border-top: 1px solid #f0c36d;
 }
 
-.local-coursecalendar-shared-topic-editor h6 {
+.local-courseplanner-shared-topic-editor h6 {
     margin-bottom: 0.5rem;
     font-weight: 600;
 }
 
-.local-coursecalendar-shared-topic-warning {
+.local-courseplanner-shared-topic-warning {
     padding: 0.5rem 0.75rem;
     font-size: 0.85rem;
 }
 
-.local-coursecalendar-page-actions {
+.local-courseplanner-page-actions {
     margin-bottom: 1rem;
 }
 
-.local-coursecalendar-faint-actions {
+.local-courseplanner-faint-actions {
     margin-top: 2rem;
     text-align: right;
 }
 
-.local-coursecalendar-faint-link,
-.local-coursecalendar-faint-link:visited {
+.local-courseplanner-faint-link,
+.local-courseplanner-faint-link:visited {
     color: #adb5bd;
     font-size: 0.75rem;
     text-decoration: none;
 }
 
-.local-coursecalendar-faint-link:hover,
-.local-coursecalendar-faint-link:focus {
+.local-courseplanner-faint-link:hover,
+.local-courseplanner-faint-link:focus {
     color: #6c757d;
     text-decoration: underline;
 }
 
-.local-coursecalendar-preview-header {
+.local-courseplanner-preview-header {
     background-color: #e9ecef;
     font-weight: 600;
 }
 
-.local-coursecalendar-header-meta {
+.local-courseplanner-header-meta {
     font-size: 0.75rem;
     font-weight: 400;
     color: #6c757d;
     margin-top: 0.125rem;
 }
 
-.local-coursecalendar-preview .local-coursecalendar-topic-preview {
+.local-courseplanner-preview .local-courseplanner-topic-preview {
     max-height: none;
     overflow: visible;
 }
 
-.local-coursecalendar-toolbar {
+.local-courseplanner-toolbar {
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
     gap: 0.25rem;
 }
 
-.local-coursecalendar-dragging {
+.local-courseplanner-dragging {
     opacity: 0.5;
     outline: 2px dashed #0d6efd;
 }
 
-.local-coursecalendar-dragover {
+.local-courseplanner-dragover {
     /* stylelint-disable-next-line declaration-no-important */
     background-color: #d1ecf1 !important;
     outline: 2px solid #0d6efd;
@@ -259,7 +259,7 @@
     cursor: grabbing;
 }
 
-.local-coursecalendar-elesson-notice {
+.local-courseplanner-elesson-notice {
     display: inline-block;
     background: #6f42c1;
     color: #fff;
@@ -271,7 +271,7 @@
     margin-right: 0.25rem;
 }
 
-.local-coursecalendar-elesson-sub {
+.local-courseplanner-elesson-sub {
     display: block;
     font-size: 0.75rem;
     color: #6c757d;
@@ -279,26 +279,26 @@
     margin-top: 0.125rem;
 }
 
-.local-coursecalendar-week-note {
+.local-courseplanner-week-note {
     font-size: 0.75rem;
     color: #6c757d;
     font-style: italic;
     margin-top: 0.25rem;
 }
 
-.local-coursecalendar-today-cell {
+.local-courseplanner-today-cell {
     /* stylelint-disable-next-line declaration-no-important */
     background-color: #cfe2ff !important;
     /* stylelint-disable-next-line declaration-no-important */
     border: 2px solid #0d6efd !important;
 }
 
-.local-coursecalendar-nearest-row td,
-.local-coursecalendar-nearest-row th {
+.local-courseplanner-nearest-row td,
+.local-courseplanner-nearest-row th {
     border-left: 3px solid #0d6efd;
 }
 
-.local-coursecalendar-course-intro {
+.local-courseplanner-course-intro {
     margin-bottom: 1.5rem;
     padding: 1rem;
     border: 1px solid #d9e2ec;
@@ -306,51 +306,51 @@
     background: #f8fbff;
 }
 
-.local-coursecalendar-course-intro h3 {
+.local-courseplanner-course-intro h3 {
     margin-top: 0;
 }
 
-.local-coursecalendar-introtexts-grid,
-.local-coursecalendar-course-intro-grid {
+.local-courseplanner-introtexts-grid,
+.local-courseplanner-course-intro-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 1rem;
 }
 
-.local-coursecalendar-introtext-panel,
-.local-coursecalendar-course-intro-panel {
+.local-courseplanner-introtext-panel,
+.local-courseplanner-course-intro-panel {
     min-width: 0;
 }
 
-.local-coursecalendar-introtexts-form .tox-tinymce {
+.local-courseplanner-introtexts-form .tox-tinymce {
     min-height: 320px;
 }
 
-.local-coursecalendar-grid .tox-tinymce {
+.local-courseplanner-grid .tox-tinymce {
     min-height: 220px;
 }
 
-.local-coursecalendar-coverage-found {
+.local-courseplanner-coverage-found {
     color: #198754;
 }
 
-.local-coursecalendar-coverage-missing {
+.local-courseplanner-coverage-missing {
     color: #dc3545;
 }
 
-.local-coursecalendar-coverage-empty {
+.local-courseplanner-coverage-empty {
     color: #6c757d;
 }
 
-.local-coursecalendar-embed .local-coursecalendar-grid {
+.local-courseplanner-embed .local-courseplanner-grid {
     margin: 0;
 }
 
-.local-coursecalendar-embed body {
+.local-courseplanner-embed body {
     padding: 0.5rem;
 }
 
-.local-coursecalendar-pageheader {
+.local-courseplanner-pageheader {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -358,55 +358,55 @@
     flex-wrap: wrap;
 }
 
-.local-coursecalendar-pageheader h2,
-.local-coursecalendar-pageheader .h2 {
+.local-courseplanner-pageheader h2,
+.local-courseplanner-pageheader .h2 {
     margin-bottom: 0;
 }
 
-.local-coursecalendar-showtour {
+.local-courseplanner-showtour {
     align-self: flex-start;
     margin-top: 0.25rem;
     scroll-margin-top: 140px;
 }
 
-#local-coursecalendar-showtour {
+#local-courseplanner-showtour {
     scroll-margin-top: 140px;
 }
 
-#local-coursecalendar-section-link,
-#local-coursecalendar-section-linkcourse,
-#local-coursecalendar-section-calendars,
-#local-coursecalendar-section-blueprints,
-#local-coursecalendar-section-topics {
+#local-courseplanner-section-link,
+#local-courseplanner-section-linkcourse,
+#local-courseplanner-section-calendars,
+#local-courseplanner-section-blueprints,
+#local-courseplanner-section-topics {
     scroll-margin-top: 120px;
 }
 
-body.local-coursecalendar-tour-active {
+body.local-courseplanner-tour-active {
     scroll-padding-top: 160px;
 }
 
-body.local-coursecalendar-tour-active #page-content,
-body.local-coursecalendar-tour-active .local-coursecalendar-pageheader {
+body.local-courseplanner-tour-active #page-content,
+body.local-courseplanner-tour-active .local-courseplanner-pageheader {
     scroll-margin-top: 160px;
 }
 
-body.local-coursecalendar-tour-active .local-coursecalendar-pageheader {
+body.local-courseplanner-tour-active .local-courseplanner-pageheader {
     margin-top: 6rem;
 }
 
-.local-coursecalendar-intro {
+.local-courseplanner-intro {
     margin: 0.75rem 0 1rem;
 }
 
-.local-coursecalendar-intro p:last-child {
+.local-courseplanner-intro p:last-child {
     margin-bottom: 0;
 }
 
-.local-coursecalendar-setup-summary {
+.local-courseplanner-setup-summary {
     margin: 1rem 0 1.5rem;
 }
 
-.local-coursecalendar-status-heading {
+.local-courseplanner-status-heading {
     margin: 0 0 0.5rem;
     color: #495057;
     font-size: 0.95rem;
@@ -415,26 +415,26 @@ body.local-coursecalendar-tour-active .local-coursecalendar-pageheader {
     text-transform: uppercase;
 }
 
-.local-coursecalendar-status-grid {
+.local-courseplanner-status-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 0.75rem;
     margin-bottom: 1rem;
 }
 
-.local-coursecalendar-status-card {
+.local-courseplanner-status-card {
     padding: 0.85rem 1rem;
     border: 1px solid #d9e2ec;
     border-radius: 0.375rem;
     background: #fff;
 }
 
-.local-coursecalendar-status-label,
-.local-coursecalendar-status-value {
+.local-courseplanner-status-label,
+.local-courseplanner-status-value {
     display: block;
 }
 
-.local-coursecalendar-status-label {
+.local-courseplanner-status-label {
     margin-bottom: 0.25rem;
     color: #5f6872;
     font-size: 0.75rem;
@@ -443,11 +443,11 @@ body.local-coursecalendar-tour-active .local-coursecalendar-pageheader {
     text-transform: uppercase;
 }
 
-.local-coursecalendar-status-value {
+.local-courseplanner-status-value {
     font-weight: 600;
 }
 
-.local-coursecalendar-nextstep-card {
+.local-courseplanner-nextstep-card {
     margin: 1rem 0 1.5rem;
     padding: 1.25rem;
     border: 1px solid #b6d4fe;
@@ -456,14 +456,14 @@ body.local-coursecalendar-tour-active .local-coursecalendar-pageheader {
     background: #f8fbff;
 }
 
-.local-coursecalendar-nextstep-card--complete {
+.local-courseplanner-nextstep-card--complete {
     padding: 1rem;
     border-color: #d9e2ec;
     border-left-color: #6c757d;
     background: #fff;
 }
 
-.local-coursecalendar-nextstep-label {
+.local-courseplanner-nextstep-label {
     margin-bottom: 0.35rem;
     color: #0f6cbf;
     font-size: 0.75rem;
@@ -472,49 +472,49 @@ body.local-coursecalendar-tour-active .local-coursecalendar-pageheader {
     text-transform: uppercase;
 }
 
-.local-coursecalendar-nextstep-card--complete .local-coursecalendar-nextstep-label {
+.local-courseplanner-nextstep-card--complete .local-courseplanner-nextstep-label {
     color: #5f6872;
 }
 
-.local-coursecalendar-nextstep-title {
+.local-courseplanner-nextstep-title {
     margin: 0 0 0.5rem;
     font-size: 1.25rem;
 }
 
-.local-coursecalendar-nextstep-card--complete .local-coursecalendar-nextstep-title {
+.local-courseplanner-nextstep-card--complete .local-courseplanner-nextstep-title {
     font-size: 1.1rem;
 }
 
-.local-coursecalendar-nextstep-body {
+.local-courseplanner-nextstep-body {
     max-width: 48rem;
     margin-bottom: 1rem;
 }
 
-.local-coursecalendar-nextstep-card--complete .local-coursecalendar-nextstep-body {
+.local-courseplanner-nextstep-card--complete .local-courseplanner-nextstep-body {
     margin-bottom: 0.75rem;
 }
 
-.local-coursecalendar-recommendation-reason {
+.local-courseplanner-recommendation-reason {
     margin: -0.25rem 0 0.75rem;
     color: #5f6872;
     font-size: 0.85rem;
 }
 
-.local-coursecalendar-nextstep-action {
+.local-courseplanner-nextstep-action {
     font-weight: 600;
 }
 
-.local-coursecalendar-section-title {
+.local-courseplanner-section-title {
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
 }
 
-.local-coursecalendar-create-blueprint {
+.local-courseplanner-create-blueprint {
     padding: 0;
     overflow: hidden;
 }
 
-.local-coursecalendar-disclosure-summary {
+.local-courseplanner-disclosure-summary {
     list-style: none;
     cursor: pointer;
     padding: 0.75rem 1rem;
@@ -525,11 +525,11 @@ body.local-coursecalendar-tour-active .local-coursecalendar-pageheader {
     gap: 0.5rem;
 }
 
-.local-coursecalendar-disclosure-summary::-webkit-details-marker {
+.local-courseplanner-disclosure-summary::-webkit-details-marker {
     display: none;
 }
 
-.local-coursecalendar-disclosure-summary::before {
+.local-courseplanner-disclosure-summary::before {
     content: "+";
     display: inline-block;
     width: 1rem;
@@ -538,28 +538,28 @@ body.local-coursecalendar-tour-active .local-coursecalendar-pageheader {
     transition: transform 0.15s ease;
 }
 
-details[open] > .local-coursecalendar-disclosure-summary::before {
+details[open] > .local-courseplanner-disclosure-summary::before {
     content: "−";
 }
 
-.local-coursecalendar-disclosure-summary--primary {
+.local-courseplanner-disclosure-summary--primary {
     background: #f8fbff;
     color: #0f6cbf;
 }
 
-.local-coursecalendar-disclosure-summary--primary:hover,
-.local-coursecalendar-disclosure-summary--primary:focus {
+.local-courseplanner-disclosure-summary--primary:hover,
+.local-courseplanner-disclosure-summary--primary:focus {
     background: #eef5fd;
     outline: none;
 }
 
-.local-coursecalendar-disclosure-body {
+.local-courseplanner-disclosure-body {
     padding: 1rem;
     border-top: 1px solid #d9e2ec;
     background: #fff;
 }
 
-.local-coursecalendar-blueprint-list {
+.local-courseplanner-blueprint-list {
     list-style: none;
     padding: 0;
     margin: 1rem 0;
@@ -568,7 +568,7 @@ details[open] > .local-coursecalendar-disclosure-summary::before {
     background: #fff;
 }
 
-.local-coursecalendar-linked-blueprint-row {
+.local-courseplanner-linked-blueprint-row {
     margin: 1rem 0;
     padding: 0.75rem 1rem;
     border: 1px solid #d9e2ec;
@@ -580,20 +580,20 @@ details[open] > .local-coursecalendar-disclosure-summary::before {
     gap: 1rem;
 }
 
-.local-coursecalendar-row-action-form {
+.local-courseplanner-row-action-form {
     margin: 0;
     flex: 0 0 auto;
 }
 
-.local-coursecalendar-blueprint-item + .local-coursecalendar-blueprint-item {
+.local-courseplanner-blueprint-item + .local-courseplanner-blueprint-item {
     border-top: 1px solid #e5eaf0;
 }
 
-.local-coursecalendar-blueprint-details {
+.local-courseplanner-blueprint-details {
     width: 100%;
 }
 
-.local-coursecalendar-blueprint-summary {
+.local-courseplanner-blueprint-summary {
     list-style: none;
     cursor: pointer;
     padding: 0.75rem 1rem;
@@ -604,17 +604,17 @@ details[open] > .local-coursecalendar-disclosure-summary::before {
     user-select: none;
 }
 
-.local-coursecalendar-blueprint-summary::-webkit-details-marker {
+.local-courseplanner-blueprint-summary::-webkit-details-marker {
     display: none;
 }
 
-.local-coursecalendar-blueprint-summary:hover,
-.local-coursecalendar-blueprint-summary:focus {
+.local-courseplanner-blueprint-summary:hover,
+.local-courseplanner-blueprint-summary:focus {
     background: #f8fbff;
     outline: none;
 }
 
-.local-coursecalendar-blueprint-summary-main {
+.local-courseplanner-blueprint-summary-main {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -623,11 +623,11 @@ details[open] > .local-coursecalendar-disclosure-summary::before {
     min-width: 0;
 }
 
-.local-coursecalendar-blueprint-name {
+.local-courseplanner-blueprint-name {
     font-weight: 600;
 }
 
-.local-coursecalendar-blueprint-shortcode {
+.local-courseplanner-blueprint-shortcode {
     font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 0.8rem;
     color: #5f6872;
@@ -636,7 +636,7 @@ details[open] > .local-coursecalendar-disclosure-summary::before {
     border-radius: 0.25rem;
 }
 
-.local-coursecalendar-badge {
+.local-courseplanner-badge {
     display: inline-block;
     padding: 0.125rem 0.5rem;
     border-radius: 0.25rem;
@@ -646,48 +646,48 @@ details[open] > .local-coursecalendar-disclosure-summary::before {
     letter-spacing: 0.02em;
 }
 
-.local-coursecalendar-badge--active {
+.local-courseplanner-badge--active {
     color: #0f5132;
     background: #d1e7dd;
 }
 
-.local-coursecalendar-badge--archived {
+.local-courseplanner-badge--archived {
     color: #6c757d;
     background: #e9ecef;
 }
 
-.local-coursecalendar-badge--recommended {
+.local-courseplanner-badge--recommended {
     color: #084298;
     background: #cfe2ff;
 }
 
-.local-coursecalendar-edit-indicator {
+.local-courseplanner-edit-indicator {
     flex: 0 0 auto;
     pointer-events: none;
 }
 
-details[open] > .local-coursecalendar-blueprint-summary {
+details[open] > .local-courseplanner-blueprint-summary {
     background: #f8fbff;
     border-bottom: 1px solid #e5eaf0;
 }
 
-details[open] > .local-coursecalendar-blueprint-summary .local-coursecalendar-edit-indicator {
+details[open] > .local-courseplanner-blueprint-summary .local-courseplanner-edit-indicator {
     display: none;
 }
 
-.local-coursecalendar-open-builder {
+.local-courseplanner-open-builder {
     flex: 0 0 auto;
     margin-right: 0.5rem;
     font-weight: 600;
     white-space: nowrap;
 }
 
-.local-coursecalendar-open-builder:hover,
-.local-coursecalendar-open-builder:focus {
+.local-courseplanner-open-builder:hover,
+.local-courseplanner-open-builder:focus {
     text-decoration: none;
 }
 
-.local-coursecalendar-drag-handle {
+.local-courseplanner-drag-handle {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
@@ -703,38 +703,38 @@ details[open] > .local-coursecalendar-blueprint-summary .local-coursecalendar-ed
     letter-spacing: -0.15rem;
 }
 
-.local-coursecalendar-drag-handle:hover {
+.local-courseplanner-drag-handle:hover {
     color: #0d6efd;
 }
 
-.local-coursecalendar-topic-item {
+.local-courseplanner-topic-item {
     transition: background-color 120ms ease;
 }
 
-.local-coursecalendar-topic-item.sortable-list-is-dragged {
+.local-courseplanner-topic-item.sortable-list-is-dragged {
     opacity: 0.7;
     background: #eef4ff;
 }
 
-.local-coursecalendar-topic-item.sortable-list-target-position {
+.local-courseplanner-topic-item.sortable-list-target-position {
     outline: 2px dashed #0d6efd;
     outline-offset: -2px;
 }
 
-.local-coursecalendar-list-saving {
+.local-courseplanner-list-saving {
     position: relative;
     pointer-events: none;
     opacity: 0.7;
 }
 
-.local-coursecalendar-list-saving::after {
+.local-courseplanner-list-saving::after {
     content: "";
     position: absolute;
     inset: 0;
     border: 2px solid transparent;
     border-top-color: #0d6efd;
     border-radius: 0.5rem;
-    animation: local-coursecalendar-spin 0.9s linear infinite;
+    animation: local-courseplanner-spin 0.9s linear infinite;
     pointer-events: none;
     width: 1.25rem;
     height: 1.25rem;
@@ -744,7 +744,7 @@ details[open] > .local-coursecalendar-blueprint-summary .local-coursecalendar-ed
     bottom: auto;
 }
 
-@keyframes local-coursecalendar-spin {
+@keyframes local-courseplanner-spin {
     to {
         transform: rotate(360deg);
     }

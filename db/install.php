@@ -17,22 +17,22 @@
 /**
  * Database installation routines.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Post-install hook for local_coursecalendar.
+ * Post-install hook for local_courseplanner.
  *
  * Seeds shipped user tours so teachers get a walkthrough on first visit.
  *
  * @return bool
  */
-function xmldb_local_coursecalendar_install(): bool {
+function xmldb_local_courseplanner_install(): bool {
     global $CFG;
-    require_once($CFG->dirroot . '/local/coursecalendar/locallib.php');
+    require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
 
-    local_coursecalendar_install_user_tours();
+    local_courseplanner_install_user_tours();
     return true;
 }

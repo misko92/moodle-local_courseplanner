@@ -17,7 +17,7 @@
 /**
  * Landing page for the course calendar plugin.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -30,9 +30,9 @@ $context = context_course::instance($courseid);
 
 require_login($course);
 
-if (has_capability('local/coursecalendar:managecalendar', $context)) {
-    redirect(new moodle_url('/local/coursecalendar/manage.php', ['id' => $courseid]));
+if (has_capability('local/courseplanner:manage', $context)) {
+    redirect(new moodle_url('/local/courseplanner/manage.php', ['id' => $courseid]));
 }
 
-require_capability('local/coursecalendar:viewcalendar', $context);
-redirect(new moodle_url('/local/coursecalendar/student.php', ['id' => $courseid]));
+require_capability('local/courseplanner:view', $context);
+redirect(new moodle_url('/local/courseplanner/student.php', ['id' => $courseid]));

@@ -17,7 +17,7 @@
 /**
  * Capability definitions.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,15 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
-    'local/coursecalendar:managesettings' => [
-        'riskbitmask' => RISK_CONFIG,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => [
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-    'local/coursecalendar:managecalendar' => [
+    'local/courseplanner:manage' => [
         'riskbitmask' => RISK_XSS | RISK_DATALOSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
@@ -42,7 +34,7 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
-    'local/coursecalendar:viewcalendar' => [
+    'local/courseplanner:view' => [
         'riskbitmask' => 0,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COURSE,
@@ -53,29 +45,5 @@ $capabilities = [
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
         ],
-    ],
-    // Legacy capability names kept as aliases for backward compatibility.
-    'local/coursecalendar:manage' => [
-        'riskbitmask' => RISK_XSS | RISK_DATALOSS,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-        'clonepermissionsfrom' => 'local/coursecalendar:managecalendar',
-    ],
-    'local/coursecalendar:view' => [
-        'riskbitmask' => 0,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => [
-            'guest' => CAP_ALLOW,
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-        'clonepermissionsfrom' => 'local/coursecalendar:viewcalendar',
     ],
 ];

@@ -17,15 +17,16 @@
 /**
  * Plugin version information.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_coursecalendar';
-$plugin->version   = 2026060103;
-$plugin->requires  = 2023042400;
-$plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '0.2.3';
+$plugin->component = 'local_courseplanner';
+$plugin->version   = 2026093000;
+$plugin->requires  = 2024100700; // Moodle 4.5 LTS.
+$plugin->supported = [405, 502];
+$plugin->maturity  = MATURITY_ALPHA;
+$plugin->release   = '0.1.0';

@@ -1,5 +1,5 @@
 /**
- * Modal confirmation shim for local_coursecalendar action forms.
+ * Modal confirmation shim for local_courseplanner action forms.
  *
  * Replaces the browser-native `confirm()` dialog used by the builder's
  * automation buttons (Auto-populate, Fill Problem Sessions, the two
@@ -12,7 +12,7 @@
  * actions). When the user confirms, the form is submitted directly so
  * the submit listener is not re-entered.
  *
- * @module local_coursecalendar/confirmaction
+ * @module local_courseplanner/confirmaction
  */
 define(['core/notification'], function(Notification) {
     'use strict';

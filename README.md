@@ -1,12 +1,12 @@
-# Course Calendar (`local_coursecalendar`)
+# Course Calendar (`local_courseplanner`)
 
-[![Moodle Plugin CI](https://github.com/GitHubGreg/moodle-local_coursecalendar/actions/workflows/moodle-ci.yml/badge.svg?branch=main)](https://github.com/GitHubGreg/moodle-local_coursecalendar/actions/workflows/moodle-ci.yml)
+[![Moodle Plugin CI](https://github.com/GitHubGreg/moodle-local_courseplanner/actions/workflows/moodle-ci.yml/badge.svg?branch=main)](https://github.com/GitHubGreg/moodle-local_courseplanner/actions/workflows/moodle-ci.yml)
 
 A Moodle local plugin that lets teachers define reusable course content once, build semester calendars from that content, and publish a student-facing calendar view inside Moodle.
 
 | | |
 |---|---|
-| **Plugin type** | Local (`local_coursecalendar`) |
+| **Plugin type** | Local (`local_courseplanner`) |
 | **Requires** | Moodle 4.2+ (`2023042400`) |
 | **Tested on** | Moodle 5.0 (`MOODLE_501_STABLE`) |
 | **Maturity** | Beta |
@@ -44,20 +44,20 @@ A Moodle local plugin that lets teachers define reusable course content once, bu
 
 ## Installation
 
-The repository root is the plugin directory itself, so the contents clone or extract directly into your Moodle's `local/coursecalendar/` folder.
+The repository root is the plugin directory itself, so the contents clone or extract directly into your Moodle's `local/courseplanner/` folder.
 
 ### Option A: Git clone (recommended)
 
 From the root of your Moodle installation:
 
 ```bash
-git clone https://github.com/GitHubGreg/moodle-local_coursecalendar.git local/coursecalendar
+git clone https://github.com/GitHubGreg/moodle-local_courseplanner.git local/courseplanner
 ```
 
 ### Option B: Download a release zip
 
-1. Download the latest release zip from the [Releases page](https://github.com/GitHubGreg/moodle-local_coursecalendar/releases).
-2. Extract it so the plugin files (`version.php`, `db/`, `lang/`, `amd/`, etc.) live directly at `<moodle>/local/coursecalendar/`.
+1. Download the latest release zip from the [Releases page](https://github.com/GitHubGreg/moodle-local_courseplanner/releases).
+2. Extract it so the plugin files (`version.php`, `db/`, `lang/`, `amd/`, etc.) live directly at `<moodle>/local/courseplanner/`.
 
 ### Finish the install
 
@@ -92,9 +92,9 @@ The typical workflow for a new teacher is:
 
 | Capability | Default roles | Purpose |
 |---|---|---|
-| `local/coursecalendar:managesettings` | Manager | Access plugin admin settings |
-| `local/coursecalendar:managecalendar` | Editing teacher, Manager | Full access to builder, topics, rules, automation, and course info |
-| `local/coursecalendar:viewcalendar` | Guest, Student, Teacher, Editing teacher, Manager | Read-only access to the student calendar view |
+| `local/courseplanner:managesettings` | Manager | Access plugin admin settings |
+| `local/courseplanner:manage` | Editing teacher, Manager | Full access to builder, topics, rules, automation, and course info |
+| `local/courseplanner:view` | Guest, Student, Teacher, Editing teacher, Manager | Read-only access to the student calendar view |
 
 Teachers can only see and edit blueprints they own. All builder pages enforce `require_login()` and `require_capability()` in the course context.
 
@@ -345,7 +345,7 @@ Tools for importing existing calendar content into the plugin.
 
 ## Database Tables
 
-All tables are prefixed with `local_coursecalendar_`.
+All tables are prefixed with `local_courseplanner_`.
 
 | Table | Purpose |
 |---|---|
@@ -362,7 +362,7 @@ All tables are prefixed with `local_coursecalendar_`.
 
 ## Upgrading
 
-1. In your Moodle install, replace the contents of `local/coursecalendar/` with the new version (e.g. `git pull` inside that directory, or re-extract a fresh release zip).
+1. In your Moodle install, replace the contents of `local/courseplanner/` with the new version (e.g. `git pull` inside that directory, or re-extract a fresh release zip).
 2. Navigate to **Site administration > Notifications**.
 3. Moodle will detect the version change and run any necessary database upgrades.
 4. Purge caches: **Site administration > Development > Purge all caches**.
@@ -395,7 +395,7 @@ All tables are prefixed with `local_coursecalendar_`.
 
 ## Reporting Issues
 
-Please open an issue on [GitHub Issues](https://github.com/GitHubGreg/moodle-local_coursecalendar/issues) with:
+Please open an issue on [GitHub Issues](https://github.com/GitHubGreg/moodle-local_courseplanner/issues) with:
 
 - Your Moodle version.
 - The plugin version (see `version.php`).

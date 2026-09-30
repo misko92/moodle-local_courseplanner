@@ -17,7 +17,7 @@
 /**
  * Calendar rendering and event helpers.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -33,40 +33,40 @@ $course = get_course($courseid);
 $context = context_course::instance($courseid);
 
 require_login($course);
-require_capability('local/coursecalendar:managecalendar', $context);
+require_capability('local/courseplanner:manage', $context);
 
-$calendar = local_coursecalendar_require_course_calendar($calendarid, $courseid);
-$blueprint = local_coursecalendar_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+$calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
+$blueprint = local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
 
-$pageurl = new moodle_url('/local/coursecalendar/calendar.php', ['id' => $courseid, 'calendarid' => $calendarid]);
-$backurl = new moodle_url('/local/coursecalendar/manage.php', ['id' => $courseid, 'blueprintctx' => $blueprint->id]);
+$pageurl = new moodle_url('/local/courseplanner/calendar.php', ['id' => $courseid, 'calendarid' => $calendarid]);
+$backurl = new moodle_url('/local/courseplanner/manage.php', ['id' => $courseid, 'blueprintctx' => $blueprint->id]);
 $headerdayoptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 $headermodeoptions = ['Lecture', 'Lab'];
-$activetopics = local_coursecalendar_get_blueprint_topics((int)$blueprint->id, false);
-$alltopics = local_coursecalendar_get_blueprint_topics((int)$blueprint->id, true);
+$activetopics = local_courseplanner_get_blueprint_topics((int)$blueprint->id, false);
+$alltopics = local_courseplanner_get_blueprint_topics((int)$blueprint->id, true);
 
 if ($action !== '' && data_submitted()) {
     require_sesskey();
 
     switch ($action) {
         case 'addweekrow':
-            local_coursecalendar_ensure_base_grid((int)$calendar->id, (int)$USER->id);
-            local_coursecalendar_add_week_row((int)$calendar->id, (int)$USER->id);
-            redirect($pageurl, get_string('weekrowadded', 'local_coursecalendar'), null, \core\output\notification::NOTIFY_SUCCESS);
+            local_courseplanner_ensure_base_grid((int)$calendar->id, (int)$USER->id);
+            local_courseplanner_add_week_row((int)$calendar->id, (int)$USER->id);
+            redirect($pageurl, get_string('weekrowadded', 'local_courseplanner'), null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'removelastweekrow':
-            if (!local_coursecalendar_remove_last_week_row((int)$calendar->id)) {
+            if (!local_courseplanner_remove_last_week_row((int)$calendar->id)) {
                 redirect(
                     $pageurl,
-                    get_string('errornoweekrowstoremove', 'local_coursecalendar'),
+                    get_string('errornoweekrowstoremove', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
             }
             redirect(
                 $pageurl,
-                get_string('weekrowremoved', 'local_coursecalendar'),
+                get_string('weekrowremoved', 'local_courseplanner'),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
@@ -77,7 +77,7 @@ if ($action !== '' && data_submitted()) {
             if ($colnum < 1 || $colnum > 4) {
                 redirect(
                     $pageurl,
-                    get_string('errorinvalidheadercol', 'local_coursecalendar'),
+                    get_string('errorinvalidheadercol', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
@@ -94,14 +94,14 @@ if ($action !== '' && data_submitted()) {
                 if (!in_array($headerday, $headerdayoptions, true) || !in_array($headermode, $headermodeoptions, true)) {
                     redirect(
                         $pageurl,
-                        get_string('errorinvalidheaderconfig', 'local_coursecalendar'),
+                        get_string('errorinvalidheaderconfig', 'local_courseplanner'),
                         null,
                         \core\output\notification::NOTIFY_ERROR
                     );
                 }
             }
 
-            local_coursecalendar_upsert_block(
+            local_courseplanner_upsert_block(
                 (int)$calendar->id,
                 0,
                 $colnum,
@@ -113,7 +113,7 @@ if ($action !== '' && data_submitted()) {
             );
             redirect(
                 $pageurl,
-                get_string('headercellsaved', 'local_coursecalendar'),
+                get_string('headercellsaved', 'local_courseplanner'),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
@@ -124,15 +124,15 @@ if ($action !== '' && data_submitted()) {
             if ($colnum < 1) {
                 redirect(
                     $pageurl,
-                    get_string('errorcannotdeletecolumn', 'local_coursecalendar'),
+                    get_string('errorcannotdeletecolumn', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
             }
-            $deleted = local_coursecalendar_delete_column((int)$calendar->id, $colnum);
+            $deleted = local_courseplanner_delete_column((int)$calendar->id, $colnum);
             $message = $deleted
-                ? get_string('columndeleted', 'local_coursecalendar')
-                : get_string('errorcannotdeletecolumn', 'local_coursecalendar');
+                ? get_string('columndeleted', 'local_courseplanner')
+                : get_string('errorcannotdeletecolumn', 'local_courseplanner');
             $type = $deleted ? \core\output\notification::NOTIFY_SUCCESS : \core\output\notification::NOTIFY_ERROR;
             redirect($pageurl, $message, null, $type);
             break;
@@ -143,7 +143,7 @@ if ($action !== '' && data_submitted()) {
             if ($rownum < 0 || $colnum < 0 || $colnum > 4) {
                 redirect(
                     $pageurl,
-                    get_string('errorinvalidcell', 'local_coursecalendar'),
+                    get_string('errorinvalidcell', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
@@ -151,7 +151,7 @@ if ($action !== '' && data_submitted()) {
             if ($rownum === 0) {
                 redirect(
                     $pageurl,
-                    get_string('errorheaderreadonly', 'local_coursecalendar'),
+                    get_string('errorheaderreadonly', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
@@ -159,7 +159,7 @@ if ($action !== '' && data_submitted()) {
             if ($colnum === 0) {
                 redirect(
                     $pageurl,
-                    get_string('errorweeklabelreadonly', 'local_coursecalendar'),
+                    get_string('errorweeklabelreadonly', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
@@ -169,7 +169,7 @@ if ($action !== '' && data_submitted()) {
             if (!in_array($blocktype, ['TEXT', 'TOPIC'], true)) {
                 redirect(
                     $pageurl,
-                    get_string('errorinvalidblocktype', 'local_coursecalendar'),
+                    get_string('errorinvalidblocktype', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
@@ -185,16 +185,16 @@ if ($action !== '' && data_submitted()) {
                 if ($topicid <= 0) {
                     redirect(
                         $pageurl,
-                        get_string('errorinvalidtopicselection', 'local_coursecalendar'),
+                        get_string('errorinvalidtopicselection', 'local_courseplanner'),
                         null,
                         \core\output\notification::NOTIFY_ERROR
                     );
                 }
-                $topic = local_coursecalendar_require_owned_topic($topicid, (int)$USER->id);
+                $topic = local_courseplanner_require_owned_topic($topicid, (int)$USER->id);
                 if ((int)$topic->blueprintid !== (int)$blueprint->id) {
                     redirect(
                         $pageurl,
-                        get_string('errorinvalidtopicselection', 'local_coursecalendar'),
+                        get_string('errorinvalidtopicselection', 'local_courseplanner'),
                         null,
                         \core\output\notification::NOTIFY_ERROR
                     );
@@ -202,18 +202,18 @@ if ($action !== '' && data_submitted()) {
                 $contenthtml = '';
             }
             if ($blocktype === 'TEXT' && $contenthtml === '' && $cellheading === '' && !$highlighted && !$verticallycentred) {
-                $deleted = $DB->delete_records('local_coursecalendar_calendar_blocks', [
+                $deleted = $DB->delete_records('local_courseplanner_blocks', [
                     'calendarid' => (int)$calendar->id,
                     'rownum' => $rownum,
                     'colnum' => $colnum,
                 ]);
                 $message = $deleted
-                    ? get_string('cellcleared', 'local_coursecalendar')
-                    : get_string('cellalreadyempty', 'local_coursecalendar');
+                    ? get_string('cellcleared', 'local_courseplanner')
+                    : get_string('cellalreadyempty', 'local_courseplanner');
                 redirect($pageurl, $message, null, \core\output\notification::NOTIFY_SUCCESS);
             }
 
-            local_coursecalendar_upsert_block(
+            local_courseplanner_upsert_block(
                 (int)$calendar->id,
                 $rownum,
                 $colnum,
@@ -227,28 +227,28 @@ if ($action !== '' && data_submitted()) {
                 $highlighted,
                 $verticallycentred
             );
-            redirect($pageurl, get_string('cellsaved', 'local_coursecalendar'), null, \core\output\notification::NOTIFY_SUCCESS);
+            redirect($pageurl, get_string('cellsaved', 'local_courseplanner'), null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'updatetopicfromcell':
             $topicid = required_param('topicid', PARAM_INT);
-            $topic = local_coursecalendar_require_owned_topic($topicid, (int)$USER->id);
+            $topic = local_courseplanner_require_owned_topic($topicid, (int)$USER->id);
             if ((int)$topic->blueprintid !== (int)$blueprint->id) {
                 redirect(
                     $pageurl,
-                    get_string('errorinvalidtopicselection', 'local_coursecalendar'),
+                    get_string('errorinvalidtopicselection', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
             }
 
             $topic->title = trim(required_param('topictitle', PARAM_TEXT));
-            $topic->type = local_coursecalendar_normalise_topic_type(required_param('topictype', PARAM_ALPHANUMEXT));
+            $topic->type = local_courseplanner_normalise_topic_type(required_param('topictype', PARAM_ALPHANUMEXT));
             $topic->contenthtml = trim(optional_param('topiccontenthtml', '', PARAM_RAW));
             if ($topic->title === '') {
                 redirect(
                     $pageurl,
-                    get_string('errortopictitlerequired', 'local_coursecalendar'),
+                    get_string('errortopictitlerequired', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
@@ -256,10 +256,10 @@ if ($action !== '' && data_submitted()) {
 
             $topic->timemodified = time();
             $topic->usermodified = (int)$USER->id;
-            $DB->update_record('local_coursecalendar_blueprint_topics', $topic);
+            $DB->update_record('local_courseplanner_topics', $topic);
             redirect(
                 $pageurl,
-                get_string('topicupdatedfrombuilder', 'local_coursecalendar'),
+                get_string('topicupdatedfrombuilder', 'local_courseplanner'),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
@@ -268,10 +268,10 @@ if ($action !== '' && data_submitted()) {
         case 'savecourseinfo':
             $introhtml = trim(optional_param('introhtml', '', PARAM_RAW));
             $linkshtml = trim(optional_param('linkshtml', '', PARAM_RAW));
-            local_coursecalendar_save_course_info($courseid, $introhtml, $linkshtml, (int)$USER->id);
+            local_courseplanner_save_course_info($courseid, $introhtml, $linkshtml, (int)$USER->id);
             redirect(
                 $pageurl,
-                get_string('courseinfosaved', 'local_coursecalendar'),
+                get_string('courseinfosaved', 'local_courseplanner'),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
@@ -283,54 +283,54 @@ if ($action !== '' && data_submitted()) {
             if ($rownum <= 0 || $colnum <= 0 || $colnum > 4) {
                 redirect(
                     $pageurl,
-                    get_string('errorinvalidcell', 'local_coursecalendar'),
+                    get_string('errorinvalidcell', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
             }
 
-            $deleted = $DB->delete_records('local_coursecalendar_calendar_blocks', [
+            $deleted = $DB->delete_records('local_courseplanner_blocks', [
                 'calendarid' => (int)$calendar->id,
                 'rownum' => $rownum,
                 'colnum' => $colnum,
             ]);
             $message = $deleted
-                ? get_string('celldeleted', 'local_coursecalendar')
-                : get_string('cellalreadyempty', 'local_coursecalendar');
+                ? get_string('celldeleted', 'local_courseplanner')
+                : get_string('cellalreadyempty', 'local_courseplanner');
             redirect($pageurl, $message, null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'autopopulate':
-            $result = local_coursecalendar_auto_populate((int)$calendar->id, (int)$blueprint->id, (int)$USER->id);
-            $msg = get_string('autopopulatedone', 'local_coursecalendar', $result);
+            $result = local_courseplanner_auto_populate((int)$calendar->id, (int)$blueprint->id, (int)$USER->id);
+            $msg = get_string('autopopulatedone', 'local_courseplanner', $result);
             redirect($pageurl, $msg, null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'fillproblemsessions':
-            $filled = local_coursecalendar_fill_problem_sessions((int)$calendar->id, (int)$USER->id);
+            $filled = local_courseplanner_fill_problem_sessions((int)$calendar->id, (int)$USER->id);
             redirect(
                 $pageurl,
-                get_string('problemsessionsfilled', 'local_coursecalendar', $filled),
+                get_string('problemsessionsfilled', 'local_courseplanner', $filled),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
             break;
 
         case 'deletenonheader':
-            $deleted = local_coursecalendar_delete_non_header_blocks((int)$calendar->id);
+            $deleted = local_courseplanner_delete_non_header_blocks((int)$calendar->id);
             redirect(
                 $pageurl,
-                get_string('nonheaderdeleted', 'local_coursecalendar', $deleted),
+                get_string('nonheaderdeleted', 'local_courseplanner', $deleted),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
             break;
 
         case 'deletenonheadernontext':
-            $deleted = local_coursecalendar_delete_non_header_non_text_blocks((int)$calendar->id);
+            $deleted = local_courseplanner_delete_non_header_non_text_blocks((int)$calendar->id);
             redirect(
                 $pageurl,
-                get_string('nonheadernontextdeleted', 'local_coursecalendar', $deleted),
+                get_string('nonheadernontextdeleted', 'local_courseplanner', $deleted),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
@@ -338,9 +338,9 @@ if ($action !== '' && data_submitted()) {
     }
 }
 
-local_coursecalendar_ensure_base_grid((int)$calendar->id, (int)$USER->id);
-$blocksmap = local_coursecalendar_get_blocks_map((int)$calendar->id);
-$courseinfo = local_coursecalendar_get_course_info($courseid);
+local_courseplanner_ensure_base_grid((int)$calendar->id, (int)$USER->id);
+$blocksmap = local_courseplanner_get_blocks_map((int)$calendar->id);
+$courseinfo = local_courseplanner_get_course_info($courseid);
 $maxrow = 0;
 foreach (array_keys($blocksmap) as $rownum) {
     $maxrow = max($maxrow, (int)$rownum);
@@ -357,82 +357,82 @@ $htmleditoroptions = [
 $PAGE->set_url($pageurl);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('incourse');
-$PAGE->set_title(get_string('builderpageheading', 'local_coursecalendar'));
+$PAGE->set_title(get_string('builderpageheading', 'local_courseplanner'));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->requires->css(new moodle_url('/local/coursecalendar/styles.css'));
+$PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
 
 echo $OUTPUT->header();
-echo html_writer::start_tag('div', ['class' => 'local-coursecalendar-pageheader']);
-echo $OUTPUT->heading(get_string('builderpageheading', 'local_coursecalendar'));
-echo html_writer::tag('button', get_string('showtourbtn', 'local_coursecalendar'), [
+echo html_writer::start_tag('div', ['class' => 'local-courseplanner-pageheader']);
+echo $OUTPUT->heading(get_string('builderpageheading', 'local_courseplanner'));
+echo html_writer::tag('button', get_string('showtourbtn', 'local_courseplanner'), [
     'type' => 'button',
-    'id' => 'local-coursecalendar-showtour',
-    'class' => 'btn btn-sm btn-outline-info local-coursecalendar-showtour',
-    'data-tour-name' => 'local_coursecalendar_builder',
+    'id' => 'local-courseplanner-showtour',
+    'class' => 'btn btn-sm btn-outline-info local-courseplanner-showtour',
+    'data-tour-name' => 'local_courseplanner_builder',
 ]);
 echo html_writer::end_tag('div');
-echo html_writer::link($backurl, get_string('backtomanage', 'local_coursecalendar'), ['class' => 'btn btn-secondary mb-3']);
+echo html_writer::link($backurl, get_string('backtomanage', 'local_courseplanner'), ['class' => 'btn btn-secondary mb-3']);
 
-echo html_writer::div(get_string('intro_calendar', 'local_coursecalendar'), 'local-coursecalendar-intro alert alert-info');
+echo html_writer::div(get_string('intro_calendar', 'local_courseplanner'), 'local-courseplanner-intro alert alert-info');
 
-$managecontenturl = new moodle_url('/local/coursecalendar/manage.php', [
+$managecontenturl = new moodle_url('/local/courseplanner/manage.php', [
     'id' => $courseid,
     'blueprintctx' => (int)$blueprint->id,
 ]);
-$previewurl = new moodle_url('/local/coursecalendar/view.php', [
+$previewurl = new moodle_url('/local/courseplanner/view.php', [
     'id' => $courseid,
     'calendarid' => $calendarid,
 ]);
-$rulesurl = new moodle_url('/local/coursecalendar/rules.php', [
+$rulesurl = new moodle_url('/local/courseplanner/rules.php', [
     'id' => $courseid,
     'calendarid' => $calendarid,
 ]);
 
 echo html_writer::tag(
     'h4',
-    get_string('section_builderactions', 'local_coursecalendar')
-    . ' ' . $OUTPUT->help_icon('section_builderactions', 'local_coursecalendar'),
-    ['class' => 'local-coursecalendar-section-title']
+    get_string('section_builderactions', 'local_courseplanner')
+    . ' ' . $OUTPUT->help_icon('section_builderactions', 'local_courseplanner'),
+    ['class' => 'local-courseplanner-section-title']
 );
 echo html_writer::start_tag(
     'div',
-    ['class' => 'local-coursecalendar-page-actions', 'id' => 'local-coursecalendar-builder-actions']
+    ['class' => 'local-courseplanner-page-actions', 'id' => 'local-courseplanner-builder-actions']
 );
 echo html_writer::link(
     $managecontenturl,
-    get_string('managecontentlink', 'local_coursecalendar'),
+    get_string('managecontentlink', 'local_courseplanner'),
     ['class' => 'btn btn-sm btn-outline-primary mr-2']
 );
 echo html_writer::link(
     $rulesurl,
-    get_string('manageruleslink', 'local_coursecalendar'),
+    get_string('manageruleslink', 'local_courseplanner'),
     ['class' => 'btn btn-sm btn-outline-warning mr-2']
 );
 echo html_writer::link(
     $previewurl,
-    get_string('openpreviewlink', 'local_coursecalendar'),
+    get_string('openpreviewlink', 'local_courseplanner'),
     ['class' => 'btn btn-sm btn-outline-info mr-2', 'target' => '_blank']
 );
-$coverageurl = new moodle_url('/local/coursecalendar/coverage.php', [
+$coverageurl = new moodle_url('/local/courseplanner/coverage.php', [
     'id' => $courseid,
     'calendarid' => $calendarid,
 ]);
 echo html_writer::link(
     $coverageurl,
-    get_string('coveragechecklink', 'local_coursecalendar'),
+    get_string('coveragechecklink', 'local_courseplanner'),
     ['class' => 'btn btn-sm btn-outline-info ml-2']
 );
 echo html_writer::end_tag('div');
 
 echo html_writer::tag(
     'h4',
-    get_string('section_automation', 'local_coursecalendar')
-    . ' ' . $OUTPUT->help_icon('section_automation', 'local_coursecalendar'),
-    ['class' => 'local-coursecalendar-section-title']
+    get_string('section_automation', 'local_courseplanner')
+    . ' ' . $OUTPUT->help_icon('section_automation', 'local_courseplanner'),
+    ['class' => 'local-courseplanner-section-title']
 );
 echo html_writer::start_tag(
     'div',
-    ['class' => 'local-coursecalendar-page-actions', 'id' => 'local-coursecalendar-automation-actions']
+    ['class' => 'local-courseplanner-page-actions', 'id' => 'local-courseplanner-automation-actions']
 );
 $automationactions = [
     'autopopulate' => [
@@ -462,11 +462,11 @@ $automationactions = [
 ];
 $confirmtitle = get_string('confirm', 'core');
 foreach ($automationactions as $act => $cfg) {
-    $buttonlabel = get_string($cfg['label'], 'local_coursecalendar');
+    $buttonlabel = get_string($cfg['label'], 'local_courseplanner');
     echo html_writer::start_tag('form', [
         'method' => 'post',
-        'class' => 'local-coursecalendar-inline-form',
-        'data-cc-confirm' => get_string($cfg['confirm'], 'local_coursecalendar'),
+        'class' => 'local-courseplanner-inline-form',
+        'data-cc-confirm' => get_string($cfg['confirm'], 'local_courseplanner'),
         'data-cc-confirm-title' => $confirmtitle,
         'data-cc-confirm-action' => $buttonlabel,
         'data-cc-confirm-style' => $cfg['style'],
@@ -486,30 +486,30 @@ echo html_writer::end_tag('div');
 
 echo html_writer::tag(
     'h4',
-    get_string('section_buildertoolbar', 'local_coursecalendar')
-    . ' ' . $OUTPUT->help_icon('section_buildertoolbar', 'local_coursecalendar'),
-    ['class' => 'local-coursecalendar-section-title']
+    get_string('section_buildertoolbar', 'local_courseplanner')
+    . ' ' . $OUTPUT->help_icon('section_buildertoolbar', 'local_courseplanner'),
+    ['class' => 'local-courseplanner-section-title']
 );
-echo html_writer::start_tag('div', ['class' => 'local-coursecalendar-toolbar', 'id' => 'local-coursecalendar-toolbar']);
-echo html_writer::tag('span', get_string('unsavedchangesbadge', 'local_coursecalendar'), [
-    'id' => 'local-coursecalendar-unsaved-badge',
+echo html_writer::start_tag('div', ['class' => 'local-courseplanner-toolbar', 'id' => 'local-courseplanner-toolbar']);
+echo html_writer::tag('span', get_string('unsavedchangesbadge', 'local_courseplanner'), [
+    'id' => 'local-courseplanner-unsaved-badge',
     'class' => 'badge badge-warning mr-2',
     'style' => 'display:none',
 ]);
-echo html_writer::tag('button', get_string('saveallsubmit', 'local_coursecalendar'), [
+echo html_writer::tag('button', get_string('saveallsubmit', 'local_courseplanner'), [
     'type' => 'button',
-    'id' => 'local-coursecalendar-saveall',
+    'id' => 'local-courseplanner-saveall',
     'class' => 'btn btn-sm btn-success mr-2',
 ]);
-echo html_writer::tag('button', get_string('undobtn', 'local_coursecalendar'), [
+echo html_writer::tag('button', get_string('undobtn', 'local_courseplanner'), [
     'type' => 'button',
-    'id' => 'local-coursecalendar-undo',
+    'id' => 'local-courseplanner-undo',
     'class' => 'btn btn-sm btn-outline-secondary mr-1',
     'disabled' => 'disabled',
 ]);
-echo html_writer::tag('button', get_string('redobtn', 'local_coursecalendar'), [
+echo html_writer::tag('button', get_string('redobtn', 'local_courseplanner'), [
     'type' => 'button',
-    'id' => 'local-coursecalendar-redo',
+    'id' => 'local-courseplanner-redo',
     'class' => 'btn btn-sm btn-outline-secondary',
     'disabled' => 'disabled',
 ]);
@@ -519,73 +519,73 @@ $calendarlabel = s($calendar->semester) . ' ' . (int)$calendar->year;
 if (!empty($calendar->title)) {
     $calendarlabel .= ' - ' . format_string($calendar->title);
 }
-echo html_writer::div(get_string('buildercontextlabel', 'local_coursecalendar', $calendarlabel), 'local-coursecalendar-shell');
+echo html_writer::div(get_string('buildercontextlabel', 'local_courseplanner', $calendarlabel), 'local-courseplanner-shell');
 
 echo html_writer::tag(
     'h4',
-    get_string('section_introtexts', 'local_coursecalendar')
-    . ' ' . $OUTPUT->help_icon('section_introtexts', 'local_coursecalendar'),
-    ['class' => 'local-coursecalendar-section-title', 'id' => 'local-coursecalendar-section-introtexts']
+    get_string('section_introtexts', 'local_courseplanner')
+    . ' ' . $OUTPUT->help_icon('section_introtexts', 'local_courseplanner'),
+    ['class' => 'local-courseplanner-section-title', 'id' => 'local-courseplanner-section-introtexts']
 );
 echo html_writer::start_tag(
     'form',
-    ['method' => 'post', 'class' => 'local-coursecalendar-card local-coursecalendar-introtexts-form']
+    ['method' => 'post', 'class' => 'local-courseplanner-card local-courseplanner-introtexts-form']
 );
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'calendarid', 'value' => $calendarid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'savecourseinfo']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::start_div('local-coursecalendar-introtexts-grid');
-echo html_writer::start_div('local-coursecalendar-introtext-panel');
-echo html_writer::tag('label', get_string('courseinfointroleftlabel', 'local_coursecalendar'), [
-    'for' => 'local-coursecalendar-intro-left',
+echo html_writer::start_div('local-courseplanner-introtexts-grid');
+echo html_writer::start_div('local-courseplanner-introtext-panel');
+echo html_writer::tag('label', get_string('courseinfointroleftlabel', 'local_courseplanner'), [
+    'for' => 'local-courseplanner-intro-left',
     'class' => 'font-weight-bold',
 ]);
 echo html_writer::tag('textarea', $courseinfo ? s((string)$courseinfo->introhtml) : '', [
-    'id' => 'local-coursecalendar-intro-left',
+    'id' => 'local-courseplanner-intro-left',
     'name' => 'introhtml',
     'class' => 'form-control',
     'rows' => 12,
 ]);
-$htmleditor->use_editor('local-coursecalendar-intro-left', $htmleditoroptions);
+$htmleditor->use_editor('local-courseplanner-intro-left', $htmleditoroptions);
 echo html_writer::end_div();
-echo html_writer::start_div('local-coursecalendar-introtext-panel');
-echo html_writer::tag('label', get_string('courseinfointrorightlabel', 'local_coursecalendar'), [
-    'for' => 'local-coursecalendar-intro-right',
+echo html_writer::start_div('local-courseplanner-introtext-panel');
+echo html_writer::tag('label', get_string('courseinfointrorightlabel', 'local_courseplanner'), [
+    'for' => 'local-courseplanner-intro-right',
     'class' => 'font-weight-bold',
 ]);
 echo html_writer::tag('textarea', $courseinfo ? s((string)$courseinfo->linkshtml) : '', [
-    'id' => 'local-coursecalendar-intro-right',
+    'id' => 'local-courseplanner-intro-right',
     'name' => 'linkshtml',
     'class' => 'form-control',
     'rows' => 12,
 ]);
-$htmleditor->use_editor('local-coursecalendar-intro-right', $htmleditoroptions);
+$htmleditor->use_editor('local-courseplanner-intro-right', $htmleditoroptions);
 echo html_writer::end_div();
 echo html_writer::end_div();
 echo html_writer::empty_tag('input', [
     'type' => 'submit',
     'class' => 'btn btn-primary mt-3',
-    'value' => get_string('saveintrotextssubmit', 'local_coursecalendar'),
+    'value' => get_string('saveintrotextssubmit', 'local_courseplanner'),
 ]);
 echo html_writer::end_tag('form');
 
 echo html_writer::tag(
     'h4',
-    get_string('section_buildergrid', 'local_coursecalendar')
-    . ' ' . $OUTPUT->help_icon('section_buildergrid', 'local_coursecalendar'),
-    ['class' => 'local-coursecalendar-section-title']
+    get_string('section_buildergrid', 'local_courseplanner')
+    . ' ' . $OUTPUT->help_icon('section_buildergrid', 'local_courseplanner'),
+    ['class' => 'local-courseplanner-section-title']
 );
-$columns = local_coursecalendar_get_grid_columns($blocksmap);
+$columns = local_courseplanner_get_grid_columns($blocksmap);
 $confirmtitle = get_string('confirm', 'core');
 
 $rendercolumndelete = function (int $col) use ($courseid, $calendarid, $confirmtitle, $OUTPUT) {
     echo html_writer::start_tag('form', [
         'method' => 'post',
-        'class' => 'local-coursecalendar-delete-column-form',
-        'data-cc-confirm' => get_string('deletecolumnconfirm', 'local_coursecalendar'),
+        'class' => 'local-courseplanner-delete-column-form',
+        'data-cc-confirm' => get_string('deletecolumnconfirm', 'local_courseplanner'),
         'data-cc-confirm-title' => $confirmtitle,
-        'data-cc-confirm-action' => get_string('deletecolumnbtn', 'local_coursecalendar'),
+        'data-cc-confirm-action' => get_string('deletecolumnbtn', 'local_courseplanner'),
         'data-cc-confirm-style' => 'delete',
     ]);
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
@@ -595,12 +595,12 @@ $rendercolumndelete = function (int $col) use ($courseid, $calendarid, $confirmt
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
     echo html_writer::tag(
         'button',
-        $OUTPUT->pix_icon('t/delete', get_string('deletecolumnbtn', 'local_coursecalendar')),
+        $OUTPUT->pix_icon('t/delete', get_string('deletecolumnbtn', 'local_courseplanner')),
         [
             'type' => 'submit',
-            'class' => 'btn btn-sm btn-link text-danger local-coursecalendar-delete-column-btn',
-            'title' => get_string('deletecolumnbtn', 'local_coursecalendar'),
-            'aria-label' => get_string('deletecolumnbtn', 'local_coursecalendar'),
+            'class' => 'btn btn-sm btn-link text-danger local-courseplanner-delete-column-btn',
+            'title' => get_string('deletecolumnbtn', 'local_courseplanner'),
+            'aria-label' => get_string('deletecolumnbtn', 'local_courseplanner'),
         ]
     );
     echo html_writer::end_tag('form');
@@ -608,7 +608,7 @@ $rendercolumndelete = function (int $col) use ($courseid, $calendarid, $confirmt
 
 echo html_writer::start_tag(
     'table',
-    ['class' => 'table table-bordered local-coursecalendar-grid', 'id' => 'local-coursecalendar-grid']
+    ['class' => 'table table-bordered local-courseplanner-grid', 'id' => 'local-courseplanner-grid']
 );
 for ($row = 0; $row <= $maxrow; $row++) {
     echo html_writer::start_tag('tr');
@@ -618,14 +618,14 @@ for ($row = 0; $row <= $maxrow; $row++) {
         $tag = ($row === 0) ? 'th' : 'td';
         if ($row === 0 && $col === 0) {
             echo html_writer::start_tag($tag, [
-                'class' => 'local-coursecalendar-grid-cell',
+                'class' => 'local-courseplanner-grid-cell',
                 'data-cc-row' => $row,
                 'data-cc-col' => $col,
                 'data-cc-blocktype' => 'HEADER',
                 'data-cc-content' => $content,
                 'data-cc-editable' => '0',
             ]);
-            echo html_writer::tag('div', format_text($content, FORMAT_HTML), ['class' => 'local-coursecalendar-readonly-cell']);
+            echo html_writer::tag('div', format_text($content, FORMAT_HTML), ['class' => 'local-courseplanner-readonly-cell']);
             echo html_writer::end_tag($tag);
             continue;
         }
@@ -633,7 +633,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             $headerday = $cell && !empty($cell->headerday) ? (string)$cell->headerday : $headerdayoptions[$col - 1];
             $headermode = $cell && !empty($cell->headermode) ? (string)$cell->headermode : 'Lecture';
             echo html_writer::start_tag($tag, [
-                'class' => 'local-coursecalendar-grid-cell',
+                'class' => 'local-courseplanner-grid-cell',
                 'data-cc-row' => 0,
                 'data-cc-col' => $col,
                 'data-cc-blocktype' => 'HEADER',
@@ -649,7 +649,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'saveheader']);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'colnum', 'value' => $col]);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-            $headercontentid = 'local-coursecalendar-header-content-' . $col;
+            $headercontentid = 'local-courseplanner-header-content-' . $col;
             echo html_writer::tag('textarea', s($content), [
                 'id' => $headercontentid,
                 'name' => 'contenthtml',
@@ -678,7 +678,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             echo html_writer::empty_tag('input', [
                 'type' => 'submit',
                 'class' => 'btn btn-sm btn-outline-secondary',
-                'value' => get_string('saveheadersubmit', 'local_coursecalendar'),
+                'value' => get_string('saveheadersubmit', 'local_courseplanner'),
             ]);
             echo html_writer::end_tag('form');
             echo html_writer::end_tag($tag);
@@ -688,7 +688,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             // Any remaining header column (e.g. the assignments column) is an
             // editable plain-text heading with no day/mode selectors.
             echo html_writer::start_tag($tag, [
-                'class' => 'local-coursecalendar-grid-cell',
+                'class' => 'local-courseplanner-grid-cell',
                 'data-cc-row' => 0,
                 'data-cc-col' => $col,
                 'data-cc-blocktype' => 'HEADER',
@@ -702,7 +702,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'saveheader']);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'colnum', 'value' => $col]);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-            $headercontentid = 'local-coursecalendar-header-content-' . $col;
+            $headercontentid = 'local-courseplanner-header-content-' . $col;
             echo html_writer::tag('textarea', s($content), [
                 'id' => $headercontentid,
                 'name' => 'contenthtml',
@@ -713,7 +713,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             echo html_writer::empty_tag('input', [
                 'type' => 'submit',
                 'class' => 'btn btn-sm btn-outline-secondary',
-                'value' => get_string('saveheadersubmit', 'local_coursecalendar'),
+                'value' => get_string('saveheadersubmit', 'local_courseplanner'),
             ]);
             echo html_writer::end_tag('form');
             echo html_writer::end_tag($tag);
@@ -721,14 +721,14 @@ for ($row = 0; $row <= $maxrow; $row++) {
         }
         if ($col === 0) {
             echo html_writer::start_tag($tag, [
-                'class' => 'local-coursecalendar-grid-cell',
+                'class' => 'local-courseplanner-grid-cell',
                 'data-cc-row' => $row,
                 'data-cc-col' => 0,
                 'data-cc-blocktype' => 'TEXT',
                 'data-cc-content' => $content,
                 'data-cc-editable' => '0',
             ]);
-            echo html_writer::tag('div', format_text($content, FORMAT_HTML), ['class' => 'local-coursecalendar-readonly-cell']);
+            echo html_writer::tag('div', format_text($content, FORMAT_HTML), ['class' => 'local-courseplanner-readonly-cell']);
             echo html_writer::end_tag($tag);
             continue;
         }
@@ -736,10 +736,10 @@ for ($row = 0; $row <= $maxrow; $row++) {
             // Out-of-term day (before the semester start or after the end).
             // Rendered greyed and non-editable; refreshed by Apply Dates.
             echo html_writer::start_tag($tag, [
-                'class' => 'local-coursecalendar-grid-cell local-coursecalendar-blank-cell',
+                'class' => 'local-courseplanner-grid-cell local-courseplanner-blank-cell',
             ]);
             echo html_writer::tag('div', format_text((string)$cell->contenthtml, FORMAT_HTML), [
-                'class' => 'local-coursecalendar-blank-label',
+                'class' => 'local-courseplanner-blank-label',
             ]);
             echo html_writer::end_tag($tag);
             continue;
@@ -754,12 +754,12 @@ for ($row = 0; $row <= $maxrow; $row++) {
         $selectedtopicid = ($cell && !empty($cell->topicid)) ? (int)$cell->topicid : 0;
         $selectedtopic = ($selectedtopicid > 0 && isset($alltopics[$selectedtopicid])) ? $alltopics[$selectedtopicid] : null;
 
-        $cellclasses = ['local-coursecalendar-grid-cell'];
+        $cellclasses = ['local-courseplanner-grid-cell'];
         if ($highlighted) {
-            $cellclasses[] = 'local-coursecalendar-highlighted';
+            $cellclasses[] = 'local-courseplanner-highlighted';
         }
         if ($verticallycentred) {
-            $cellclasses[] = 'local-coursecalendar-vcentred';
+            $cellclasses[] = 'local-courseplanner-vcentred';
         }
         echo html_writer::start_tag($tag, [
             'class' => implode(' ', $cellclasses),
@@ -775,35 +775,35 @@ for ($row = 0; $row <= $maxrow; $row++) {
         ]);
 
         if ($cellheading !== '') {
-            echo html_writer::tag('div', format_text($cellheading, FORMAT_HTML), ['class' => 'local-coursecalendar-cellheading']);
+            echo html_writer::tag('div', format_text($cellheading, FORMAT_HTML), ['class' => 'local-courseplanner-cellheading']);
         }
         if ($blocktype === 'TOPIC' && $selectedtopic) {
             $inactivetag = '';
             if ((int)$selectedtopic->isactive === 0) {
                 $inactivetag = ' ' . html_writer::tag(
                     'span',
-                    get_string('topicinactive', 'local_coursecalendar'),
+                    get_string('topicinactive', 'local_courseplanner'),
                     ['class' => 'badge badge-warning']
                 );
             }
-            echo local_coursecalendar_topic_heading_html($selectedtopic, $inactivetag);
+            echo local_courseplanner_topic_heading_html($selectedtopic, $inactivetag);
             if (!empty($selectedtopic->contenthtml)) {
                 echo html_writer::tag(
                     'div',
                     format_text($selectedtopic->contenthtml, FORMAT_HTML),
-                    ['class' => 'local-coursecalendar-topic-preview']
+                    ['class' => 'local-courseplanner-topic-preview']
                 );
             }
         } else if ($blocktype === 'TEXT' && $content !== '') {
             echo html_writer::tag(
                 'div',
                 format_text($content, FORMAT_HTML),
-                ['class' => 'local-coursecalendar-text-preview']
+                ['class' => 'local-courseplanner-text-preview']
             );
         }
 
-        echo html_writer::start_tag('details', ['class' => 'local-coursecalendar-cell-editor']);
-        echo html_writer::tag('summary', get_string('editcellsummary', 'local_coursecalendar'), ['class' => 'btn btn-sm btn-link']);
+        echo html_writer::start_tag('details', ['class' => 'local-courseplanner-cell-editor']);
+        echo html_writer::tag('summary', get_string('editcellsummary', 'local_courseplanner'), ['class' => 'btn btn-sm btn-link']);
         echo html_writer::start_tag('form', ['method' => 'post']);
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'calendarid', 'value' => $calendarid]);
@@ -815,15 +815,15 @@ for ($row = 0; $row <= $maxrow; $row++) {
         if ($blocktype === 'TEXT') {
             $textattrs['selected'] = 'selected';
         }
-        echo html_writer::tag('option', get_string('blocktypetext', 'local_coursecalendar'), $textattrs);
+        echo html_writer::tag('option', get_string('blocktypetext', 'local_courseplanner'), $textattrs);
         $topicattrs = ['value' => 'TOPIC'];
         if ($blocktype === 'TOPIC') {
             $topicattrs['selected'] = 'selected';
         }
-        echo html_writer::tag('option', get_string('blocktypetopic', 'local_coursecalendar'), $topicattrs);
+        echo html_writer::tag('option', get_string('blocktypetopic', 'local_courseplanner'), $topicattrs);
         echo html_writer::end_tag('select');
         echo html_writer::start_tag('select', ['name' => 'topicid', 'class' => 'custom-select mb-2']);
-        echo html_writer::tag('option', get_string('selecttopicplaceholder', 'local_coursecalendar'), ['value' => '']);
+        echo html_writer::tag('option', get_string('selecttopicplaceholder', 'local_courseplanner'), ['value' => '']);
         foreach ($activetopics as $topic) {
             $optiontext = s($topic->title) . ' (' . s($topic->type) . ')';
             $attrs = ['value' => (int)$topic->id];
@@ -834,24 +834,24 @@ for ($row = 0; $row <= $maxrow; $row++) {
         }
         if ($selectedtopic && (int)$selectedtopic->isactive === 0) {
             echo html_writer::tag('option', s($selectedtopic->title) . ' (' . s($selectedtopic->type) . ', ' .
-                get_string('topicinactive', 'local_coursecalendar') . ')', [
+                get_string('topicinactive', 'local_courseplanner') . ')', [
                 'value' => (int)$selectedtopic->id,
                 'selected' => 'selected',
             ]);
         }
         echo html_writer::end_tag('select');
         if ($blocktype === 'TOPIC' && $selectedtopic) {
-            echo html_writer::tag('div', get_string('celltopiccontenthandledseparately', 'local_coursecalendar'), [
-                'class' => 'local-coursecalendar-muted-note mb-2',
+            echo html_writer::tag('div', get_string('celltopiccontenthandledseparately', 'local_courseplanner'), [
+                'class' => 'local-courseplanner-muted-note mb-2',
             ]);
         } else {
-            $cellcontentid = 'local-coursecalendar-cell-content-' . $row . '-' . $col;
+            $cellcontentid = 'local-courseplanner-cell-content-' . $row . '-' . $col;
             echo html_writer::tag('textarea', s($content), [
                 'id' => $cellcontentid,
                 'name' => 'contenthtml',
                 'rows' => 6,
                 'class' => 'form-control mb-2',
-                'placeholder' => get_string('contenthtmlplaceholder', 'local_coursecalendar'),
+                'placeholder' => get_string('contenthtmlplaceholder', 'local_courseplanner'),
             ]);
             $htmleditor->use_editor($cellcontentid, $htmleditoroptions);
         }
@@ -859,10 +859,10 @@ for ($row = 0; $row <= $maxrow; $row++) {
             'name' => 'cellheading',
             'rows' => 2,
             'class' => 'form-control mb-2',
-            'placeholder' => get_string('cellheadingplaceholder', 'local_coursecalendar'),
+            'placeholder' => get_string('cellheadingplaceholder', 'local_courseplanner'),
         ]);
-        $highlightid = 'local-coursecalendar-highlighted-' . $row . '-' . $col;
-        $vcenterid = 'local-coursecalendar-vcenter-' . $row . '-' . $col;
+        $highlightid = 'local-courseplanner-highlighted-' . $row . '-' . $col;
+        $vcenterid = 'local-courseplanner-vcenter-' . $row . '-' . $col;
         $highlightattrs = [
             'type' => 'checkbox',
             'name' => 'highlighted',
@@ -883,18 +883,18 @@ for ($row = 0; $row <= $maxrow; $row++) {
         if ($verticallycentred) {
             $vcenterattrs['checked'] = 'checked';
         }
-        echo html_writer::start_tag('div', ['class' => 'local-coursecalendar-checkbox-row']);
+        echo html_writer::start_tag('div', ['class' => 'local-courseplanner-checkbox-row']);
         echo html_writer::empty_tag('input', $highlightattrs);
-        echo html_writer::tag('label', get_string('cellhighlightedlabel', 'local_coursecalendar'), [
+        echo html_writer::tag('label', get_string('cellhighlightedlabel', 'local_courseplanner'), [
             'for' => $highlightid,
             'class' => 'mr-3',
         ]);
         echo html_writer::empty_tag('input', $vcenterattrs);
-        echo html_writer::tag('label', get_string('cellverticalcentredlabel', 'local_coursecalendar'), [
+        echo html_writer::tag('label', get_string('cellverticalcentredlabel', 'local_courseplanner'), [
             'for' => $vcenterid,
         ]);
         echo html_writer::end_tag('div');
-        echo html_writer::tag('button', get_string('savecellsubmit', 'local_coursecalendar'), [
+        echo html_writer::tag('button', get_string('savecellsubmit', 'local_courseplanner'), [
             'type' => 'submit',
             'name' => 'action',
             'value' => 'savecell',
@@ -904,10 +904,10 @@ for ($row = 0; $row <= $maxrow; $row++) {
 
         echo html_writer::start_tag('form', [
             'method' => 'post',
-            'class' => 'local-coursecalendar-inline-form',
-            'data-cc-confirm' => get_string('deletecellconfirm', 'local_coursecalendar'),
+            'class' => 'local-courseplanner-inline-form',
+            'data-cc-confirm' => get_string('deletecellconfirm', 'local_courseplanner'),
             'data-cc-confirm-title' => $confirmtitle,
-            'data-cc-confirm-action' => get_string('deletecellsubmit', 'local_coursecalendar'),
+            'data-cc-confirm-action' => get_string('deletecellsubmit', 'local_courseplanner'),
             'data-cc-confirm-style' => 'delete',
         ]);
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
@@ -916,7 +916,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'colnum', 'value' => $col]);
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'deletecell']);
         echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-        echo html_writer::tag('button', get_string('deletecellsubmit', 'local_coursecalendar'), [
+        echo html_writer::tag('button', get_string('deletecellsubmit', 'local_courseplanner'), [
             'type' => 'submit',
             'class' => 'btn btn-sm btn-outline-danger',
         ]);
@@ -925,21 +925,21 @@ for ($row = 0; $row <= $maxrow; $row++) {
         if ($blocktype === 'TOPIC' && $selectedtopic) {
             echo html_writer::start_tag('form', [
                 'method' => 'post',
-                'class' => 'local-coursecalendar-shared-topic-editor',
+                'class' => 'local-courseplanner-shared-topic-editor',
             ]);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'calendarid', 'value' => $calendarid]);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'topicid', 'value' => (int)$selectedtopic->id]);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
-            echo html_writer::tag('h6', get_string('sharedtopiceditorheading', 'local_coursecalendar'));
-            echo html_writer::tag('div', get_string('sharedtopiceditwarning', 'local_coursecalendar'), [
-                'class' => 'alert alert-warning local-coursecalendar-shared-topic-warning',
+            echo html_writer::tag('h6', get_string('sharedtopiceditorheading', 'local_courseplanner'));
+            echo html_writer::tag('div', get_string('sharedtopiceditwarning', 'local_courseplanner'), [
+                'class' => 'alert alert-warning local-courseplanner-shared-topic-warning',
             ]);
 
-            $topictitleid = 'local-coursecalendar-shared-topic-title-' . $row . '-' . $col;
+            $topictitleid = 'local-courseplanner-shared-topic-title-' . $row . '-' . $col;
             echo html_writer::start_div('mb-2');
-            echo html_writer::tag('label', get_string('topictitlelabel', 'local_coursecalendar'), ['for' => $topictitleid]);
+            echo html_writer::tag('label', get_string('topictitlelabel', 'local_courseplanner'), ['for' => $topictitleid]);
             echo html_writer::empty_tag('input', [
                 'type' => 'text',
                 'id' => $topictitleid,
@@ -950,11 +950,11 @@ for ($row = 0; $row <= $maxrow; $row++) {
             ]);
             echo html_writer::end_div();
 
-            $topictypeid = 'local-coursecalendar-shared-topic-type-' . $row . '-' . $col;
+            $topictypeid = 'local-courseplanner-shared-topic-type-' . $row . '-' . $col;
             echo html_writer::start_div('mb-2');
-            echo html_writer::tag('label', get_string('topictypelabel', 'local_coursecalendar'), ['for' => $topictypeid]);
+            echo html_writer::tag('label', get_string('topictypelabel', 'local_courseplanner'), ['for' => $topictypeid]);
             echo html_writer::start_tag('select', ['id' => $topictypeid, 'name' => 'topictype', 'class' => 'custom-select']);
-            foreach (local_coursecalendar_get_topic_types() as $topictype) {
+            foreach (local_courseplanner_get_topic_types() as $topictype) {
                 $attrs = ['value' => $topictype];
                 if ($selectedtopic->type === $topictype) {
                     $attrs['selected'] = 'selected';
@@ -964,9 +964,9 @@ for ($row = 0; $row <= $maxrow; $row++) {
             echo html_writer::end_tag('select');
             echo html_writer::end_div();
 
-            $topiccontentid = 'local-coursecalendar-shared-topic-content-' . $row . '-' . $col;
+            $topiccontentid = 'local-courseplanner-shared-topic-content-' . $row . '-' . $col;
             echo html_writer::start_div('mb-2');
-            echo html_writer::tag('label', get_string('topiccontentlabel', 'local_coursecalendar'), ['for' => $topiccontentid]);
+            echo html_writer::tag('label', get_string('topiccontentlabel', 'local_courseplanner'), ['for' => $topiccontentid]);
             echo html_writer::tag('textarea', s((string)$selectedtopic->contenthtml), [
                 'id' => $topiccontentid,
                 'name' => 'topiccontenthtml',
@@ -976,7 +976,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             $htmleditor->use_editor($topiccontentid, $htmleditoroptions);
             echo html_writer::end_div();
 
-            echo html_writer::tag('button', get_string('savesharedtopicsubmit', 'local_coursecalendar'), [
+            echo html_writer::tag('button', get_string('savesharedtopicsubmit', 'local_courseplanner'), [
                 'type' => 'submit',
                 'name' => 'action',
                 'value' => 'updatetopicfromcell',
@@ -991,18 +991,18 @@ for ($row = 0; $row <= $maxrow; $row++) {
 }
 echo html_writer::end_tag('table');
 
-echo html_writer::start_div('local-coursecalendar-weekrow-actions');
-echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'local-coursecalendar-inline-form']);
+echo html_writer::start_div('local-courseplanner-weekrow-actions');
+echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'local-courseplanner-inline-form']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'calendarid', 'value' => $calendarid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'addweekrow']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 echo html_writer::empty_tag(
     'input',
-    ['type' => 'submit', 'class' => 'btn btn-primary', 'value' => get_string('addweekrowsubmit', 'local_coursecalendar')]
+    ['type' => 'submit', 'class' => 'btn btn-primary', 'value' => get_string('addweekrowsubmit', 'local_courseplanner')]
 );
 echo html_writer::end_tag('form');
-echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'local-coursecalendar-inline-form']);
+echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'local-courseplanner-inline-form']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'calendarid', 'value' => $calendarid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'removelastweekrow']);
@@ -1010,27 +1010,27 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', '
 echo html_writer::empty_tag('input', [
     'type' => 'submit',
     'class' => 'btn btn-outline-secondary',
-    'value' => get_string('removelastweekrowsubmit', 'local_coursecalendar'),
+    'value' => get_string('removelastweekrowsubmit', 'local_courseplanner'),
 ]);
 echo html_writer::end_tag('form');
 echo html_writer::end_div();
 
 $autobuildlink = html_writer::link(
     $rulesurl,
-    get_string('manageruleslink', 'local_coursecalendar'),
+    get_string('manageruleslink', 'local_courseplanner'),
     ['class' => 'alert-link']
 );
 echo html_writer::div(
-    get_string('weekrowautobuildreminder', 'local_coursecalendar', $autobuildlink),
-    'local-coursecalendar-weekrow-reminder alert alert-info mt-2'
+    get_string('weekrowautobuildreminder', 'local_courseplanner', $autobuildlink),
+    'local-courseplanner-weekrow-reminder alert alert-info mt-2'
 );
 
-$PAGE->requires->js_call_amd('local_coursecalendar/builder', 'init', [$courseid, $calendarid]);
-$PAGE->requires->js_call_amd('local_coursecalendar/confirmaction', 'init', []);
-$tourid = local_coursecalendar_get_tour_id_by_name('local_coursecalendar_builder');
-$PAGE->requires->js_call_amd('local_coursecalendar/showtour', 'init', [
+$PAGE->requires->js_call_amd('local_courseplanner/builder', 'init', [$courseid, $calendarid]);
+$PAGE->requires->js_call_amd('local_courseplanner/confirmaction', 'init', []);
+$tourid = local_courseplanner_get_tour_id_by_name('local_courseplanner_builder');
+$PAGE->requires->js_call_amd('local_courseplanner/showtour', 'init', [
     $tourid,
-    '#local-coursecalendar-showtour',
+    '#local-courseplanner-showtour',
 ]);
 
 echo $OUTPUT->footer();

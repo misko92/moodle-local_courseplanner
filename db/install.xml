@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/coursecalendar/db" VERSION="2026053001" COMMENT="XMLDB schema for local_coursecalendar"
+<XMLDB PATH="local/courseplanner/db" VERSION="2026093000" COMMENT="XMLDB schema for local_courseplanner"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
   <TABLES>
-    <TABLE NAME="local_coursecalendar_blueprints" COMMENT="Teacher-owned blueprint definitions">
+    <TABLE NAME="local_courseplanner_blueprints" COMMENT="Teacher-owned blueprint definitions">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="owneruserid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -25,7 +25,7 @@
       </INDEXES>
     </TABLE>
 
-    <TABLE NAME="local_coursecalendar_blueprint_topics" COMMENT="Ordered topics for a blueprint">
+    <TABLE NAME="local_courseplanner_topics" COMMENT="Ordered topics for a blueprint">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="blueprintid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -40,17 +40,17 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="blueprintid_fk" TYPE="foreign" FIELDS="blueprintid" REFTABLE="local_coursecalendar_blueprints" REFFIELDS="id"/>
+        <KEY NAME="blueprintid_fk" TYPE="foreign" FIELDS="blueprintid" REFTABLE="local_courseplanner_blueprints" REFFIELDS="id"/>
         <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
-        <KEY NAME="blueprint_sortorder_uq" TYPE="unique" FIELDS="blueprintid, sortorder"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="blueprintid_ix" UNIQUE="false" FIELDS="blueprintid"/>
         <INDEX NAME="blueprint_type_ix" UNIQUE="false" FIELDS="blueprintid, type"/>
+        <INDEX NAME="blueprint_sortorder_ix" UNIQUE="false" FIELDS="blueprintid, sortorder"/>
       </INDEXES>
     </TABLE>
 
-    <TABLE NAME="local_coursecalendar_course_blueprint_link" COMMENT="One blueprint link per course">
+    <TABLE NAME="local_courseplanner_courselink" COMMENT="One blueprint link per course">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -65,7 +65,7 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
-        <KEY NAME="blueprintid_fk" TYPE="foreign" FIELDS="blueprintid" REFTABLE="local_coursecalendar_blueprints" REFFIELDS="id"/>
+        <KEY NAME="blueprintid_fk" TYPE="foreign" FIELDS="blueprintid" REFTABLE="local_courseplanner_blueprints" REFFIELDS="id"/>
         <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="courseid_uq" TYPE="unique" FIELDS="courseid"/>
       </KEYS>
@@ -74,13 +74,11 @@
       </INDEXES>
     </TABLE>
 
-    <TABLE NAME="local_coursecalendar_semester_calendars" COMMENT="Semester calendars per course">
+    <TABLE NAME="local_courseplanner_calendars" COMMENT="Course plans (week-by-week calendars) per course">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="blueprintid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="year" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="semester" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="FALL" SEQUENCE="false"/>
         <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="isactive" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -90,9 +88,8 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
-        <KEY NAME="blueprintid_fk" TYPE="foreign" FIELDS="blueprintid" REFTABLE="local_coursecalendar_blueprints" REFFIELDS="id"/>
+        <KEY NAME="blueprintid_fk" TYPE="foreign" FIELDS="blueprintid" REFTABLE="local_courseplanner_blueprints" REFFIELDS="id"/>
         <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
-        <KEY NAME="course_year_sem_uq" TYPE="unique" FIELDS="courseid, year, semester"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="courseid_ix" UNIQUE="false" FIELDS="courseid"/>
@@ -100,7 +97,7 @@
       </INDEXES>
     </TABLE>
 
-    <TABLE NAME="local_coursecalendar_timeline_exception_rules" COMMENT="Date-based calendar rules">
+    <TABLE NAME="local_courseplanner_rules" COMMENT="Date-based calendar rules">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="calendarid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -118,7 +115,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="calendarid_fk" TYPE="foreign" FIELDS="calendarid" REFTABLE="local_coursecalendar_semester_calendars" REFFIELDS="id"/>
+        <KEY NAME="calendarid_fk" TYPE="foreign" FIELDS="calendarid" REFTABLE="local_courseplanner_calendars" REFFIELDS="id"/>
         <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
@@ -128,7 +125,7 @@
       </INDEXES>
     </TABLE>
 
-    <TABLE NAME="local_coursecalendar_calendar_blocks" COMMENT="Grid blocks for semester calendars">
+    <TABLE NAME="local_courseplanner_blocks" COMMENT="Grid blocks for course plans">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="calendarid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -150,9 +147,9 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="calendarid_fk" TYPE="foreign" FIELDS="calendarid" REFTABLE="local_coursecalendar_semester_calendars" REFFIELDS="id"/>
-        <KEY NAME="topicid_fk" TYPE="foreign" FIELDS="topicid" REFTABLE="local_coursecalendar_blueprint_topics" REFFIELDS="id"/>
-        <KEY NAME="generatedruleid_fk" TYPE="foreign" FIELDS="generatedruleid" REFTABLE="local_coursecalendar_timeline_exception_rules" REFFIELDS="id"/>
+        <KEY NAME="calendarid_fk" TYPE="foreign" FIELDS="calendarid" REFTABLE="local_courseplanner_calendars" REFFIELDS="id"/>
+        <KEY NAME="topicid_fk" TYPE="foreign" FIELDS="topicid" REFTABLE="local_courseplanner_topics" REFFIELDS="id"/>
+        <KEY NAME="generatedruleid_fk" TYPE="foreign" FIELDS="generatedruleid" REFTABLE="local_courseplanner_rules" REFFIELDS="id"/>
         <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="calendar_row_col_uq" TYPE="unique" FIELDS="calendarid, rownum, colnum"/>
       </KEYS>
@@ -163,7 +160,7 @@
       </INDEXES>
     </TABLE>
 
-    <TABLE NAME="local_coursecalendar_rule_apply_runs" COMMENT="Trace apply-rules executions">
+    <TABLE NAME="local_courseplanner_ruleruns" COMMENT="Trace apply-rules executions">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="calendarid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -174,7 +171,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="calendarid_fk" TYPE="foreign" FIELDS="calendarid" REFTABLE="local_coursecalendar_semester_calendars" REFFIELDS="id"/>
+        <KEY NAME="calendarid_fk" TYPE="foreign" FIELDS="calendarid" REFTABLE="local_courseplanner_calendars" REFFIELDS="id"/>
         <KEY NAME="appliedbyuserid_fk" TYPE="foreign" FIELDS="appliedbyuserid" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
@@ -182,7 +179,7 @@
         <INDEX NAME="runhash_ix" UNIQUE="false" FIELDS="runhash"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="local_coursecalendar_course_info" COMMENT="Supplementary student-facing course content">
+    <TABLE NAME="local_courseplanner_courseinfo" COMMENT="Supplementary student-facing course content">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>

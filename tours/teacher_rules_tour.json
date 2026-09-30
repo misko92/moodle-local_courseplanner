@@ -1,7 +1,7 @@
 {
-  "name": "local_coursecalendar_rules",
-  "description": "Walkthrough for the Academic Timeline Rules page (local_coursecalendar).",
-  "pathmatch": "/local/coursecalendar/rules.php%",
+  "name": "local_courseplanner_rules",
+  "description": "Walkthrough for the Academic Timeline Rules page (local_courseplanner).",
+  "pathmatch": "/local/courseplanner/rules.php%",
   "enabled": "1",
   "sortorder": "0",
   "endtourlabel": "",
@@ -23,7 +23,7 @@
       "content": "<p>Use this form when you want to add dates manually. At minimum you need a <strong>Semester start date</strong> and a <strong>Semester end date</strong>. Add as many <strong>No class</strong> rules as you need for holidays and closures, and use <strong>Day swap</strong> for days that follow a different weekday's schedule.</p><p>The create-new form appears after the existing rules list so you can review what's already there before adding more.</p>",
       "contentformat": "1",
       "targettype": "0",
-      "targetvalue": "#local-coursecalendar-createrule",
+      "targetvalue": "#local-courseplanner-createrule",
       "sortorder": "4",
       "configdata": "{\"placement\":\"top\"}"
     },
@@ -32,7 +32,7 @@
       "content": "<p>All your rules appear here. Toggle any rule off to exclude it from the next Apply without deleting it. Delete removes it permanently.</p><p>This list is the source of truth for the semester dates that will be applied to the calendar.</p>",
       "contentformat": "1",
       "targettype": "0",
-      "targetvalue": "#local-coursecalendar-existingrules",
+      "targetvalue": "#local-courseplanner-existingrules",
       "sortorder": "3",
       "configdata": "{\"placement\":\"bottom\"}"
     },
@@ -41,7 +41,7 @@
       "content": "<p>Click <strong>Apply Rules to Calendar</strong> when you're ready. The grid will regenerate week labels, mark no-class days, and add day-swap annotations. Any manual edits you made to individual cells are preserved - only the auto-generated content is refreshed.</p><p>This action uses the current rules list.</p>",
       "contentformat": "1",
       "targettype": "0",
-      "targetvalue": "#local-coursecalendar-applyrules-form",
+      "targetvalue": "#local-courseplanner-applyrules-form",
       "sortorder": "1",
       "configdata": "{\"placement\":\"bottom\"}"
     }

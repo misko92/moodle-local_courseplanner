@@ -17,7 +17,7 @@
 /**
  * Topics import page.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -33,12 +33,12 @@ $course = get_course($courseid);
 $context = context_course::instance($courseid);
 
 require_login($course);
-require_capability('local/coursecalendar:managecalendar', $context);
+require_capability('local/courseplanner:manage', $context);
 
-$blueprint = local_coursecalendar_require_owned_blueprint($blueprintid, (int)$USER->id);
+$blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
 
-$pageurl = new moodle_url('/local/coursecalendar/import_topics.php', ['id' => $courseid, 'blueprintid' => $blueprintid]);
-$manageurl = new moodle_url('/local/coursecalendar/manage.php', ['id' => $courseid, 'blueprintctx' => $blueprintid]);
+$pageurl = new moodle_url('/local/courseplanner/import_topics.php', ['id' => $courseid, 'blueprintid' => $blueprintid]);
+$manageurl = new moodle_url('/local/courseplanner/manage.php', ['id' => $courseid, 'blueprintctx' => $blueprintid]);
 
 $layoutoptions = [
     'LLL' => 'Lecture - Lecture - Lecture',
@@ -57,10 +57,10 @@ if ($action !== '' && data_submitted()) {
             if (!isset($layoutoptions[$layout])) {
                 $layout = 'LLL';
             }
-            $result = local_coursecalendar_seed_topics_from_html($html, $layout, $blueprintid, (int)$USER->id);
+            $result = local_courseplanner_seed_topics_from_html($html, $layout, $blueprintid, (int)$USER->id);
             redirect(
                 $pageurl,
-                get_string('importtopicsdone', 'local_coursecalendar', $result),
+                get_string('importtopicsdone', 'local_courseplanner', $result),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
@@ -68,28 +68,28 @@ if ($action !== '' && data_submitted()) {
 
         case 'updateelessonlinks':
             $html = required_param('linkshtml', PARAM_RAW);
-            $result = local_coursecalendar_bulk_update_elesson_links($html, $blueprintid);
+            $result = local_courseplanner_bulk_update_elesson_links($html, $blueprintid);
             redirect(
                 $pageurl,
-                get_string('importelessonlinksdone', 'local_coursecalendar', $result),
+                get_string('importelessonlinksdone', 'local_courseplanner', $result),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
             break;
 
         case 'deletealltopics':
-            $count = local_coursecalendar_delete_all_topics($blueprintid, true);
+            $count = local_courseplanner_delete_all_topics($blueprintid, true);
             if ($count < 0) {
                 redirect(
                     $pageurl,
-                    get_string('deletealltopicsblocked', 'local_coursecalendar'),
+                    get_string('deletealltopicsblocked', 'local_courseplanner'),
                     null,
                     \core\output\notification::NOTIFY_ERROR
                 );
             }
             redirect(
                 $pageurl,
-                get_string('deletealltopicsdone', 'local_coursecalendar', $count),
+                get_string('deletealltopicsdone', 'local_courseplanner', $count),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
@@ -100,29 +100,29 @@ if ($action !== '' && data_submitted()) {
 $PAGE->set_url($pageurl);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('incourse');
-$PAGE->set_title(get_string('importtopicspagetitle', 'local_coursecalendar'));
+$PAGE->set_title(get_string('importtopicspagetitle', 'local_courseplanner'));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->requires->css(new moodle_url('/local/coursecalendar/styles.css'));
+$PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('importtopicspagetitle', 'local_coursecalendar'));
-echo html_writer::link($manageurl, get_string('backtomanage', 'local_coursecalendar'), ['class' => 'btn btn-secondary mb-3']);
+echo $OUTPUT->heading(get_string('importtopicspagetitle', 'local_courseplanner'));
+echo html_writer::link($manageurl, get_string('backtomanage', 'local_courseplanner'), ['class' => 'btn btn-secondary mb-3']);
 
-echo html_writer::div(get_string('intro_importtopics', 'local_coursecalendar'), 'local-coursecalendar-intro alert alert-info');
+echo html_writer::div(get_string('intro_importtopics', 'local_courseplanner'), 'local-courseplanner-intro alert alert-info');
 
 echo html_writer::tag(
     'h4',
-    get_string('importtopicsfromhtml', 'local_coursecalendar')
-    . ' ' . $OUTPUT->help_icon('importtopicsfromhtml', 'local_coursecalendar'),
+    get_string('importtopicsfromhtml', 'local_courseplanner')
+    . ' ' . $OUTPUT->help_icon('importtopicsfromhtml', 'local_courseplanner'),
     ['class' => 'mt-3']
 );
-echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'local-coursecalendar-card']);
+echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'local-courseplanner-card']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $courseid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'blueprintid', 'value' => $blueprintid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'seedtopics']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
-echo html_writer::tag('label', get_string('importtopicshtmllabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('importtopicshtmllabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
 echo html_writer::tag('textarea', '', [
     'name' => 'importhtml',
     'class' => 'form-control mb-2',
@@ -130,7 +130,7 @@ echo html_writer::tag('textarea', '', [
     'required' => 'required',
 ]);
 
-echo html_writer::tag('label', get_string('importtopicslayoutlabel', 'local_coursecalendar'), ['class' => 'font-weight-bold']);
+echo html_writer::tag('label', get_string('importtopicslayoutlabel', 'local_courseplanner'), ['class' => 'font-weight-bold']);
 echo html_writer::start_tag('select', ['name' => 'layout', 'class' => 'custom-select mb-2']);
 foreach ($layoutoptions as $key => $label) {
     echo html_writer::tag('option', $label, ['value' => $key]);
@@ -139,21 +139,21 @@ echo html_writer::end_tag('select');
 
 echo html_writer::empty_tag(
     'input',
-    ['type' => 'submit', 'class' => 'btn btn-primary', 'value' => get_string('importtopicssubmit', 'local_coursecalendar')]
+    ['type' => 'submit', 'class' => 'btn btn-primary', 'value' => get_string('importtopicssubmit', 'local_courseplanner')]
 );
 echo html_writer::end_tag('form');
 
 echo html_writer::tag(
     'h4',
-    get_string('importdangerzone', 'local_coursecalendar')
-    . ' ' . $OUTPUT->help_icon('importdangerzone', 'local_coursecalendar'),
+    get_string('importdangerzone', 'local_courseplanner')
+    . ' ' . $OUTPUT->help_icon('importdangerzone', 'local_courseplanner'),
     ['class' => 'mt-4 text-danger']
 );
-$deletealltopicslabel = get_string('deletealltopicsbtn', 'local_coursecalendar');
+$deletealltopicslabel = get_string('deletealltopicsbtn', 'local_courseplanner');
 echo html_writer::start_tag('form', [
     'method' => 'post',
-    'class' => 'local-coursecalendar-card',
-    'data-cc-confirm' => get_string('deletealltopicsconfirm', 'local_coursecalendar'),
+    'class' => 'local-courseplanner-card',
+    'data-cc-confirm' => get_string('deletealltopicsconfirm', 'local_courseplanner'),
     'data-cc-confirm-title' => get_string('confirm', 'core'),
     'data-cc-confirm-action' => $deletealltopicslabel,
     'data-cc-confirm-style' => 'delete',
@@ -168,6 +168,6 @@ echo html_writer::empty_tag(
 );
 echo html_writer::end_tag('form');
 
-$PAGE->requires->js_call_amd('local_coursecalendar/confirmaction', 'init', []);
+$PAGE->requires->js_call_amd('local_courseplanner/confirmaction', 'init', []);
 
 echo $OUTPUT->footer();

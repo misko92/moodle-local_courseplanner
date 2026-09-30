@@ -2,10 +2,10 @@
  * Drag-and-drop reordering for blueprint topics on manage.php.
  *
  * Wraps Moodle's core/sortable_list AMD module around the topic list and
- * persists the new order via the local_coursecalendar_reorder_blueprint_topics
+ * persists the new order via the local_courseplanner_reorder_blueprint_topics
  * external function whenever the user drops a row into a new position.
  *
- * @module local_coursecalendar/topicreorder
+ * @module local_courseplanner/topicreorder
  */
 define([
     'jquery',
@@ -37,7 +37,7 @@ define([
      */
     function refreshSortOrderBadges(list) {
         $(list).children('[data-topicid]').each(function(index, li) {
-            var badge = li.querySelector('.local-coursecalendar-blueprint-shortcode');
+            var badge = li.querySelector('.local-courseplanner-blueprint-shortcode');
             if (badge) {
                 badge.textContent = String(index + 1);
             }
@@ -54,7 +54,7 @@ define([
      */
     function saveOrder(courseid, blueprintid, topicids) {
         var request = Ajax.call([{
-            methodname: 'local_coursecalendar_reorder_blueprint_topics',
+            methodname: 'local_courseplanner_reorder_blueprint_topics',
             args: {
                 courseid: courseid,
                 blueprintid: blueprintid,
@@ -73,9 +73,9 @@ define([
      */
     function setSaving(list, saving) {
         if (saving) {
-            list.classList.add('local-coursecalendar-list-saving');
+            list.classList.add('local-courseplanner-list-saving');
         } else {
-            list.classList.remove('local-coursecalendar-list-saving');
+            list.classList.remove('local-courseplanner-list-saving');
         }
     }
 
@@ -98,14 +98,14 @@ define([
         try {
             new SortableList(list);
         } catch (err) {
-            log.error('local_coursecalendar/topicreorder: failed to init SortableList', err);
+            log.error('local_courseplanner/topicreorder: failed to init SortableList', err);
             return;
         }
 
         // Give each row a human-readable name for sortable_list's live region.
         $(list).children('[data-topicid]').each(function() {
             var $item = $(this);
-            var name = $item.find('.local-coursecalendar-blueprint-name').text().trim();
+            var name = $item.find('.local-courseplanner-blueprint-name').text().trim();
             if (name) {
                 $item.attr('data-sortable-list-name', name);
             }

@@ -17,42 +17,42 @@
 /**
  * Core library callbacks.
  *
- * @package    local_coursecalendar
+ * @package    local_courseplanner
  * @copyright  2026 Greg Mulcair
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Add local_coursecalendar links to course navigation.
+ * Add local_courseplanner links to course navigation.
  *
  * @param navigation_node $navigation
  * @param stdClass $course
  * @param context_course $context
  */
-function local_coursecalendar_extend_navigation_course(
+function local_courseplanner_extend_navigation_course(
     navigation_node $navigation,
     stdClass $course,
     context_course $context
 ): void {
-    if (has_capability('local/coursecalendar:managecalendar', $context)) {
-        $manageurl = new moodle_url('/local/coursecalendar/manage.php', ['id' => $course->id]);
+    if (has_capability('local/courseplanner:manage', $context)) {
+        $manageurl = new moodle_url('/local/courseplanner/manage.php', ['id' => $course->id]);
         $navigation->add(
-            get_string('managecoursecalendar', 'local_coursecalendar'),
+            get_string('managecourseplanner', 'local_courseplanner'),
             $manageurl,
             navigation_node::TYPE_CUSTOM,
             null,
-            'local_coursecalendar_manage'
+            'local_courseplanner_manage'
         );
     }
 
-    if (has_capability('local/coursecalendar:viewcalendar', $context)) {
-        $studenturl = new moodle_url('/local/coursecalendar/student.php', ['id' => $course->id]);
+    if (has_capability('local/courseplanner:view', $context)) {
+        $studenturl = new moodle_url('/local/courseplanner/student.php', ['id' => $course->id]);
         $navigation->add(
-            get_string('viewcoursecalendar', 'local_coursecalendar'),
+            get_string('viewcourseplanner', 'local_courseplanner'),
             $studenturl,
             navigation_node::TYPE_CUSTOM,
             null,
-            'local_coursecalendar_student'
+            'local_courseplanner_student'
         );
     }
 }
