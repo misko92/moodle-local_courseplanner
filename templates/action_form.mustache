@@ -1,0 +1,40 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_courseplanner/action_form
+
+    A one-button form that POSTs an action back to the current page, optionally after a confirmation
+    dialog (handled by local_courseplanner/confirmaction).
+
+    Example context (json):
+    {
+        "action": "deletecalendar",
+        "label": "Delete",
+        "btnclass": "btn-outline-danger",
+        "sesskey": "abc",
+        "params": [{"name": "calendarid", "value": 3}],
+        "confirm": {"message": "Delete this calendar?", "title": "Confirm", "action": "Delete", "style": "delete"}
+    }
+}}
+<form method="post" class="local-courseplanner-inline-form{{#formclass}} {{.}}{{/formclass}}"{{#confirm}}
+    data-cc-confirm="{{message}}" data-cc-confirm-title="{{title}}" data-cc-confirm-action="{{action}}"
+    data-cc-confirm-style="{{style}}"{{/confirm}}>
+    <input type="hidden" name="sesskey" value="{{sesskey}}">
+    <input type="hidden" name="action" value="{{action}}">
+    {{#params}}<input type="hidden" name="{{name}}" value="{{value}}">{{/params}}
+    <button type="submit" class="btn {{btnclass}}{{^btnclass}}btn-outline-secondary{{/btnclass}}">{{label}}</button>
+</form>

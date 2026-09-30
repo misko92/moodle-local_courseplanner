@@ -160,6 +160,21 @@ class calendars {
     }
 
     /**
+     * Load a calendar the current user may edit, checking capability and blueprint ownership.
+     *
+     * @param int $calendarid
+     * @return array [stdClass $calendar, stdClass $blueprint, \context_course $context]
+     */
+    public static function require_editable(int $calendarid): array {
+        global $DB, $USER;
+        $calendar = $DB->get_record('local_courseplanner_calendars', ['id' => $calendarid], '*', MUST_EXIST);
+        $context = context_course::instance((int)$calendar->courseid);
+        require_capability('local/courseplanner:manage', $context);
+        $blueprint = blueprints::require_owned((int)$calendar->blueprintid, (int)$USER->id);
+        return [$calendar, $blueprint, $context];
+    }
+
+    /**
      * Require a calendar belonging to this course.
      *
      * @param int $calendarid
@@ -217,5 +232,75 @@ class calendars {
         }
         $DB->delete_records('local_courseplanner_courselink', ['courseid' => $courseid]);
         $DB->delete_records('local_courseplanner_courseinfo', ['courseid' => $courseid]);
+    }
+
+    /**
+     * Create a calendar for a course and make it the active one.
+     *
+     * @param int $courseid
+     * @param int $blueprintid
+     * @param string $title
+     * @param int $userid
+     * @return int New calendar id.
+     */
+    public static function create(int $courseid, int $blueprintid, string $title, int $userid): int {
+        global $DB;
+        $now = time();
+        $DB->set_field('local_courseplanner_calendars', 'isactive', 0, ['courseid' => $courseid]);
+        return (int)$DB->insert_record('local_courseplanner_calendars', (object)[
+            'courseid' => $courseid,
+            'blueprintid' => $blueprintid,
+            'title' => $title,
+            'isactive' => 1,
+            'timecreated' => $now,
+            'timemodified' => $now,
+            'usermodified' => $userid,
+        ]);
+    }
+
+    /**
+     * Rename a calendar.
+     *
+     * @param stdClass $calendar
+     * @param string $title
+     * @param int $userid
+     */
+    public static function rename(stdClass $calendar, string $title, int $userid): void {
+        global $DB;
+        $DB->update_record('local_courseplanner_calendars', (object)[
+            'id' => $calendar->id, 'title' => $title, 'timemodified' => time(), 'usermodified' => $userid,
+        ]);
+    }
+
+    /**
+     * Activate a calendar (deactivating the course's others), or deactivate it.
+     *
+     * @param stdClass $calendar
+     * @param int $userid
+     * @return bool True if the calendar is now active.
+     */
+    public static function toggle_active(stdClass $calendar, int $userid): bool {
+        global $DB;
+        $activating = (int)$calendar->isactive !== 1;
+        if ($activating) {
+            $DB->set_field('local_courseplanner_calendars', 'isactive', 0, ['courseid' => $calendar->courseid]);
+        }
+        $DB->update_record('local_courseplanner_calendars', (object)[
+            'id' => $calendar->id, 'isactive' => $activating ? 1 : 0, 'timemodified' => time(), 'usermodified' => $userid,
+        ]);
+        return $activating;
+    }
+
+    /**
+     * Delete a calendar with its grid, dates and apply history.
+     *
+     * @param stdClass $calendar
+     */
+    public static function delete(stdClass $calendar): void {
+        global $DB;
+        $DB->delete_records('local_courseplanner_ruleruns', ['calendarid' => $calendar->id]);
+        $DB->delete_records('local_courseplanner_blocks', ['calendarid' => $calendar->id]);
+        $DB->delete_records('local_courseplanner_rules', ['calendarid' => $calendar->id]);
+        $DB->delete_records('local_courseplanner_calendars', ['id' => $calendar->id]);
     }
 }

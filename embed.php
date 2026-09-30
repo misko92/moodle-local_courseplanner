@@ -25,14 +25,13 @@
 require_once(__DIR__ . '/../../config.php');
 
 use local_courseplanner\local\calendars;
-use local_courseplanner\local\grid;
+use local_courseplanner\output\calendar_grid;
 
 $courseid = required_param('id', PARAM_INT);
 $calendarid = required_param('calendarid', PARAM_INT);
 
 $course = get_course($courseid);
 $context = context_course::instance($courseid);
-
 require_login($course);
 require_capability('local/courseplanner:view', $context);
 
@@ -42,8 +41,11 @@ $PAGE->set_url(new moodle_url('/local/courseplanner/embed.php', ['id' => $course
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('embedded');
 $PAGE->set_title(get_string('embedpagetitle', 'local_courseplanner'));
-$PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
+$PAGE->requires->js_call_amd('local_courseplanner/calendar_view', 'init');
 
 echo $OUTPUT->header();
-echo grid::render($calendar, true);
+echo $OUTPUT->render_from_template(
+    'local_courseplanner/calendar_grid',
+    (new calendar_grid($calendar))->export_for_template($OUTPUT)
+);
 echo $OUTPUT->footer();

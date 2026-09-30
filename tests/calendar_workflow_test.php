@@ -139,8 +139,13 @@ final class calendar_workflow_test extends \advanced_testcase {
 
         $PAGE->set_url(new \moodle_url('/local/courseplanner/view.php'));
         $PAGE->set_context(\context_course::instance($course->id));
-        $html = \local_courseplanner\local\grid::render($calendar);
+        $grid = new \local_courseplanner\output\calendar_grid($calendar, false, self::day('2026-10-12') + HOURSECS);
+        $output = $PAGE->get_renderer('core');
+        $html = $output->render_from_template('local_courseplanner/calendar_grid', $grid->export_for_template($output));
         $this->assertStringContainsString('Thanksgiving', $html);
+        // Today (Thanksgiving Monday) is week 6's Monday column. Rows are counted from the first day of classes, so
+        // this works whatever year the week labels would parse as.
+        $this->assertMatchesRegularExpression('~local-courseplanner-today-cell"\s*data-cc-row="6" data-cc-col="1"~', $html);
 
         // Applying requires both ends of the year.
         $other = $plugingen->create_calendar(['courseid' => $course->id, 'blueprintid' => $blueprint->id,

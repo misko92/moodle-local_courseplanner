@@ -1,0 +1,65 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_courseplanner/builder_page
+
+    The calendar builder. Edit buttons in the grid and the intro-texts button open pop-up forms
+    (local_courseplanner/builder); the other buttons POST actions back to calendar.php.
+
+    Example context (json):
+    {
+        "courseid": 2, "calendarid": 3, "contextlabel": "Editing calendar: 2026-27",
+        "backurl": "#", "contenturl": "#", "rulesurl": "#", "previewurl": "#", "coverageurl": "#",
+        "automation": [], "weekrowactions": [], "autobuildreminder": "Tip",
+        "helpactions": "", "helpautomation": "", "helpintrotexts": "", "helpgrid": "",
+        "grid": {"hasrows": false}
+    }
+}}
+<div id="local-courseplanner-builder" data-courseid="{{courseid}}" data-calendarid="{{calendarid}}">
+    <a href="{{backurl}}" class="btn btn-secondary mb-3">{{#str}}backtomanage, local_courseplanner{{/str}}</a>
+    <div class="local-courseplanner-intro alert alert-info">{{#str}}intro_calendar, local_courseplanner{{/str}}</div>
+
+    <h4 class="local-courseplanner-section-title">{{#str}}section_builderactions, local_courseplanner{{/str}} {{{helpactions}}}</h4>
+    <div class="local-courseplanner-page-actions" id="local-courseplanner-builder-actions">
+        <a href="{{contenturl}}" class="btn btn-sm btn-outline-primary me-2">{{#str}}managecontentlink, local_courseplanner{{/str}}</a>
+        <a href="{{rulesurl}}" class="btn btn-sm btn-outline-warning me-2">{{#str}}manageruleslink, local_courseplanner{{/str}}</a>
+        <a href="{{previewurl}}" class="btn btn-sm btn-outline-info me-2" target="_blank">{{#str}}openpreviewlink, local_courseplanner{{/str}}</a>
+        <a href="{{coverageurl}}" class="btn btn-sm btn-outline-info">{{#str}}coveragechecklink, local_courseplanner{{/str}}</a>
+    </div>
+
+    <h4 class="local-courseplanner-section-title">{{#str}}section_automation, local_courseplanner{{/str}} {{{helpautomation}}}</h4>
+    <div class="local-courseplanner-page-actions" id="local-courseplanner-automation-actions">
+        {{#automation}}{{> local_courseplanner/action_form}}{{/automation}}
+    </div>
+
+    <div class="local-courseplanner-shell">{{contextlabel}}</div>
+
+    <h4 class="local-courseplanner-section-title" id="local-courseplanner-section-introtexts">
+        {{#str}}section_introtexts, local_courseplanner{{/str}} {{{helpintrotexts}}}
+    </h4>
+    <button type="button" class="btn btn-outline-primary mb-3" data-action="edit-courseinfo">
+        {{#str}}editintrotexts, local_courseplanner{{/str}}
+    </button>
+
+    <h4 class="local-courseplanner-section-title">{{#str}}section_buildergrid, local_courseplanner{{/str}} {{{helpgrid}}}</h4>
+    {{#grid}}{{> local_courseplanner/calendar_grid}}{{/grid}}
+
+    <div class="local-courseplanner-weekrow-actions">
+        {{#weekrowactions}}{{> local_courseplanner/action_form}}{{/weekrowactions}}
+    </div>
+    <div class="local-courseplanner-weekrow-reminder alert alert-info mt-2">{{{autobuildreminder}}}</div>
+</div>

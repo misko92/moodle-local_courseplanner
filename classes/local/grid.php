@@ -17,7 +17,6 @@
 namespace local_courseplanner\local;
 
 use core_text;
-use html_writer;
 use stdClass;
 
 /**
@@ -28,6 +27,12 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class grid {
+    /** @var string[] Weekdays a teaching-day column can be set to. */
+    public const HEADER_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+    /** @var string[] Session modes a teaching-day column can be set to. */
+    public const HEADER_MODES = ['Lecture', 'Lab'];
+
     /**
      * Get calendar blocks indexed by row/col.
      *
@@ -322,52 +327,65 @@ class grid {
     }
 
     /**
-     * Map a date to a grid cell position using the week-label structure and header days.
+     * Find the grid cell for a date, for "today" highlighting.
      *
-     * @param array $blocksmap Block grid keyed [row][col] of block records.
-     * @param int $maxrow Highest row number present in the grid.
-     * @param int $timestamp Unix timestamp of the date to locate.
-     * @return array|null ['row' => int, 'col' => int] or null if not found.
+     * Week rows are numbered from the first day of classes, as {@see timeline::apply()} generates them. Without a
+     * first day of classes, each row's week is read from its label ("Week 3<br/>Sep 21"), trying the years either
+     * side of the date so labels in a school year that spans New Year resolve correctly.
+     *
+     * @param array $blocksmap Blocks keyed by [row][col].
+     * @param int $maxrow Last week row.
+     * @param int $timestamp The date to find.
+     * @param int|null $startdate First day of classes, if known.
+     * @return array|null ['row' => int, 'col' => ?int] for the date's week (col when a column is that weekday), or
+     *     ['row' => int, 'col' => null, 'nearest' => true] for the nearest week, or null if no row has a week.
      */
-    public static function date_to_cell(array $blocksmap, int $maxrow, int $timestamp): ?array {
-        $daymap = ['monday' => 0, 'tuesday' => 1, 'wednesday' => 2, 'thursday' => 3, 'friday' => 4, 'saturday' => 5, 'sunday' => 6];
+    public static function date_to_cell(array $blocksmap, int $maxrow, int $timestamp, ?int $startdate = null): ?array {
+        $daymap = ['monday' => 0, 'tuesday' => 1, 'wednesday' => 2, 'thursday' => 3, 'friday' => 4, 'saturday' => 5,
+            'sunday' => 6];
 
-        // Build header day offsets for cols 1-3.
+        // Weekday offset of each teaching-day column.
         $coloffsets = [];
-        for ($c = 1; $c <= 3; $c++) {
-            $h = $blocksmap[0][$c] ?? null;
-            if ($h && !empty($h->headerday)) {
-                $dayname = core_text::strtolower((string)$h->headerday);
-                if (isset($daymap[$dayname])) {
-                    $coloffsets[$c] = $daymap[$dayname];
-                }
-            }
-        }
-
-        // Parse week mondays from col-0 labels.
-        $rowmondays = [];
-        for ($row = 1; $row <= $maxrow; $row++) {
-            $cell = $blocksmap[$row][0] ?? null;
-            if (!$cell) {
-                continue;
-            }
-            $content = strip_tags((string)$cell->contenthtml);
-            if (preg_match('/(\w{3})\s+(\d{1,2})/', $content, $m)) {
-                $parsed = strtotime($m[1] . ' ' . $m[2] . ' ' . date('Y', $timestamp));
-                if ($parsed) {
-                    $rowmondays[$row] = timeline::get_week_monday($parsed);
-                }
+        foreach ($blocksmap[0] ?? [] as $col => $header) {
+            $dayname = core_text::strtolower((string)($header->headerday ?? ''));
+            if (isset($daymap[$dayname])) {
+                $coloffsets[$col] = $daymap[$dayname];
             }
         }
 
         $targetdate = strtotime(date('Y-m-d', $timestamp));
         $targetmonday = timeline::get_week_monday($targetdate);
 
+        $rowmondays = [];
+        if ($startdate) {
+            $firstmonday = timeline::get_week_monday($startdate);
+            for ($row = 1; $row <= $maxrow; $row++) {
+                $rowmondays[$row] = strtotime('+' . ($row - 1) . ' weeks', $firstmonday);
+            }
+        } else {
+            $year = (int)date('Y', $timestamp);
+            for ($row = 1; $row <= $maxrow; $row++) {
+                $label = strip_tags((string)($blocksmap[$row][0]->contenthtml ?? ''));
+                if (!preg_match('/([A-Z][a-z]{2})\s+(\d{1,2})/', $label, $m)) {
+                    continue;
+                }
+                $best = null;
+                foreach ([$year - 1, $year, $year + 1] as $candidate) {
+                    $parsed = strtotime($m[1] . ' ' . $m[2] . ' ' . $candidate);
+                    if ($parsed && ($best === null || abs($parsed - $targetdate) < abs($best - $targetdate))) {
+                        $best = $parsed;
+                    }
+                }
+                if ($best) {
+                    $rowmondays[$row] = timeline::get_week_monday($best);
+                }
+            }
+        }
+
         foreach ($rowmondays as $row => $monday) {
             if ($monday === $targetmonday) {
                 foreach ($coloffsets as $col => $offset) {
-                    $celldate = strtotime('+' . $offset . ' days', $monday);
-                    if ($celldate === $targetdate) {
+                    if (strtotime('+' . $offset . ' days', $monday) === $targetdate) {
                         return ['row' => $row, 'col' => $col];
                     }
                 }
@@ -375,7 +393,6 @@ class grid {
             }
         }
 
-        // Find nearest row.
         $nearestrow = null;
         $nearestdiff = PHP_INT_MAX;
         foreach ($rowmondays as $row => $monday) {
@@ -385,137 +402,6 @@ class grid {
                 $nearestrow = $row;
             }
         }
-
-        if ($nearestrow !== null) {
-            return ['row' => $nearestrow, 'col' => null, 'nearest' => true];
-        }
-
-        return null;
-    }
-
-    /**
-     * Render the read-only student-facing calendar grid as an HTML string.
-     *
-     * Shared by the embeddable page (embed.php) and the course block so the grid
-     * markup stays in one place.
-     *
-     * @param stdClass $calendar Calendar record.
-     * @param bool $autoscroll When true, emit a script that scrolls the nearest/today row into view.
-     * @return string Grid HTML, or '' when the calendar has no content.
-     */
-    public static function render(stdClass $calendar, bool $autoscroll = true): string {
-        $alltopics = topics::get_for_blueprint((int)$calendar->blueprintid, true);
-        $blocksmap = self::get_blocks_map((int)$calendar->id);
-        $maxrow = 0;
-        foreach (array_keys($blocksmap) as $rownum) {
-            $maxrow = max($maxrow, (int)$rownum);
-        }
-        if ($maxrow === 0 && empty($blocksmap)) {
-            return '';
-        }
-        $columns = self::get_columns($blocksmap);
-
-        // Compute today/nearest cell for highlighting.
-        $todaycell = self::date_to_cell($blocksmap, $maxrow, time());
-        $todayrow = $todaycell ? ($todaycell['row'] ?? null) : null;
-        $todaycol = $todaycell ? ($todaycell['col'] ?? null) : null;
-        $nearestonly = $todaycell && !empty($todaycell['nearest']);
-
-        $out = html_writer::start_tag('div', ['class' => 'local-courseplanner-embed']);
-        $out .= html_writer::start_tag('table', [
-            'class' => 'table table-bordered local-courseplanner-grid local-courseplanner-preview',
-        ]);
-        for ($row = 0; $row <= $maxrow; $row++) {
-            $rowclasses = [];
-            if ($row === $todayrow && ($nearestonly || $todaycol === null)) {
-                $rowclasses[] = 'local-courseplanner-nearest-row';
-            }
-            $out .= html_writer::start_tag('tr', $rowclasses ? ['class' => implode(' ', $rowclasses)] : []);
-            foreach ($columns as $col) {
-                $cell = $blocksmap[$row][$col] ?? null;
-                $content = $cell ? (string)$cell->contenthtml : '';
-                $blocktype = $cell ? (string)$cell->blocktype : '';
-                $cellheading = $cell ? (string)$cell->cellheading : '';
-                $highlighted = $cell && (int)$cell->highlighted === 1;
-                $verticallycentred = $cell && (int)$cell->verticallycentred === 1;
-                $selectedtopicid = ($cell && !empty($cell->topicid)) ? (int)$cell->topicid : 0;
-                $selectedtopic = $alltopics[$selectedtopicid] ?? null;
-
-                $isblank = ($blocktype === 'BLANK');
-
-                $tag = ($row === 0) ? 'th' : 'td';
-                $cellclasses = ['local-courseplanner-grid-cell'];
-                if ($isblank) {
-                    $cellclasses[] = 'local-courseplanner-blank-cell';
-                }
-                if ($highlighted) {
-                    $cellclasses[] = 'local-courseplanner-highlighted';
-                }
-                if ($verticallycentred) {
-                    $cellclasses[] = 'local-courseplanner-vcentred';
-                }
-                if ($row === 0) {
-                    $cellclasses[] = 'local-courseplanner-preview-header';
-                }
-                if ($row === $todayrow && $col === $todaycol && !$nearestonly) {
-                    $cellclasses[] = 'local-courseplanner-today-cell';
-                }
-                $out .= html_writer::start_tag($tag, ['class' => implode(' ', $cellclasses)]);
-
-                if ($cellheading !== '') {
-                    $out .= html_writer::tag('div', format_text($cellheading, FORMAT_HTML), [
-                        'class' => 'local-courseplanner-cellheading',
-                    ]);
-                }
-                if ($isblank) {
-                    $out .= html_writer::tag('div', format_text($content, FORMAT_HTML), [
-                        'class' => 'local-courseplanner-blank-label',
-                    ]);
-                } else if ($blocktype === 'TOPIC' && $selectedtopic) {
-                    $out .= topics::heading_html($selectedtopic);
-                    if (!empty($selectedtopic->contenthtml)) {
-                        $topichtml = format_text($selectedtopic->contenthtml, FORMAT_HTML);
-                        $topichtml = preg_replace('/<a\b/', '<a target="_blank"', $topichtml);
-                        $out .= html_writer::tag('div', $topichtml, ['class' => 'local-courseplanner-topic-preview']);
-                    }
-                } else if ($row === 0) {
-                    $out .= html_writer::tag('div', format_text($content, FORMAT_HTML), [
-                        'class' => 'local-courseplanner-readonly-cell',
-                    ]);
-                    if ($cell && !empty($cell->headerday)) {
-                        $out .= html_writer::tag(
-                            'div',
-                            s($cell->headerday) . ($cell->headermode ? ' &middot; ' . s($cell->headermode) : ''),
-                            ['class' => 'local-courseplanner-header-meta']
-                        );
-                    }
-                } else if ($content !== '') {
-                    $texthtml = format_text($content, FORMAT_HTML);
-                    $texthtml = preg_replace('/<a\b/', '<a target="_blank"', $texthtml);
-                    $out .= html_writer::tag('div', $texthtml, ['class' => 'local-courseplanner-text-preview']);
-                }
-
-                $out .= html_writer::end_tag($tag);
-            }
-            $out .= html_writer::end_tag('tr');
-        }
-        $out .= html_writer::end_tag('table');
-        $out .= html_writer::end_tag('div');
-
-        if ($autoscroll && $todayrow) {
-            $out .= <<<'JS'
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var selector = ".local-courseplanner-today-cell,.local-courseplanner-nearest-row";
-        var target = document.querySelector(selector);
-        if (target) {
-            target.scrollIntoView({behavior: "smooth", block: "center"});
-        }
-    });
-    </script>
-    JS;
-        }
-
-        return $out;
+        return $nearestrow === null ? null : ['row' => $nearestrow, 'col' => null, 'nearest' => true];
     }
 }

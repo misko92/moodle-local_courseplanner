@@ -63,6 +63,28 @@ Feature: Every course planner page works for teachers and students
     Then I should see "Found topics"
     And I should see "Stoichiometry"
 
+  @javascript
+  Scenario: Teacher edits cells, column headings and topics from the builder in pop-up forms
+    Given I am on the "2026-27" "local_courseplanner > Builder" page logged in as "teacher1"
+    When I click on "Edit cell" "button" in the "[data-cc-row='3'][data-cc-col='2']" "css_element"
+    And I set the field "Content" to "Lab safety briefing"
+    And I set the field "Highlighted" to "1"
+    And I click on "Save changes" "button" in the ".modal-dialog" "css_element"
+    Then I should see "Lab safety briefing" in the "[data-cc-row='3'][data-cc-col='2']" "css_element"
+    When I click on "Edit column" "button" in the "[data-cc-row='0'][data-cc-col='3']" "css_element"
+    And I set the field "Day of the week" to "Thursday"
+    And I click on "Save changes" "button" in the ".modal-dialog" "css_element"
+    Then I should see "Thursday" in the "[data-cc-row='0'][data-cc-col='3']" "css_element"
+    When I click on "[data-cc-row='1'][data-cc-col='2'] [data-action='edit-topic']" "css_element"
+    And I set the field "Topic title" to "Atoms, molecules and ions"
+    And I click on "Save changes" "button" in the ".modal-dialog" "css_element"
+    Then I should see "Atoms, molecules and ions" in the "local-courseplanner-grid" "table"
+    When I click on "Edit intro texts" "button"
+    And I set the field "Intro text (left)" to "Welcome to Chemistry"
+    And I click on "Save changes" "button" in the ".modal-dialog" "css_element"
+    And I am on the "CHEM101" "local_courseplanner > Student view" page
+    Then I should see "Welcome to Chemistry"
+
   Scenario: Teacher imports topics from an HTML table
     Given I am on the "CHEM101" "local_courseplanner > Setup" page logged in as "teacher1"
     And I follow "Import Topics"

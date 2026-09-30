@@ -33,14 +33,7 @@ $context = context_course::instance($courseid);
 require_login($course);
 require_capability('local/courseplanner:view', $context);
 
-$calendars = calendars::get_for_course($courseid);
-$activecalendar = null;
-foreach ($calendars as $calendar) {
-    if ((int)$calendar->isactive === 1) {
-        $activecalendar = $calendar;
-        break;
-    }
-}
+$activecalendar = calendars::get_active($courseid);
 
 if ($activecalendar) {
     redirect(new moodle_url('/local/courseplanner/view.php', [
@@ -55,7 +48,6 @@ $PAGE->set_context($context);
 $PAGE->set_pagelayout('incourse');
 $PAGE->set_title(get_string('studentpageheading', 'local_courseplanner'));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('studentpageheading', 'local_courseplanner'));

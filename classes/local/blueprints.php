@@ -66,4 +66,75 @@ class blueprints {
 
         return $blueprint;
     }
+
+    /**
+     * Whether the teacher already has another blueprint with this name.
+     *
+     * @param int $userid
+     * @param string $name
+     * @param int $excludeid Blueprint to ignore (when renaming).
+     * @return bool
+     */
+    public static function name_taken(int $userid, string $name, int $excludeid = 0): bool {
+        global $DB;
+        return $DB->record_exists_select(
+            'local_courseplanner_blueprints',
+            'owneruserid = :owneruserid AND name = :name AND id <> :id',
+            ['owneruserid' => $userid, 'name' => $name, 'id' => $excludeid]
+        );
+    }
+
+    /**
+     * Create a blueprint for a teacher.
+     *
+     * @param int $userid Owner.
+     * @param string $name
+     * @param string $description
+     * @return int New blueprint id.
+     */
+    public static function create(int $userid, string $name, string $description): int {
+        global $DB;
+        $now = time();
+        return (int)$DB->insert_record('local_courseplanner_blueprints', (object)[
+            'owneruserid' => $userid,
+            'name' => $name,
+            'description' => $description,
+            'isarchived' => 0,
+            'timecreated' => $now,
+            'timemodified' => $now,
+            'usermodified' => $userid,
+        ]);
+    }
+
+    /**
+     * Rename a blueprint and/or change its description.
+     *
+     * @param stdClass $blueprint
+     * @param string $name
+     * @param string $description
+     * @param int $userid
+     */
+    public static function update(stdClass $blueprint, string $name, string $description, int $userid): void {
+        global $DB;
+        $DB->update_record('local_courseplanner_blueprints', (object)[
+            'id' => $blueprint->id, 'name' => $name, 'description' => $description,
+            'timemodified' => time(), 'usermodified' => $userid,
+        ]);
+    }
+
+    /**
+     * Archive or unarchive a blueprint.
+     *
+     * @param stdClass $blueprint
+     * @param int $userid
+     * @return bool True if the blueprint is now archived.
+     */
+    public static function toggle_archived(stdClass $blueprint, int $userid): bool {
+        global $DB;
+        $archived = $blueprint->isarchived ? 0 : 1;
+        $DB->update_record('local_courseplanner_blueprints', (object)[
+            'id' => $blueprint->id, 'isarchived' => $archived, 'timemodified' => time(), 'usermodified' => $userid,
+        ]);
+        return (bool)$archived;
+    }
 }

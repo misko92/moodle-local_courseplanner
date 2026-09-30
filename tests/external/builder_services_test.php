@@ -25,7 +25,6 @@ use core_external\external_api;
  * @copyright  2026 misko92
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_courseplanner\external\save_builder_grid::class)]
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_courseplanner\external\swap_builder_cells::class)]
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_courseplanner\external\reorder_blueprint_topics::class)]
 final class builder_services_test extends \advanced_testcase {
@@ -81,17 +80,6 @@ final class builder_services_test extends \advanced_testcase {
         return $text === false ? null : $text;
     }
 
-    public function test_save_builder_grid(): void {
-        $result = save_builder_grid::execute($this->course->id, $this->calendar->id, [
-            ['rownum' => 1, 'colnum' => 1, 'blocktype' => 'TEXT', 'contenthtml' => 'Hello'],
-            ['rownum' => 1, 'colnum' => 2, 'blocktype' => 'BOGUS', 'contenthtml' => 'Ignored'],
-        ]);
-        $result = external_api::clean_returnvalue(save_builder_grid::execute_returns(), $result);
-        $this->assertSame(1, $result['saved']);
-        $this->assertSame('Hello', $this->cell(1, 1));
-        $this->assertNull($this->cell(1, 2));
-    }
-
     public function test_swap_two_occupied_cells(): void {
         $this->put(1, 1, 'A');
         $this->put(2, 3, 'B');
@@ -134,7 +122,7 @@ final class builder_services_test extends \advanced_testcase {
         $student = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
         $this->setUser($student);
         $this->expectException(\required_capability_exception::class);
-        save_builder_grid::execute($this->course->id, $this->calendar->id, []);
+        swap_builder_cells::execute($this->course->id, $this->calendar->id, 1, 1, 2, 2);
     }
 
     public function test_other_teachers_cannot_edit_blueprint_they_do_not_own(): void {

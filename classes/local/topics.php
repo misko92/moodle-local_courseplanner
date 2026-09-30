@@ -291,4 +291,74 @@ class topics {
         $DB->delete_records('local_courseplanner_topics', ['blueprintid' => $blueprintid]);
         return $count;
     }
+
+    /**
+     * Add a topic at the end of a blueprint.
+     *
+     * @param int $blueprintid
+     * @param array $fields title, type and contenthtml.
+     * @param int $userid
+     * @return int New topic id.
+     */
+    public static function create(int $blueprintid, array $fields, int $userid): int {
+        global $DB;
+        $now = time();
+        return (int)$DB->insert_record('local_courseplanner_topics', (object)[
+            'blueprintid' => $blueprintid,
+            'title' => $fields['title'],
+            'type' => self::normalise_type($fields['type'] ?? 'LECTURE'),
+            'contenthtml' => $fields['contenthtml'] ?? '',
+            'sortorder' => self::next_sortorder($blueprintid),
+            'isactive' => 1,
+            'timecreated' => $now,
+            'timemodified' => $now,
+            'usermodified' => $userid,
+        ]);
+    }
+
+    /**
+     * Update a topic's title, type and/or content.
+     *
+     * @param int $topicid
+     * @param array $fields Any of title, type, contenthtml.
+     * @param int $userid
+     */
+    public static function update(int $topicid, array $fields, int $userid): void {
+        global $DB;
+        $record = (object)array_intersect_key($fields, array_flip(['title', 'type', 'contenthtml']));
+        if (isset($record->type)) {
+            $record->type = self::normalise_type($record->type);
+        }
+        $record->id = $topicid;
+        $record->timemodified = time();
+        $record->usermodified = $userid;
+        $DB->update_record('local_courseplanner_topics', $record);
+    }
+
+    /**
+     * Flip a topic between active and inactive.
+     *
+     * @param stdClass $topic
+     * @param int $userid
+     * @return bool True if the topic is now active.
+     */
+    public static function toggle_active(stdClass $topic, int $userid): bool {
+        global $DB;
+        $active = $topic->isactive ? 0 : 1;
+        $DB->update_record('local_courseplanner_topics', (object)[
+            'id' => $topic->id, 'isactive' => $active, 'timemodified' => time(), 'usermodified' => $userid,
+        ]);
+        return (bool)$active;
+    }
+
+    /**
+     * Delete a topic that no calendar uses, and close the gap in the sort order.
+     *
+     * @param stdClass $topic
+     */
+    public static function delete(stdClass $topic): void {
+        global $DB;
+        $DB->delete_records('local_courseplanner_topics', ['id' => $topic->id]);
+        self::normalise_sortorder((int)$topic->blueprintid);
+    }
 }
