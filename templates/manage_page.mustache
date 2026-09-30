@@ -213,7 +213,8 @@
         <button type="submit" class="btn btn-secondary">{{#str}}applyfilter, local_courseplanner{{/str}}</button>
     </form>
 
-    <button type="button" class="btn btn-primary mb-3" data-action="create-topic" data-blueprintid="{{blueprintid}}">
+    <button type="button" class="btn btn-primary mb-3" data-modalform="local_courseplanner\form\topic_form"
+        data-modalform-args="{{createargs}}" data-modalform-title="{{#str}}createtopicbutton, local_courseplanner{{/str}}">
         {{#str}}createtopicbutton, local_courseplanner{{/str}}
     </button>
 
@@ -232,7 +233,8 @@
                     {{^active}}<span class="local-courseplanner-badge local-courseplanner-badge--archived">{{#str}}topicstatusinactive, local_courseplanner{{/str}}</span>{{/active}}
                 </div>
                 <div class="local-courseplanner-inline-controls">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-action="edit-topic" data-topicid="{{id}}">{{#str}}edittopicbutton, local_courseplanner{{/str}}</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-modalform="local_courseplanner\form\topic_form"
+                        data-modalform-args="{{editargs}}" data-modalform-title="{{#str}}edittopic, local_courseplanner{{/str}}">{{#str}}edittopicbutton, local_courseplanner{{/str}}</button>
                     {{#toggle}}{{> local_courseplanner/action_form}}{{/toggle}}
                     {{#delete}}{{> local_courseplanner/action_form}}{{/delete}}
                 </div>

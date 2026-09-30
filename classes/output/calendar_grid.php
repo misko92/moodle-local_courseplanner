@@ -121,6 +121,9 @@ class calendar_grid implements renderable, templatable {
             'meta' => '',
             'editcell' => false,
             'editheader' => false,
+            'cellargs' => json_encode(['calendarid' => (int)$this->calendar->id, 'rownum' => $row, 'colnum' => $col]),
+            'headerargs' => json_encode(['calendarid' => (int)$this->calendar->id, 'colnum' => $col]),
+            'topicargs' => '',
             'topicid' => 0,
             'istopic' => false,
             'topicheading' => '',
@@ -143,6 +146,8 @@ class calendar_grid implements renderable, templatable {
             $cell['topicheading'] = topics::heading_html($topic, $suffix);
             $cell['html'] = $this->format((string)$topic->contenthtml);
             $cell['topicid'] = (int)$topic->id;
+            $cell['topicargs'] = json_encode(['courseid' => (int)$this->calendar->courseid, 'topicid' => (int)$topic->id,
+                'shared' => 1]);
             $cell['istopic'] = true;
         } else {
             $cell['html'] = $this->format((string)($block->contenthtml ?? ''));

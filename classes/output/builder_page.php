@@ -76,6 +76,7 @@ class builder_page implements renderable, templatable {
         return [
             'courseid' => $courseid,
             'calendarid' => (int)$this->calendar->id,
+            'courseinfoargs' => json_encode(['courseid' => $courseid]),
             'contextlabel' => get_string('buildercontextlabel', 'local_courseplanner', calendars::label($this->calendar)),
             'backurl' => (new moodle_url('/local/courseplanner/manage.php', ['id' => $courseid]))->out(false),
             'contenturl' => (new moodle_url(

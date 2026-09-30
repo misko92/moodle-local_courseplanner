@@ -49,16 +49,25 @@ Feature: Every course planner page works for teachers and students
     When I click on "Deactivate" "button" in the "[data-topicid]:last-child" "css_element"
     Then I should see "Inactive" in the "[data-topicid]:last-child" "css_element"
 
+  @javascript
   Scenario: Teacher adds a no-class date and re-applies the dates
     Given I am on the "2026-27" "local_courseplanner > Dates" page logged in as "teacher1"
     Then I should see "First day of classes"
     And I should see "Last day of classes"
-    When I set the field "ruletype" in the "#local-courseplanner-createrule-form" "css_element" to "NO_CLASS"
-    And I set the field "ruledate" in the "#local-courseplanner-createrule-form" "css_element" to "2026-10-12"
-    And I set the field "label" in the "#local-courseplanner-createrule-form" "css_element" to "Thanksgiving Day"
-    And I press "Add date"
-    Then I should see "Date created."
-    And I should see "Thanksgiving Day"
+    When I press "Add a new date"
+    And I set the following fields to these values:
+      | Date type       | No class (holiday or closure) |
+      | ruledate[day]   | 12                            |
+      | ruledate[month] | October                       |
+      | ruledate[year]  | 2026                          |
+      | Label           | Thanksgiving Day              |
+    And I click on "Save changes" "button" in the ".modal-dialog" "css_element"
+    Then I should see "Thanksgiving Day" in the "[data-ruledate='2026-10-12']" "css_element"
+    When I press "Add a new date"
+    And I set the field "Date type" to "First day of classes"
+    And I click on "Save changes" "button" in the ".modal-dialog" "css_element"
+    Then I should see "An active date of this type already exists"
+    And I click on "Cancel" "button" in the ".modal-dialog" "css_element"
     When I press "Apply Dates to Calendar"
     Then I should see "Dates applied. 42 week(s) generated."
     And I should see "Thanksgiving Day"

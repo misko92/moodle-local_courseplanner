@@ -1,0 +1,73 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_courseplanner/rules_page
+
+    A calendar's dates. Dates are added and edited in a pop-up form (local_courseplanner/modal_forms).
+
+    Example context (json):
+    {
+        "contextlabel": "Editing calendar: 2026-27", "builderurl": "#", "hasrules": true, "addargs": "{}",
+        "apply": {"action": "applyrules", "label": "Apply Dates to Calendar", "btnclass": "btn-primary", "sesskey": "abc"},
+        "rules": [{"date": "08/09/26", "isodate": "2026-09-08", "label": "First day of classes",
+            "typename": "First day of classes", "typeclass": "start", "active": true, "editargs": "{}"}],
+        "helpapply": "", "helpexisting": ""
+    }
+}}
+<div id="local-courseplanner-rules">
+    <a href="{{builderurl}}" class="btn btn-secondary mb-3">{{#str}}backtobuilder, local_courseplanner{{/str}}</a>
+    <div class="local-courseplanner-intro alert alert-info">{{#str}}intro_rules, local_courseplanner{{/str}}</div>
+    <div class="local-courseplanner-shell mb-3">{{contextlabel}}</div>
+
+    <h4 class="local-courseplanner-section-title">{{#str}}section_rulesapply, local_courseplanner{{/str}} {{{helpapply}}}</h4>
+    <div id="local-courseplanner-applyrules-form" class="mb-3">{{#apply}}{{> local_courseplanner/action_form}}{{/apply}}</div>
+
+    <h4 class="local-courseplanner-section-title" id="local-courseplanner-existingrules">
+        {{#str}}section_rulesexisting, local_courseplanner{{/str}} {{{helpexisting}}}
+    </h4>
+    {{^hasrules}}<div class="alert alert-info">{{#str}}norules, local_courseplanner{{/str}}</div>{{/hasrules}}
+    {{#hasrules}}
+    <ul class="local-courseplanner-blueprint-list">
+        {{#rules}}
+        <li class="local-courseplanner-blueprint-item" data-ruledate="{{isodate}}">
+            <div class="local-courseplanner-blueprint-summary">
+                <div class="local-courseplanner-blueprint-summary-main">
+                    <span class="local-courseplanner-blueprint-shortcode">{{date}}</span>
+                    <span class="local-courseplanner-blueprint-name">{{label}}</span>
+                    <span class="local-courseplanner-type-badge local-courseplanner-type-{{typeclass}}">{{typename}}</span>
+                    {{#active}}<span class="local-courseplanner-badge local-courseplanner-badge--active">{{#str}}ruleactive, local_courseplanner{{/str}}</span>{{/active}}
+                    {{^active}}<span class="local-courseplanner-badge local-courseplanner-badge--archived">{{#str}}ruleinactive, local_courseplanner{{/str}}</span>{{/active}}
+                </div>
+                <div class="local-courseplanner-inline-controls">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-modalform="local_courseplanner\form\rule_form"
+                        data-modalform-args="{{editargs}}" data-modalform-title="{{#str}}editrule, local_courseplanner{{/str}}">
+                        {{#str}}editrulebutton, local_courseplanner{{/str}}
+                    </button>
+                    {{#toggle}}{{> local_courseplanner/action_form}}{{/toggle}}
+                    {{#delete}}{{> local_courseplanner/action_form}}{{/delete}}
+                </div>
+            </div>
+            {{#description}}<div class="text-muted small ms-2">{{description}}</div>{{/description}}
+        </li>
+        {{/rules}}
+    </ul>
+    {{/hasrules}}
+    <button type="button" class="btn btn-primary" id="local-courseplanner-createrule" data-modalform="local_courseplanner\form\rule_form"
+        data-modalform-args="{{addargs}}" data-modalform-title="{{#str}}adddate, local_courseplanner{{/str}}">
+        {{#str}}createrulebutton, local_courseplanner{{/str}}
+    </button>
+</div>

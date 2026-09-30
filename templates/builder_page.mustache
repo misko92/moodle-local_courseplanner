@@ -51,7 +51,8 @@
     <h4 class="local-courseplanner-section-title" id="local-courseplanner-section-introtexts">
         {{#str}}section_introtexts, local_courseplanner{{/str}} {{{helpintrotexts}}}
     </h4>
-    <button type="button" class="btn btn-outline-primary mb-3" data-action="edit-courseinfo">
+    <button type="button" class="btn btn-outline-primary mb-3" data-modalform="local_courseplanner\form\course_info_form"
+        data-modalform-args="{{courseinfoargs}}" data-modalform-title="{{#str}}editintrotexts, local_courseplanner{{/str}}">
         {{#str}}editintrotexts, local_courseplanner{{/str}}
     </button>
 

@@ -309,6 +309,7 @@ class manage_page implements renderable, templatable {
             $params = ['topicid' => $topic->id];
             $items[] = [
                 'id' => $topic->id,
+                'editargs' => json_encode(['courseid' => (int)$this->course->id, 'topicid' => (int)$topic->id]),
                 'sortorder' => $topic->sortorder,
                 'title' => format_string($topic->title),
                 'type' => $topic->type,
@@ -346,6 +347,7 @@ class manage_page implements renderable, templatable {
         $bp = ['blueprintid' => $this->selected->id];
         return [
             'blueprintid' => $this->selected->id,
+            'createargs' => json_encode(['courseid' => (int)$this->course->id, 'blueprintid' => (int)$this->selected->id]),
             'items' => array_values($items),
             'hasitems' => !empty($items),
             'sortable' => $this->topicfilter === 'ALL' && count($items) > 1,

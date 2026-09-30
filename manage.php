@@ -176,7 +176,8 @@ $PAGE->set_heading(format_string($course->fullname));
 $page = new manage_page($course, (int)$USER->id, $selectedblueprintid, $topicfilter);
 $data = $page->export_for_template($PAGE->get_renderer('core'));
 
-$PAGE->requires->js_call_amd('local_courseplanner/manage', 'init', ['#local-courseplanner-manage']);
+$PAGE->requires->js_call_amd('local_courseplanner/sections', 'init', ['#local-courseplanner-manage']);
+$PAGE->requires->js_call_amd('local_courseplanner/modal_forms', 'init', ['#local-courseplanner-manage']);
 $PAGE->requires->js_call_amd('local_courseplanner/confirmaction', 'init', []);
 $PAGE->requires->js_call_amd('local_courseplanner/showtour', 'init', [
     tours::get_id_by_name('local_courseplanner_setup'),

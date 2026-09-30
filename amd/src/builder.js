@@ -14,8 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Calendar builder: pop-up editors for cells, column headings, topics and intro texts, and drag-and-drop
- * to swap two cells.
+ * Calendar builder: drag one content cell onto another to swap them. (Edit buttons use local_courseplanner/modal_forms.)
  *
  * @module     local_courseplanner/builder
  * @copyright  2026 misko92
@@ -23,69 +22,7 @@
  */
 
 import Ajax from 'core/ajax';
-import ModalForm from 'core_form/modalform';
 import Notification from 'core/notification';
-import {getString} from 'core/str';
-
-/**
- * Open a pop-up form and reload the page once it has been saved.
- *
- * @param {string} formClass Dynamic form class.
- * @param {Object} args Form arguments.
- * @param {Promise<string>} title Modal title.
- * @param {HTMLElement} returnFocus Element to focus when the modal closes.
- */
-const openForm = (formClass, args, title, returnFocus) => {
-    const form = new ModalForm({formClass, args, modalConfig: {title, large: true}, returnFocus});
-    form.addEventListener(form.events.FORM_SUBMITTED, () => window.location.reload());
-    form.show();
-};
-
-/**
- * Handle clicks on the builder's edit buttons.
- *
- * @param {HTMLElement} root Builder container.
- * @param {MouseEvent} e
- */
-const handleClick = (root, e) => {
-    const button = e.target.closest('[data-action]');
-    if (!button || !root.contains(button)) {
-        return;
-    }
-    const courseid = parseInt(root.dataset.courseid, 10);
-    const calendarid = parseInt(root.dataset.calendarid, 10);
-    const cell = button.closest('[data-cc-row]');
-    switch (button.dataset.action) {
-        case 'edit-cell':
-            e.preventDefault();
-            openForm('local_courseplanner\\form\\cell_form', {
-                calendarid,
-                rownum: parseInt(cell.dataset.ccRow, 10),
-                colnum: parseInt(cell.dataset.ccCol, 10),
-            }, getString('editcellsummary', 'local_courseplanner'), button);
-            break;
-        case 'edit-header':
-            e.preventDefault();
-            openForm('local_courseplanner\\form\\header_form', {
-                calendarid,
-                colnum: parseInt(button.dataset.colnum, 10),
-            }, getString('editcolumn', 'local_courseplanner'), button);
-            break;
-        case 'edit-topic':
-            e.preventDefault();
-            openForm('local_courseplanner\\form\\topic_form', {
-                courseid,
-                topicid: parseInt(button.dataset.topicid, 10),
-                shared: 1,
-            }, getString('sharedtopiceditorheading', 'local_courseplanner'), button);
-            break;
-        case 'edit-courseinfo':
-            e.preventDefault();
-            openForm('local_courseplanner\\form\\course_info_form', {courseid},
-                getString('editintrotexts', 'local_courseplanner'), button);
-            break;
-    }
-};
 
 /**
  * Set up drag-and-drop: dropping one content cell on another swaps them.
@@ -165,6 +102,5 @@ export const init = (selector) => {
     if (!root) {
         return;
     }
-    root.addEventListener('click', (e) => handleClick(root, e));
     initDragDrop(root);
 };

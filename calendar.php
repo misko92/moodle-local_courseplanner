@@ -96,6 +96,7 @@ $PAGE->set_pagelayout('incourse');
 $PAGE->set_title(get_string('builderpageheading', 'local_courseplanner'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->requires->js_call_amd('local_courseplanner/builder', 'init', ['#local-courseplanner-builder']);
+$PAGE->requires->js_call_amd('local_courseplanner/modal_forms', 'init', ['#local-courseplanner-builder']);
 $PAGE->requires->js_call_amd('local_courseplanner/confirmaction', 'init', []);
 $PAGE->requires->js_call_amd('local_courseplanner/showtour', 'init', [
     tours::get_id_by_name('local_courseplanner_builder'),

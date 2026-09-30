@@ -553,4 +553,33 @@ class timeline {
         });
         return hash('sha256', json_encode($data));
     }
+
+    /**
+     * Load a rule, checking it belongs to the given calendar.
+     *
+     * @param int $ruleid
+     * @param int $calendarid
+     * @return \stdClass
+     */
+    public static function require_rule(int $ruleid, int $calendarid): \stdClass {
+        global $DB;
+        return $DB->get_record('local_courseplanner_rules', ['id' => $ruleid, 'calendarid' => $calendarid], '*', MUST_EXIST);
+    }
+
+    /**
+     * Whether a calendar already has an active rule of a single-use type (START or END), other than the given one.
+     *
+     * @param int $calendarid
+     * @param string $ruletype
+     * @param int $excludeid
+     * @return bool
+     */
+    public static function has_active_rule_of_type(int $calendarid, string $ruletype, int $excludeid = 0): bool {
+        global $DB;
+        return $DB->record_exists_select(
+            'local_courseplanner_rules',
+            'calendarid = :calendarid AND ruletype = :ruletype AND isactive = 1 AND id <> :id',
+            ['calendarid' => $calendarid, 'ruletype' => $ruletype, 'id' => $excludeid]
+        );
+    }
 }

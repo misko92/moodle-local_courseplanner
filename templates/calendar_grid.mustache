@@ -55,7 +55,8 @@
             data-cc-row="{{row}}" data-cc-col="{{col}}"{{#editcell}} data-cc-editable="1"{{/editcell}}>
             {{#editheader}}
             <div class="local-courseplanner-cell-actions">
-                <button type="button" class="btn btn-sm btn-link p-0" data-action="edit-header" data-colnum="{{col}}"
+                <button type="button" class="btn btn-sm btn-link p-0" data-modalform="local_courseplanner\form\header_form"
+                    data-modalform-args="{{headerargs}}" data-modalform-title="{{#str}}editcolumn, local_courseplanner{{/str}}"
                     title="{{#str}}editcolumn, local_courseplanner{{/str}}" aria-label="{{#str}}editcolumn, local_courseplanner{{/str}}">
                     {{#pix}}t/edit, core{{/pix}}
                 </button>
@@ -87,11 +88,13 @@
             {{#meta}}<div class="local-courseplanner-header-meta">{{meta}}</div>{{/meta}}
             {{#editcell}}
             <div class="local-courseplanner-cell-actions">
-                <button type="button" class="btn btn-sm btn-link p-0" data-action="edit-cell">
+                <button type="button" class="btn btn-sm btn-link p-0" data-modalform="local_courseplanner\form\cell_form"
+                    data-modalform-args="{{cellargs}}" data-modalform-title="{{#str}}editcellsummary, local_courseplanner{{/str}}">
                     {{#str}}editcellsummary, local_courseplanner{{/str}}
                 </button>
                 {{#istopic}}
-                <button type="button" class="btn btn-sm btn-link p-0" data-action="edit-topic" data-topicid="{{topicid}}">
+                <button type="button" class="btn btn-sm btn-link p-0" data-action="edit-topic" data-modalform="local_courseplanner\form\topic_form"
+                    data-modalform-args="{{topicargs}}" data-modalform-title="{{#str}}sharedtopiceditorheading, local_courseplanner{{/str}}">
                     {{#str}}edittopicbutton, local_courseplanner{{/str}}
                 </button>
                 {{/istopic}}
