@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_courseplanner\local\calendars;
 use local_courseplanner\local\populate;
+use local_courseplanner\local\timeline;
 
 $courseid = required_param('id', PARAM_INT);
 $calendarid = required_param('calendarid', PARAM_INT);
@@ -47,23 +48,44 @@ $topic = static fn(array $item): array => [
     'type' => $item['type'],
     'typeclass' => strtolower($item['type']),
 ];
+// Group rows by the term (trimester) they fall in; week numbers restart in each term.
+$terms = timeline::get_terms((int)$calendar->id);
+$group = static function (array $items) use ($terms): array {
+    $groups = [];
+    foreach ($items as $item) {
+        $name = get_string('termnone', 'local_courseplanner');
+        $termrow = 1;
+        foreach ($terms as $term) {
+            if ($term['row'] <= $item['row']) {
+                [$name, $termrow] = [format_string($term['name']), $term['row']];
+            }
+        }
+        $item['week'] = $item['row'] - $termrow + 1;
+        $groups[$name] ??= ['name' => $name, 'items' => []];
+        $groups[$name]['items'][] = $item;
+    }
+    foreach ($groups as &$g) {
+        $g['count'] = count($g['items']);
+    }
+    return ['groups' => array_values($groups), 'showheadings' => !empty($terms)];
+};
 $slot = static fn(array $item): array => [
-    'week' => $item['row'],
+    'row' => (int)$item['row'],
     'day' => $item['headerday'] ?? '',
     'mode' => $item['headermode'] ?? '',
 ];
-$found = array_map(static fn($item) => $topic($item) + $slot($item), $result['found']);
+$found = $group(array_map(static fn($item) => $topic($item) + $slot($item), $result['found']));
 $missing = array_map($topic, $result['missing']);
-$empty = array_map($slot, $result['empty']);
+$empty = $group(array_map($slot, $result['empty']));
 $data = [
     'builderurl' => (new moodle_url('/local/courseplanner/calendar.php', ['id' => $courseid, 'calendarid' => $calendarid]))
         ->out(false),
     'found' => $found,
-    'hasfound' => !empty($found),
+    'hasfound' => !empty($result['found']),
     'missing' => $missing,
     'hasmissing' => !empty($missing),
     'empty' => $empty,
-    'hasempty' => !empty($empty),
+    'hasempty' => !empty($result['empty']),
     'helpfound' => $OUTPUT->help_icon('coveragefoundheading', 'local_courseplanner'),
     'helpmissing' => $OUTPUT->help_icon('coveragemissingheading', 'local_courseplanner'),
     'helpempty' => $OUTPUT->help_icon('coverageemptyheading', 'local_courseplanner'),

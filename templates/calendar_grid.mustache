@@ -26,11 +26,15 @@
         "editable": true,
         "hasrows": true,
         "sesskey": "abc",
+        "hasterms": true,
+        "terms": [{"anchor": "local-courseplanner-term-1", "name": "Trimester 1"}],
         "rows": [
             {"isheader": true, "nearest": false, "cells": [
                 {"row": 0, "col": 0, "isheader": true, "html": "Week"},
                 {"row": 0, "col": 1, "isheader": true, "html": "Day A", "meta": "Monday · Lecture", "editheader": true}
             ]},
+            {"isbanner": true, "anchor": "local-courseplanner-term-1", "banner": "Trimester 1 · begins Tuesday, 8 September",
+             "colspan": 2},
             {"isheader": false, "nearest": true, "cells": [
                 {"row": 1, "col": 0, "isweeklabel": true, "html": "Week 1<br>Sep 7"},
                 {"row": 1, "col": 1, "istopic": true, "topicid": 5, "topicheading": "", "html": "<p>Atoms</p>",
@@ -40,10 +44,22 @@
     }
 }}
 {{#hasrows}}
+{{#hasterms}}
+<nav class="local-courseplanner-termnav mb-2" aria-label="{{#str}}termjumplinks, local_courseplanner{{/str}}">
+    <span class="me-2">{{#str}}termjumplinks, local_courseplanner{{/str}}</span>
+    {{#terms}}<a href="#{{anchor}}" class="btn btn-sm btn-outline-primary me-1">{{name}}</a>{{/terms}}
+</nav>
+{{/hasterms}}
 <div class="local-courseplanner-gridwrap{{^editable}} local-courseplanner-embed{{/editable}}">
 <table class="table table-bordered local-courseplanner-grid{{^editable}} local-courseplanner-preview{{/editable}}"
     id="local-courseplanner-grid" data-calendarid="{{calendarid}}">
     {{#rows}}
+    {{#isbanner}}
+    <tr class="local-courseplanner-term-row" id="{{anchor}}">
+        <th scope="rowgroup" colspan="{{colspan}}" class="local-courseplanner-term-banner">{{banner}}</th>
+    </tr>
+    {{/isbanner}}
+    {{^isbanner}}
     <tr{{#nearest}} class="local-courseplanner-nearest-row"{{/nearest}}>
         {{#cells}}
         {{#isheader}}<th scope="col"{{/isheader}}{{^isheader}}<td{{/isheader}}
@@ -103,6 +119,7 @@
         {{#isheader}}</th>{{/isheader}}{{^isheader}}</td>{{/isheader}}
         {{/cells}}
     </tr>
+    {{/isbanner}}
     {{/rows}}
 </table>
 </div>

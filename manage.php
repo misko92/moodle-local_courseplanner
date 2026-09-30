@@ -102,16 +102,6 @@ if ($action !== '' && data_submitted()) {
             $done($str('courselinkremoved'));
             break;
 
-        case 'createcalendar':
-            $blueprint = blueprints::require_owned(required_param('blueprintid', PARAM_INT), $userid);
-            $title = trim(optional_param('title', '', PARAM_TEXT));
-            if ($title === '') {
-                $done($str('calendartitlerequired'), false);
-            }
-            calendars::create($courseid, (int)$blueprint->id, $title, $userid);
-            $done($str('calendarcreated'));
-            break;
-
         case 'updatecalendar':
         case 'togglecalendaractive':
         case 'deletecalendar':

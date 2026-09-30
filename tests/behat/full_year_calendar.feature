@@ -25,18 +25,50 @@ Feature: Teachers plan a full school year and students see it
       | Chem blueprint | Stoichiometry       |
 
   @javascript
-  Scenario: Teacher links a blueprint and creates a calendar for the school year
+  Scenario: Teacher creates a calendar for a school year split into trimesters
     Given I log in as "teacher1"
     And I am on "Chemistry 101" course homepage
     When I navigate to "Course planner" in current page administration
     And I set the field "local-courseplanner-blueprintid" to "Chem blueprint"
     And I press "Set blueprint"
-    And I click on "#local-courseplanner-createcalendar > summary" "css_element"
-    And I set the field "local-courseplanner-title-new" to "2026-27"
-    And I press "Create course calendar"
-    Then I should see "Course calendar created."
-    And I should see "2026-27"
+    And I click on "#local-courseplanner-createcalendar" "css_element"
+    And I set the following fields to these values:
+      | Title                 | 2026-27     |
+      | startdate[enabled]    | 1           |
+      | startdate[day]        | 8           |
+      | startdate[month]      | September   |
+      | startdate[year]       | 2026        |
+      | enddate[enabled]      | 1           |
+      | enddate[day]          | 25          |
+      | enddate[month]        | June        |
+      | enddate[year]         | 2027        |
+      | termdate1[enabled]    | 1           |
+      | termdate1[day]        | 8           |
+      | termdate1[month]      | September   |
+      | termdate1[year]       | 2026        |
+      | termdate2[enabled]    | 1           |
+      | termdate2[day]        | 1           |
+      | termdate2[month]      | December    |
+      | termdate2[year]       | 2026        |
+      | termdate3[enabled]    | 1           |
+      | termdate3[day]        | 9           |
+      | termdate3[month]      | March       |
+      | termdate3[year]       | 2027        |
+    And I click on "Save changes" "button" in the ".modal-dialog" "css_element"
+    Then I should see "Calendar builder"
+    And I should see "Trimester 1 · begins" in the "#local-courseplanner-term-1" "css_element"
+    And I should see "Trimester 2 · begins" in the "#local-courseplanner-term-2" "css_element"
+    And I should see "Week 1" in the "[data-cc-row='13'][data-cc-col='0']" "css_element"
+    And I should see "Week 16" in the "[data-cc-row='42'][data-cc-col='0']" "css_element"
     And I should not see "Semester"
+    When I follow "Coverage Check"
+    Then I should see "Trimester 1"
+    And I should see "Trimester 3"
+    And I log out
+    And I am on the "CHEM101" "local_courseplanner > Student view" page logged in as "student1"
+    And I should see "Trimester 3" in the ".local-courseplanner-termnav" "css_element"
+    And I click on "Trimester 3" "link" in the ".local-courseplanner-termnav" "css_element"
+    And "#local-courseplanner-term-3" "css_element" should be visible
 
   @javascript
   Scenario: Applying the year's dates builds a week row for every week and students can view it

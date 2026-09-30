@@ -637,3 +637,18 @@ details[open] > .local-courseplanner-blueprint-summary .local-courseplanner-edit
 .local-courseplanner-cell-actions form {
     display: inline;
 }
+
+.local-courseplanner-grid .local-courseplanner-term-banner {
+    --bs-table-bg: #e7f1fb;
+    background: #e7f1fb;
+    border-top: 3px solid #0f6cbf;
+    color: #0f3d68;
+    font-size: 1.05rem;
+    padding: 0.5rem 0.75rem;
+    scroll-margin-top: 5rem;
+}
+
+.local-courseplanner-term-row {
+    scroll-margin-top: 5rem;
+}
+

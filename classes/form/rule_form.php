@@ -45,27 +45,6 @@ class rule_form extends dynamic_form {
         return $ruleid ? timeline::require_rule($ruleid, $this->optional_param('calendarid', 0, PARAM_INT)) : null;
     }
 
-    /**
-     * Convert a date picked in the user's timezone to midnight in the server timezone, as rules are stored.
-     *
-     * @param int $time
-     * @return int
-     */
-    protected static function user_to_server_date(int $time): int {
-        $date = usergetdate($time);
-        return mktime(0, 0, 0, $date['mon'], $date['mday'], $date['year']);
-    }
-
-    /**
-     * Convert a stored rule date (server-timezone midnight) to the same calendar date in the user's timezone.
-     *
-     * @param int $time
-     * @return int
-     */
-    protected static function server_to_user_date(int $time): int {
-        return make_timestamp((int)date('Y', $time), (int)date('n', $time), (int)date('j', $time));
-    }
-
     #[\Override]
     protected function definition() {
         $mform = $this->_form;
@@ -113,6 +92,9 @@ class rule_form extends dynamic_form {
         ) {
             $errors['ruletype'] = get_string('errorrulestartendexists', 'local_courseplanner');
         }
+        if ($data['ruletype'] === 'TERM' && trim($data['label']) === '') {
+            $errors['label'] = get_string('errortermnamerequired', 'local_courseplanner');
+        }
         if ($data['ruletype'] === 'DAY_SWAP' && $data['fromday'] === $data['today']) {
             $errors['today'] = get_string('errordayswapsameday', 'local_courseplanner');
         }
@@ -138,7 +120,7 @@ class rule_form extends dynamic_form {
             'calendarid' => $this->optional_param('calendarid', 0, PARAM_INT),
             'ruleid' => $rule->id ?? 0,
             'ruletype' => $rule->ruletype ?? 'NO_CLASS',
-            'ruledate' => isset($rule->ruledate) ? self::server_to_user_date((int)$rule->ruledate) : time(),
+            'ruledate' => isset($rule->ruledate) ? timeline::date_to_user((int)$rule->ruledate) : time(),
             'label' => $rule->label ?? '',
             'description' => $rule->description ?? '',
             'fromday' => $rule->fromday ?? 'Monday',
@@ -151,7 +133,7 @@ class rule_form extends dynamic_form {
         global $USER;
         $data = $this->get_data();
         [$calendar] = calendars::require_editable((int)$data->calendarid);
-        $ruledate = self::user_to_server_date((int)$data->ruledate);
+        $ruledate = timeline::date_from_user((int)$data->ruledate);
         $isswap = $data->ruletype === 'DAY_SWAP';
         $fromday = $isswap ? $data->fromday : null;
         $today = $isswap ? $data->today : null;

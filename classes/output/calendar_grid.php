@@ -21,6 +21,7 @@ use core\output\renderer_base;
 use core\output\templatable;
 use local_courseplanner\local\calendars;
 use local_courseplanner\local\grid;
+use local_courseplanner\local\timeline;
 use local_courseplanner\local\topics;
 use stdClass;
 
@@ -77,19 +78,40 @@ class calendar_grid implements renderable, templatable {
             $today = grid::date_to_cell($blocks, $maxrow, $this->now ?? time(), $startdate);
         }
 
+        $terms = [];
+        foreach (timeline::get_terms($calendarid) as $index => $term) {
+            $terms[] = [
+                'anchor' => 'local-courseplanner-term-' . ($index + 1),
+                'name' => format_string($term['name']),
+                'row' => $term['row'],
+                'banner' => get_string('termbanner', 'local_courseplanner', (object)[
+                    'name' => format_string($term['name']),
+                    'date' => userdate(timeline::date_to_user($term['date']), get_string('strftimedaydate', 'core_langconfig')),
+                ]),
+            ];
+        }
+
         $rows = [];
         for ($row = 0; $row <= $maxrow; $row++) {
+            foreach ($terms as $term) {
+                if ($row > 0 && $term['row'] === $row) {
+                    $rows[] = ['isbanner' => true, 'banner' => $term['banner'], 'anchor' => $term['anchor'],
+                        'colspan' => count($columns)];
+                }
+            }
             $cells = [];
             foreach ($columns as $col) {
                 $cells[] = $this->export_cell($row, $col, $blocks[$row][$col] ?? null, $topics, $today);
             }
             $nearest = $today && $today['row'] === $row && $today['col'] === null;
-            $rows[] = ['isheader' => $row === 0, 'cells' => $cells, 'nearest' => $nearest];
+            $rows[] = ['isbanner' => false, 'isheader' => $row === 0, 'cells' => $cells, 'nearest' => $nearest];
         }
         return [
             'calendarid' => $calendarid,
             'editable' => $this->editable,
             'rows' => $rows,
+            'terms' => array_values(array_filter($terms, static fn($t) => $t['row'] <= $maxrow)),
+            'hasterms' => !empty($terms) && $maxrow > 0,
             'hasrows' => $maxrow > 0 || !empty($blocks),
             'sesskey' => sesskey(),
         ];

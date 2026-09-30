@@ -14,7 +14,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Open the plugin's pop-up forms from buttons, and reload the page once a form is saved.
+ * Open the plugin's pop-up forms from buttons. Once a form is saved, go to the redirecturl it returns, if any,
+ * otherwise reload the page.
  *
  * A button opts in with data-modalform="<dynamic form class>", data-modalform-args='{"json": "args"}' and
  * data-modalform-title="Modal title".
@@ -48,7 +49,13 @@ export const init = (selector) => {
             modalConfig: {title: button.dataset.modalformTitle, large: true},
             returnFocus: button,
         });
-        form.addEventListener(form.events.FORM_SUBMITTED, () => window.location.reload());
+        form.addEventListener(form.events.FORM_SUBMITTED, (event) => {
+            if (event.detail?.redirecturl) {
+                window.location.href = event.detail.redirecturl;
+            } else {
+                window.location.reload();
+            }
+        });
         form.show();
     });
 };

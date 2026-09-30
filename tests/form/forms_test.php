@@ -31,6 +31,7 @@ use local_courseplanner\local\timeline;
 #[\PHPUnit\Framework\Attributes\CoversClass(topic_form::class)]
 #[\PHPUnit\Framework\Attributes\CoversClass(rule_form::class)]
 #[\PHPUnit\Framework\Attributes\CoversClass(course_info_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(calendar_form::class)]
 final class forms_test extends \advanced_testcase {
     /** @var \stdClass */
     private \stdClass $course;
@@ -169,5 +170,27 @@ final class forms_test extends \advanced_testcase {
         $form = new rule_form(null, null, 'post', '', null, true, $data, true);
         $form->set_data_for_dynamic_submission();
         $this->assertFalse($form->is_validated());
+    }
+
+    public function test_calendar_form_creates_dates_terms_and_weeks(): void {
+        global $DB;
+        $this->setUser($this->teacher);
+        $result = $this->submit(calendar_form::class, [
+            'courseid' => $this->course->id, 'blueprintid' => $this->blueprint->id, 'title' => '2027-28',
+            'startdate' => ['day' => 7, 'month' => 9, 'year' => 2027, 'enabled' => 1],
+            'enddate' => ['day' => 23, 'month' => 6, 'year' => 2028, 'enabled' => 1],
+            'termname1' => 'Trimester 1', 'termdate1' => ['day' => 7, 'month' => 9, 'year' => 2027, 'enabled' => 1],
+            'termname2' => 'Trimester 2', 'termdate2' => ['day' => 29, 'month' => 11, 'year' => 2027, 'enabled' => 1],
+            'termname3' => 'Trimester 3', 'termdate3' => ['day' => 1, 'month' => 1, 'year' => 2028, 'enabled' => 0],
+        ]);
+        $calendar = $DB->get_record('local_courseplanner_calendars', ['title' => '2027-28'], '*', MUST_EXIST);
+        $this->assertStringContainsString('calendarid=' . $calendar->id, $result['redirecturl']);
+        $this->assertTrue((bool)$calendar->isactive);
+        $this->assertSame(
+            ['Trimester 1', 'Trimester 2'],
+            array_column(timeline::get_terms((int)$calendar->id), 'name')
+        );
+        // Weeks were generated straight away: 7 Sep 2027 to 23 Jun 2028 is 42 weeks.
+        $this->assertSame(42, max(array_keys(grid::get_blocks_map((int)$calendar->id))));
     }
 }

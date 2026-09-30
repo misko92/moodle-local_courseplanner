@@ -17,13 +17,14 @@
 {{!
     @template local_courseplanner/coverage_page
 
-    Which blueprint topics are on a calendar, which are missing, and which grid slots are empty.
+    Which blueprint topics are on a calendar, which are missing, and which grid slots are empty, grouped by term.
 
     Example context (json):
     {
         "builderurl": "#", "helpfound": "", "helpmissing": "", "helpempty": "",
-        "found": [{"title": "Atoms", "type": "LECTURE", "typeclass": "lecture", "week": 1, "day": "Monday", "mode": "Lecture"}],
-        "hasfound": true, "missing": [], "hasmissing": false, "empty": [], "hasempty": false
+        "found": {"showheadings": true, "groups": [{"name": "Trimester 1", "count": 1, "items": [
+            {"title": "Atoms", "type": "LECTURE", "typeclass": "lecture", "week": 1, "day": "Monday", "mode": "Lecture"}]}]},
+        "hasfound": true, "missing": [], "hasmissing": false, "empty": {"groups": []}, "hasempty": false
     }
 }}
 <a href="{{builderurl}}" class="btn btn-secondary mb-3">{{#str}}backtobuilder, local_courseplanner{{/str}}</a>
@@ -31,7 +32,8 @@
 
 <h4 class="local-courseplanner-section-title">{{#str}}coveragefoundheading, local_courseplanner{{/str}} {{{helpfound}}}</h4>
 {{^hasfound}}<div class="alert alert-info">{{#str}}coveragenofound, local_courseplanner{{/str}}</div>{{/hasfound}}
-{{#hasfound}}
+{{#hasfound}}{{#found}}{{#groups}}
+{{#showheadings}}<h5 class="mt-3">{{name}} <span class="badge bg-secondary">{{count}}</span></h5>{{/showheadings}}
 <table class="table table-sm table-bordered">
     <thead><tr>
         <th scope="col">{{#str}}topic, local_courseplanner{{/str}}</th>
@@ -41,13 +43,13 @@
         <th scope="col">{{#str}}columnmode, local_courseplanner{{/str}}</th>
     </tr></thead>
     <tbody>
-    {{#found}}
+    {{#items}}
     <tr><td>{{title}}</td><td><span class="local-courseplanner-type-badge local-courseplanner-type-{{typeclass}}">{{type}}</span></td>
         <td>{{week}}</td><td>{{day}}</td><td>{{mode}}</td></tr>
-    {{/found}}
+    {{/items}}
     </tbody>
 </table>
-{{/hasfound}}
+{{/groups}}{{/found}}{{/hasfound}}
 
 <h4 class="local-courseplanner-section-title">{{#str}}coveragemissingheading, local_courseplanner{{/str}} {{{helpmissing}}}</h4>
 {{^hasmissing}}<div class="alert alert-success">{{#str}}coveragenomissing, local_courseplanner{{/str}}</div>{{/hasmissing}}
@@ -67,7 +69,8 @@
 
 <h4 class="local-courseplanner-section-title">{{#str}}coverageemptyheading, local_courseplanner{{/str}} {{{helpempty}}}</h4>
 {{^hasempty}}<div class="alert alert-success">{{#str}}coveragenoempty, local_courseplanner{{/str}}</div>{{/hasempty}}
-{{#hasempty}}
+{{#hasempty}}{{#empty}}{{#groups}}
+{{#showheadings}}<h5 class="mt-3">{{name}} <span class="badge bg-secondary">{{count}}</span></h5>{{/showheadings}}
 <table class="table table-sm table-bordered">
     <thead><tr>
         <th scope="col">{{#str}}week, local_courseplanner{{/str}}</th>
@@ -75,7 +78,7 @@
         <th scope="col">{{#str}}columnmode, local_courseplanner{{/str}}</th>
     </tr></thead>
     <tbody>
-    {{#empty}}<tr><td>{{week}}</td><td>{{day}}</td><td>{{mode}}</td></tr>{{/empty}}
+    {{#items}}<tr><td>{{week}}</td><td>{{day}}</td><td>{{mode}}</td></tr>{{/items}}
     </tbody>
 </table>
-{{/hasempty}}
+{{/groups}}{{/empty}}{{/hasempty}}

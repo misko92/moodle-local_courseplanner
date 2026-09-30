@@ -36,7 +36,11 @@
     <h3 class="local-courseplanner-nextstep-title">{{title}}</h3>
     <p class="local-courseplanner-nextstep-body">{{body}}</p>
     {{#reason}}<div class="local-courseplanner-recommendation-reason">{{reason}}</div>{{/reason}}
-    <a href="{{url}}" class="btn btn-primary local-courseplanner-nextstep-action">{{button}}</a>
+    {{#modal}}
+    <button type="button" class="btn btn-primary local-courseplanner-nextstep-action" data-modalform="{{form}}"
+        data-modalform-args="{{args}}" data-modalform-title="{{button}}">{{button}}</button>
+    {{/modal}}
+    {{^modal}}<a href="{{url}}" class="btn btn-primary local-courseplanner-nextstep-action">{{button}}</a>{{/modal}}
 </div>
 {{/nextstep}}
 
@@ -117,21 +121,11 @@
     </ul>
     {{/items.0}}
     {{^needstopics}}
-    <details class="local-courseplanner-card local-courseplanner-create-blueprint" id="local-courseplanner-createcalendar">
-        <summary class="local-courseplanner-disclosure-summary local-courseplanner-disclosure-summary--primary">{{#str}}createcalendarbutton, local_courseplanner{{/str}}</summary>
-        <form method="post" id="local-courseplanner-createcalendar-form" class="local-courseplanner-disclosure-body">
-            <input type="hidden" name="sesskey" value="{{sesskey}}">
-            <input type="hidden" name="action" value="createcalendar">
-            <input type="hidden" name="blueprintid" value="{{blueprintid}}">
-            {{#stateparams}}<input type="hidden" name="{{name}}" value="{{value}}">{{/stateparams}}
-            <div class="mb-2">
-                <label for="local-courseplanner-title-new">{{#str}}calendartitlelabel, local_courseplanner{{/str}}</label>
-                <input type="text" id="local-courseplanner-title-new" name="title" class="form-control" maxlength="255"
-                    value="{{suggestedtitle}}" placeholder="{{#str}}calendartitleplaceholder, local_courseplanner{{/str}}" required>
-            </div>
-            <button type="submit" class="btn btn-primary">{{#str}}createcalendarsubmit, local_courseplanner{{/str}}</button>
-        </form>
-    </details>
+    <button type="button" class="btn btn-primary mb-3" id="local-courseplanner-createcalendar"
+        data-modalform="local_courseplanner\form\calendar_form" data-modalform-args="{{createargs}}"
+        data-modalform-title="{{#str}}createcalendarheading, local_courseplanner{{/str}}">
+        {{#str}}createcalendarbutton, local_courseplanner{{/str}}
+    </button>
     {{/needstopics}}
 {{/calendars}}
 {{/hasblueprints}}

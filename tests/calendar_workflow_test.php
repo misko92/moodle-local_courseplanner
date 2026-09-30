@@ -253,4 +253,52 @@ final class calendar_workflow_test extends \advanced_testcase {
         xmldb_local_courseplanner_uninstall();
         $this->assertSame(0, $DB->count_records_select('tool_usertours_tours', $select, $params));
     }
+
+    /**
+     * Terms (trimesters) split the year: week numbers restart at each one and the grid shows a banner above it.
+     */
+    public function test_terms_restart_week_numbers(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator();
+        $plugingen = $generator->get_plugin_generator('local_courseplanner');
+        $course = $generator->create_course();
+        $teacher = $generator->create_and_enrol($course, 'editingteacher');
+        $this->setUser($teacher);
+        $blueprint = $plugingen->create_blueprint(['owneruserid' => $teacher->id]);
+        $calendar = $plugingen->create_calendar(['courseid' => $course->id, 'blueprintid' => $blueprint->id,
+            'startdate' => self::day('2026-09-08'), 'enddate' => self::day('2027-06-25')]);
+        foreach (['Trimester 1' => '2026-09-08', 'Trimester 2' => '2026-12-01', 'Trimester 3' => '2027-03-09'] as $name => $date) {
+            \local_courseplanner\local\timeline::create_rule(
+                $calendar->id,
+                'TERM',
+                self::day($date),
+                $name,
+                '',
+                null,
+                null,
+                $teacher->id
+            );
+        }
+
+        $terms = \local_courseplanner\local\timeline::get_terms((int)$calendar->id);
+        $this->assertSame([1, 13, 27], array_column($terms, 'row'));
+
+        \local_courseplanner\local\timeline::apply($calendar->id, $teacher->id);
+        $blocks = \local_courseplanner\local\grid::get_blocks_map((int)$calendar->id);
+        $label = static fn(int $row): string => strtok(strip_tags(str_replace('<br/>', "\n", $blocks[$row][0]->contenthtml)), "\n");
+        $this->assertSame('Week 12', $label(12));
+        $this->assertSame('Week 1', $label(13));
+        $this->assertSame('Week 14', $label(26));
+        $this->assertSame('Week 1', $label(27));
+        $this->assertSame('Week 16', $label(42));
+
+        $PAGE->set_url(new \moodle_url('/local/courseplanner/view.php'));
+        $PAGE->set_context(\context_course::instance($course->id));
+        $output = $PAGE->get_renderer('core');
+        $grid = new \local_courseplanner\output\calendar_grid($calendar);
+        $html = $output->render_from_template('local_courseplanner/calendar_grid', $grid->export_for_template($output));
+        $this->assertStringContainsString('href="#local-courseplanner-term-2"', $html);
+        $this->assertMatchesRegularExpression('~id="local-courseplanner-term-2">\s*<th[^>]*>Trimester 2 · begins~', $html);
+    }
 }

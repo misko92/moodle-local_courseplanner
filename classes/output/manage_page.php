@@ -180,6 +180,8 @@ class manage_page implements renderable, templatable {
             'url' => $url,
             'complete' => $complete,
             'reason' => $complete && $reasonkey !== '' ? get_string($reasonkey, 'local_courseplanner') : '',
+            'modal' => $key === 'createcalendar'
+                ? ['form' => \local_courseplanner\form\calendar_form::class, 'args' => $this->calendar_form_args()] : null,
         ];
     }
 
@@ -272,8 +274,7 @@ class manage_page implements renderable, templatable {
         return [
             'items' => $items,
             'needstopics' => $linkedtopiccount === 0,
-            'blueprintid' => $this->linked->id,
-            'suggestedtitle' => calendars::suggest_title(time()),
+            'createargs' => $this->calendar_form_args(),
         ];
     }
 
@@ -379,5 +380,14 @@ class manage_page implements renderable, templatable {
                 ['id' => $this->course->id, 'blueprintid' => $this->selected->id]
             ))->out(false),
         ];
+    }
+
+    /**
+     * Arguments for the create-calendar pop-up form.
+     *
+     * @return string JSON.
+     */
+    protected function calendar_form_args(): string {
+        return json_encode(['courseid' => (int)$this->course->id, 'blueprintid' => (int)$this->linked->id]);
     }
 }

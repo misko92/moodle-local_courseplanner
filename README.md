@@ -7,6 +7,7 @@ A Moodle local plugin that lets teachers define reusable course content once, bu
 This is a fork of [Greg Mulcair's `local_coursecalendar`](https://github.com/GitHubGreg/moodle-local_coursecalendar) (v0.2.3). Changes from upstream:
 
 - **Full-year calendars.** Calendars have a title (defaults to the school year, e.g. `2026-27`) instead of a year + Fall/Winter/Summer semester. Date rules are *First day of classes* / *Last day of classes*.
+- **Terms (e.g. trimesters).** A year can be split into named terms; the grid shows a banner above each term, week numbers restart in each term, students get jump links, and the coverage check groups by term.
 - **Fast full-year builder.** Cells, column headings, topics, dates and intro texts are edited in pop-up forms loaded on demand. The builder page for a 42-week year went from ~7 MB with ~500 rich-text editors to ~270 KB with none.
 - **Bug fixes.** Topic drag-and-drop reordering never worked (missing drag handle, and the save failed with a database error); swapping two occupied builder cells failed; the recommended calendar could outrank the active one; "today" highlighting mis-dated weeks in school years spanning New Year; deleting a course left orphaned data; lecture/lab topics without content showed as blank cells.
 - **Security fix.** Dates could be edited or deleted in other teachers' calendars by ID.
@@ -165,7 +166,7 @@ A course calendar is the per-course container for one run of the course (normall
 **Where:** Course planner (`manage.php`) > Course calendars section.
 
 **Actions:**
-- **Create** -- Give it a title. It defaults to the current school year (July to June), e.g. `2026-27`.
+- **Create** -- A pop-up asks for a title (defaults to the current school year, e.g. `2026-27`), and optionally the first and last day of classes and up to three terms. With both days filled in, the week rows are generated straight away and you land in the builder. All of these can be changed later on the dates page.
 - **Edit title** -- Update the display title.
 - **Open builder** -- Navigate to the full grid builder page.
 - **Activate / Deactivate** -- Only the active calendar is shown to students.
@@ -223,6 +224,7 @@ Rules define the academic calendar structure: when classes start and end, holida
 |---|---|---|
 | `START` | First day of classes | Date, label |
 | `END` | Last day of classes | Date, label |
+| `TERM` | Start of a term, e.g. "Trimester 2" | Date, label (the term's name) |
 | `NO_CLASS` | Holiday or break (no classes on this date) | Date, label, description |
 | `DAY_SWAP` | Classes follow a different day's schedule | Date, label, from-day, to-day |
 | `OTHER` | General annotation | Date, label, description |

@@ -33,7 +33,7 @@ class timeline {
      * @return string[]
      */
     public static function get_rule_types(): array {
-        return ['START', 'END', 'NO_CLASS', 'DAY_SWAP', 'OTHER'];
+        return ['START', 'END', 'TERM', 'NO_CLASS', 'DAY_SWAP', 'OTHER'];
     }
 
     /**
@@ -248,6 +248,9 @@ class timeline {
         // Ensure header row exists.
         grid::ensure_base($calendarid, $userid);
 
+        // Week numbers restart at each term (trimester etc.) start.
+        $termrows = array_column(self::get_terms($calendarid), 'row');
+
         // Build a lookup of week monday -> row number, and annotations per row.
         $mondaytorow = [];
         $rowannotations = [];
@@ -261,7 +264,13 @@ class timeline {
             $rowannotations[$rownum] = [];
 
             $monthday = date('M j', $monday);
-            $label = 'Week ' . $rownum . '<br/>' . $monthday;
+            $termrow = 1;
+            foreach ($termrows as $candidate) {
+                if ($candidate <= $rownum) {
+                    $termrow = $candidate;
+                }
+            }
+            $label = 'Week ' . ($rownum - $termrow + 1) . '<br/>' . $monthday;
 
             if ($i === 0) {
                 $startdatefmt = date('M j', $startdate);
@@ -581,5 +590,57 @@ class timeline {
             'calendarid = :calendarid AND ruletype = :ruletype AND isactive = 1 AND id <> :id',
             ['calendarid' => $calendarid, 'ruletype' => $ruletype, 'id' => $excludeid]
         );
+    }
+
+    /**
+     * A calendar's terms (trimesters, semesters...) from its active TERM dates, in date order.
+     *
+     * Each term's row is the week row it starts in, counted from the first day of classes as {@see self::apply()}
+     * numbers rows. A term starting before the first week is placed on week 1.
+     *
+     * @param int $calendarid
+     * @return array[] Each ['id' => int, 'name' => string, 'date' => int, 'row' => int], or [] without a first day of classes.
+     */
+    public static function get_terms(int $calendarid): array {
+        [$startdate] = calendars::get_date_range($calendarid);
+        if (!$startdate) {
+            return [];
+        }
+        $firstmonday = self::get_week_monday($startdate);
+        $terms = [];
+        foreach (self::get_rules($calendarid, true) as $rule) {
+            if ($rule->ruletype !== 'TERM') {
+                continue;
+            }
+            $weeks = (int)round((self::get_week_monday((int)$rule->ruledate) - $firstmonday) / WEEKSECS);
+            $terms[] = [
+                'id' => (int)$rule->id,
+                'name' => trim((string)$rule->label),
+                'date' => (int)$rule->ruledate,
+                'row' => max(1, $weeks + 1),
+            ];
+        }
+        return $terms;
+    }
+
+    /**
+     * Convert a date picked in the user's timezone to midnight in the server timezone, as dates are stored.
+     *
+     * @param int $time
+     * @return int
+     */
+    public static function date_from_user(int $time): int {
+        $date = usergetdate($time);
+        return mktime(0, 0, 0, $date['mon'], $date['mday'], $date['year']);
+    }
+
+    /**
+     * Convert a stored date (server-timezone midnight) to the same calendar date in the user's timezone.
+     *
+     * @param int $time
+     * @return int
+     */
+    public static function date_to_user(int $time): int {
+        return make_timestamp((int)date('Y', $time), (int)date('n', $time), (int)date('j', $time));
     }
 }
