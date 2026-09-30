@@ -29,8 +29,11 @@
  */
 function xmldb_local_courseplanner_uninstall(): bool {
     global $DB;
-    $tours = $DB->get_records_select('tool_usertours_tours', $DB->sql_like('pathmatch', ':path'),
-        ['path' => '/local/courseplanner/%']);
+    $tours = $DB->get_records_select(
+        'tool_usertours_tours',
+        $DB->sql_like('pathmatch', ':path'),
+        ['path' => '/local/courseplanner/%']
+    );
     foreach ($tours as $tour) {
         \tool_usertours\tour::instance($tour->id)->remove();
     }
