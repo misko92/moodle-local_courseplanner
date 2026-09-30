@@ -1,137 +1,71 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * Drag-and-drop reordering for blueprint topics on manage.php.
+ * Drag-and-drop reordering of a blueprint's topics on the setup page.
  *
- * Wraps Moodle's core/sortable_list AMD module around the topic list and
- * persists the new order via the local_courseplanner_reorder_blueprint_topics
- * external function whenever the user drops a row into a new position.
- *
- * @module local_courseplanner/topicreorder
+ * @module     local_courseplanner/topicreorder
+ * @copyright  2026 Greg Mulcair
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define([
-    'jquery',
-    'core/sortable_list',
-    'core/ajax',
-    'core/notification',
-    'core/log',
-], function($, SortableList, Ajax, Notification, log) {
-    'use strict';
 
-    /**
-     * Return the current order of topic ids based on DOM position.
-     *
-     * @param {HTMLElement} list
-     * @returns {Array<number>}
-     */
-    function collectOrder(list) {
-        return $(list).children('[data-topicid]').toArray().map(function(li) {
-            return parseInt(li.getAttribute('data-topicid'), 10);
-        }).filter(function(id) {
-            return !isNaN(id) && id > 0;
-        });
+import Ajax from 'core/ajax';
+import Notification from 'core/notification';
+import SortableList from 'core/sortable_list';
+
+/**
+ * Topic items in the list, in their current order.
+ *
+ * @param {HTMLElement} list
+ * @returns {HTMLElement[]}
+ */
+const items = (list) => [...list.children].filter((li) => li.dataset.topicid);
+
+/**
+ * Initialise.
+ *
+ * @param {number} courseid
+ * @param {number} blueprintid
+ * @param {string} selector Topic list selector.
+ */
+export const init = (courseid, blueprintid, selector) => {
+    const list = document.querySelector(selector);
+    if (!list || items(list).length < 2) {
+        return;
     }
+    new SortableList(list);
+    items(list).forEach((li) => {
+        li.dataset.sortableListName = li.querySelector('.local-courseplanner-blueprint-name')?.textContent.trim() ?? '';
+    });
 
-    /**
-     * Refresh the visible 1-based sortorder badge after a successful reorder.
-     *
-     * @param {HTMLElement} list
-     */
-    function refreshSortOrderBadges(list) {
-        $(list).children('[data-topicid]').each(function(index, li) {
-            var badge = li.querySelector('.local-courseplanner-blueprint-shortcode');
-            if (badge) {
-                badge.textContent = String(index + 1);
-            }
-        });
-    }
-
-    /**
-     * Persist the new order via the external function.
-     *
-     * @param {number} courseid
-     * @param {number} blueprintid
-     * @param {Array<number>} topicids
-     * @returns {Promise}
-     */
-    function saveOrder(courseid, blueprintid, topicids) {
-        var request = Ajax.call([{
+    list.addEventListener(SortableList.EVENTS.elementDrop, (e) => {
+        if (e.detail?.positionChanged === false) {
+            return;
+        }
+        list.classList.add('local-courseplanner-list-saving');
+        Ajax.call([{
             methodname: 'local_courseplanner_reorder_blueprint_topics',
-            args: {
-                courseid: courseid,
-                blueprintid: blueprintid,
-                topicids: topicids,
-            },
-        }])[0];
-        request.fail(Notification.exception);
-        return request;
-    }
-
-    /**
-     * Toggle the "saving" CSS state on the list element.
-     *
-     * @param {Element} list The sortable list element.
-     * @param {boolean} saving True while an AJAX save is in flight.
-     */
-    function setSaving(list, saving) {
-        if (saving) {
-            list.classList.add('local-courseplanner-list-saving');
-        } else {
-            list.classList.remove('local-courseplanner-list-saving');
-        }
-    }
-
-    /**
-     * Entry point called from PHP.
-     *
-     * @param {number} courseid
-     * @param {number} blueprintid
-     * @param {string} selector CSS selector for the <ul> containing topic <li>s.
-     */
-    function init(courseid, blueprintid, selector) {
-        var list = document.querySelector(selector);
-        if (!list) {
-            return;
-        }
-        if (!$(list).children('[data-topicid]').length) {
-            return;
-        }
-
-        try {
-            new SortableList(list);
-        } catch (err) {
-            log.error('local_courseplanner/topicreorder: failed to init SortableList', err);
-            return;
-        }
-
-        // Give each row a human-readable name for sortable_list's live region.
-        $(list).children('[data-topicid]').each(function() {
-            var $item = $(this);
-            var name = $item.find('.local-courseplanner-blueprint-name').text().trim();
-            if (name) {
-                $item.attr('data-sortable-list-name', name);
-            }
-        });
-
-        $(list).on('sortablelist-drop', '> [data-topicid]', function(evt, info) {
-            evt.stopPropagation();
-            if (info && info.positionChanged === false) {
-                return;
-            }
-            setSaving(list, true);
-            var topicids = collectOrder(list);
-            saveOrder(courseid, blueprintid, topicids)
-                .then(function() {
-                    refreshSortOrderBadges(list);
-                    setSaving(list, false);
-                    return null;
-                })
-                .fail(function(ex) {
-                    setSaving(list, false);
-                    Notification.exception(ex);
-                });
-        });
-    }
-
-    return {
-        init: init,
-    };
-});
+            args: {courseid, blueprintid, topicids: items(list).map((li) => parseInt(li.dataset.topicid, 10))},
+        }])[0].then(() => {
+            items(list).forEach((li, index) => {
+                const badge = li.querySelector('.local-courseplanner-blueprint-shortcode');
+                if (badge) {
+                    badge.textContent = String(index + 1);
+                }
+            });
+            return null;
+        }).catch(Notification.exception).finally(() => list.classList.remove('local-courseplanner-list-saving'));
+    });
+};

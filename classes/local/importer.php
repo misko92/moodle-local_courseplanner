@@ -29,6 +29,9 @@ use core_text;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class importer {
+    /** @var string[] Column layouts: L = lecture column, B = lab column, for the three teaching days. */
+    public const LAYOUTS = ['LLL', 'LLB', 'LBL', 'BLL'];
+
     /**
      * Parse pasted HTML table into blueprint topics.
      *
@@ -325,93 +328,5 @@ class importer {
                 }
                 return self::clip_title($base);
         }
-    }
-
-    /**
-     * Bulk update eLesson links in topic content.
-     *
-     * @param string $html HTML containing eLesson links.
-     * @param int $blueprintid
-     * @return array ['updated' => int, 'notfound' => int]
-     */
-    public static function bulk_update_elesson_links(string $html, int $blueprintid): array {
-        global $DB;
-
-        $dom = new DOMDocument();
-        @$dom->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-        $links = $dom->getElementsByTagName('a');
-
-        $linklist = [];
-        for ($i = 0; $i < $links->length; $i++) {
-            $a = $links->item($i);
-            $href = $a->getAttribute('href');
-            $text = trim($a->textContent);
-            if ($href && $text) {
-                $linklist[] = ['href' => $href, 'text' => $text];
-            }
-        }
-
-        $elessons = $DB->get_records_select(
-            'local_courseplanner_topics',
-            "blueprintid = :bpid AND type = 'ELESSON'",
-            ['bpid' => $blueprintid],
-            'sortorder ASC'
-        );
-
-        $updated = 0;
-        $notfound = 0;
-
-        foreach ($linklist as $link) {
-            $matched = false;
-            foreach ($elessons as $topic) {
-                $contenttext = strip_tags((string)$topic->contenthtml);
-                $firstbullet = '';
-                if (preg_match('/(?:^|\n)\s*(?:[-•*]|\d+[.\)])\s*(.+?)(?:\n|$)/', $contenttext, $m)) {
-                    $firstbullet = trim($m[1]);
-                } else {
-                    $lines = preg_split('/[\r\n]+/', $contenttext, 2);
-                    $firstbullet = trim($lines[0] ?? '');
-                }
-
-                if (
-                    $firstbullet !== '' && (
-                    stripos($link['text'], $firstbullet) !== false ||
-                    stripos($firstbullet, $link['text']) !== false
-                    )
-                ) {
-                    $newcontent = preg_replace(
-                        '/<a\b[^>]*>.*?' . preg_quote(htmlspecialchars($link['text']), '/') . '.*?<\/a>/i',
-                        '<a href="' . s($link['href']) . '">' . s($link['text']) . '</a>',
-                        (string)$topic->contenthtml,
-                        1,
-                        $count
-                    );
-                    if ($count === 0) {
-                        $newcontent = (string)$topic->contenthtml;
-                        if (strpos($newcontent, $link['text']) !== false) {
-                            $newcontent = str_replace(
-                                $link['text'],
-                                '<a href="' . s($link['href']) . '">' . s($link['text']) . '</a>',
-                                $newcontent
-                            );
-                            $count = 1;
-                        }
-                    }
-                    if ($count > 0) {
-                        $topic->contenthtml = $newcontent;
-                        $topic->timemodified = time();
-                        $DB->update_record('local_courseplanner_topics', $topic);
-                        $updated++;
-                        $matched = true;
-                        break;
-                    }
-                }
-            }
-            if (!$matched) {
-                $notfound++;
-            }
-        }
-
-        return ['updated' => $updated, 'notfound' => $notfound];
     }
 }

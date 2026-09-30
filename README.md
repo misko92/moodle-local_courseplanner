@@ -7,8 +7,10 @@ A Moodle local plugin that lets teachers define reusable course content once, bu
 This is a fork of [Greg Mulcair's `local_coursecalendar`](https://github.com/GitHubGreg/moodle-local_coursecalendar) (v0.2.3). Changes from upstream:
 
 - **Full-year calendars.** Calendars have a title (defaults to the school year, e.g. `2026-27`) instead of a year + Fall/Winter/Summer semester. Date rules are *First day of classes* / *Last day of classes*.
-- **Bug fixes.** Drag-and-drop topic reordering and swapping two occupied builder cells both failed with a database error; the recommended calendar could outrank the active one; deleting a course left orphaned calendar data.
-- **Modernised for Moodle 5.x.** Web services in `classes/external/`, course clean-up via the Hooks API, Bootstrap 5 markup, no hardcoded timezone.
+- **Fast full-year builder.** Cells, column headings, topics, dates and intro texts are edited in pop-up forms loaded on demand. The builder page for a 42-week year went from ~7 MB with ~500 rich-text editors to ~270 KB with none.
+- **Bug fixes.** Topic drag-and-drop reordering never worked (missing drag handle, and the save failed with a database error); swapping two occupied builder cells failed; the recommended calendar could outrank the active one; "today" highlighting mis-dated weeks in school years spanning New Year; deleting a course left orphaned data; lecture/lab topics without content showed as blank cells.
+- **Security fix.** Dates could be edited or deleted in other teachers' calendars by ID.
+- **Restructured for easy upgrades.** Autoloaded classes instead of a 2,500-line `locallib.php`, Mustache templates instead of `html_writer` pages, dynamic forms, ES6 JavaScript, web services in `classes/external/`, the Hooks API, Bootstrap 5 markup, no hardcoded timezone.
 - **Tests.** PHPUnit and Behat coverage, plus test data generators.
 
 | | |
@@ -89,7 +91,7 @@ The typical workflow for a new teacher is:
 3. **Link the course** -- Link the current course to the blueprint (manual or auto-link).
 4. **Create a course calendar** -- Give it a title; it defaults to the current school year (e.g. `2026-27`).
 5. **Set up the grid** -- Open the builder, configure header columns (day-of-week and Lecture/Lab mode), add week rows.
-6. **Define academic timeline** -- Go to Manage Rules, add the first and last day of classes and exceptions (holidays, day swaps), then apply rules to generate week labels.
+6. **Define academic timeline** -- Go to Manage Dates, add the first and last day of classes and exceptions (holidays, day swaps), then apply them to generate the week rows.
 7. **Place topics** -- Use Auto-populate to place topics in the grid automatically, or place them manually via cell editors.
 8. **Fill gaps** -- Use Fill Problem Sessions to populate empty lab cells, check coverage for missing topics.
 9. **Publish** -- Students see the calendar via the Course calendar navigation link. Add Welcome/Links info via Course Info.
@@ -139,10 +141,9 @@ Topics are the individual content items within a blueprint. Each topic has a typ
 | `HOMEWORK` | Orange | Column 4 | Assignments and problem sets |
 
 **Actions:**
-- **Create topic** -- Title, type, and HTML content.
-- **Edit topic** -- Update any field.
-- **Reorder** -- Move up/down to change placement order (affects auto-populate).
-- **Toggle active** -- Deactivated topics are hidden from the topic picker and auto-populate but remain in existing calendar placements.
+- **Create topic** / **Edit** -- Title, type, and HTML content, in a pop-up form.
+- **Reorder** -- Drag a topic by its handle (or use the handle with the keyboard) to change placement order (affects auto-populate). Only available when the list isn't filtered by type.
+- **Activate / Deactivate** -- Deactivated topics are hidden from the topic picker and auto-populate but remain in existing calendar placements.
 - **Delete topic** -- Blocked if the topic is referenced by any calendar block.
 
 **Live reference model:** Calendar blocks that reference a topic always render the *current* content from the blueprint. Editing a topic's content immediately updates every calendar that uses it.
@@ -167,7 +168,7 @@ A course calendar is the per-course container for one run of the course (normall
 - **Create** -- Give it a title. It defaults to the current school year (July to June), e.g. `2026-27`.
 - **Edit title** -- Update the display title.
 - **Open builder** -- Navigate to the full grid builder page.
-- **Toggle active** -- Deactivate calendars no longer in use.
+- **Activate / Deactivate** -- Only the active calendar is shown to students.
 - **Delete** -- Permanently remove a calendar and all its blocks.
 
 ### The Builder
@@ -185,45 +186,36 @@ The builder is the main grid editing interface where teachers assemble the cours
 | 4 | Assignments | Fixed-purpose for homework |
 
 **Header row (row 0):**
-- Columns 1-3 each have: display name, day-of-week selector, Lecture/Lab mode selector.
-- Column 0 shows "Week # / Week of", column 4 shows a static label.
-- Click "Save header" to persist changes.
+- Use the pencil on a column heading to rename it and, for columns 1-3, choose its weekday and Lecture/Lab mode.
+- The bin icon deletes a column (from every row).
 
 **Week rows:**
-- **Add week row** -- Appends a new row at the bottom.
-- **Remove last week row** -- Removes the bottom row (if it has no content).
+- Normally generated from the calendar's dates (see below).
+- **Add week row** / **Remove last week row** for manual adjustments.
 
-**Cell editing:**
-- Click "Edit cell" to expand the inline editor for any content cell (rows 1+, columns 1-4).
-- Choose block type:
-  - **TEXT** -- Free-form HTML content.
-  - **TOPIC** -- Select a topic from the linked blueprint.
-- Optional settings per cell:
-  - **Cell heading** -- HTML annotation displayed above the cell content.
-  - **Highlighted** -- Yellow background with left border.
-  - **Vertically centred** -- Middle-aligns cell content.
-- Empty TEXT submissions clear the cell.
+**Cell editing:** click **Edit cell** on any content cell to open its pop-up form:
+- **Cell type** -- *Text block* (free-form HTML) or *Topic block* (a topic from the linked blueprint).
+- **Cell heading** -- annotation displayed above the cell content.
+- **Highlighted** / **Vertically centred**.
+- **Clear this cell** -- removes the cell's content. Saving an empty text cell also clears it.
 
-**Toolbar:**
-- **Save All** -- Batch-saves all pending changes via AJAX (Ctrl+S).
-- **Undo/Redo** -- In-memory undo stack (Ctrl+Z / Ctrl+Shift+Z).
-- **Unsaved changes** badge appears when local edits have not been saved.
+Cells showing a topic also have an **Edit** button that edits the shared blueprint topic, which changes it everywhere it is used.
 
-**Drag and drop:**
-- Drag any editable cell to swap it with another editable cell.
+Every edit is saved when you click *Save changes*.
+
+**Drag and drop:** drag a content cell onto another to swap them.
 
 **Page-level links:**
 - **Manage Content** -- Back to topic management.
-- **Manage Rules** -- Academic timeline rules page.
+- **Manage Dates** -- The calendar's dates page.
 - **Open Student Preview** -- Student view in a new tab.
-- **Copy Iframe Code** -- Copies an embeddable iframe URL to clipboard.
 - **Coverage Check** -- Topic coverage report.
 
 ### Academic Timeline Rules
 
 Rules define the academic calendar structure: when classes start and end, holidays, day swaps, and other annotations.
 
-**Where:** `rules.php` (accessed via "Manage Rules" from builder).
+**Where:** `rules.php` (accessed via "Manage Dates" from the builder).
 
 **Rule types:**
 
@@ -236,10 +228,10 @@ Rules define the academic calendar structure: when classes start and end, holida
 | `OTHER` | General annotation | Date, label, description |
 
 **Actions:**
-- **Create rule** -- Select type, date, label, and optional description/day fields.
-- **Toggle active/inactive** -- Deactivated rules are excluded from apply.
-- **Delete rule** -- Permanently remove a rule.
-- **Apply Rules to Calendar** -- Runs the rule engine:
+- **Add a new date** / **Edit** -- Type, date, label, description and (for day swaps) the days, in a pop-up form. Only one active first and last day of classes is allowed.
+- **Activate / Deactivate** -- Deactivated dates are excluded from apply.
+- **Delete** -- Permanently remove a date.
+- **Apply Dates to Calendar** -- Runs the rule engine:
   1. Generates week labels from START to END.
   2. Adds "Classes begin" and "Last day of classes" annotations.
   3. Places NO_CLASS markers at the correct row/column based on the date and header day-of-week.
@@ -299,7 +291,7 @@ The student-facing calendar shows the full grid with live topic content.
 
 Supplementary content displayed above the student calendar.
 
-**Where:** `calendar.php`, in the "Intro texts (optional)" section of the builder.
+**Where:** the **Edit intro texts** button in the builder's "Intro texts (optional)" section.
 
 **Fields:**
 - **Intro text (left)** -- left-side introductory text.
@@ -309,7 +301,7 @@ Supplementary content displayed above the student calendar.
 
 A minimal-chrome version of the student calendar, designed for embedding in iframes.
 
-**Where:** `embed.php` (URL copied via "Copy Iframe Code" on the builder).
+**Where:** `embed.php` (`/local/courseplanner/embed.php?id=<course id>&calendarid=<calendar id>`).
 
 **Differences from student view:**
 - Uses Moodle's `embedded` page layout (no site navigation, header, or footer).
@@ -414,6 +406,19 @@ vendor/bin/behat --config <behat_dataroot>/behatrun/behat/behat.yml --tags @loca
 Behat named pages: `I am on the "<course shortname>" "local_courseplanner > Setup" page` (also `Student view`), and `I am on the "<calendar title>" "local_courseplanner > Builder" page` (also `Dates`, `Coverage`, `Preview`). Data generators: `local_courseplanner > blueprints`, `topics`, `calendars` (with optional `startdate`/`enddate`).
 
 After changing `amd/src/`, rebuild with `npx grunt amd` from the plugin directory.
+
+### Code layout
+
+| Path | What's there |
+|---|---|
+| `*.php` (pages) | Thin controllers: check access, handle POSTed actions by calling `classes/local`, render a template. |
+| `classes/local/` | Domain logic: `blueprints`, `topics`, `course_link`, `calendars`, `course_info`, `grid`, `timeline` (dates and applying them), `populate` (auto-populate and coverage), `importer`, `tours`, `hook_callbacks`. |
+| `classes/output/` | Template data for the pages and the shared `calendar_grid` (builder, student view and embed). |
+| `classes/form/` | Pop-up `dynamic_form`s: cell, column header, topic, date, intro texts. Each checks access itself. |
+| `classes/external/` | Web services for drag-and-drop (swap cells, reorder topics). |
+| `templates/` | Mustache templates; `action_form` is the one-button POST form used across pages. |
+| `amd/src/` | ES modules: `modal_forms` (opens any `data-modalform` button's form), `builder` (cell drag-and-drop), `topicreorder`, `confirmaction`, `sections`, `calendar_view`, `showtour`. |
+| `tours/` | User tours; bump a tour's version in `classes/local/tours.php` and call `tours::install()` in an upgrade step when you change one. |
 
 ## Reporting Issues
 

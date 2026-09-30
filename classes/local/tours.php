@@ -52,8 +52,8 @@ class tours {
     protected static function shipped(): array {
         return [
             'teacher_setup_tour.json'   => 4,
-            'teacher_builder_tour.json' => 3,
-            'teacher_rules_tour.json'   => 3,
+            'teacher_builder_tour.json' => 4,
+            'teacher_rules_tour.json'   => 4,
         ];
     }
 

@@ -149,7 +149,12 @@ class manage_page implements renderable, templatable {
      * @param int|null $linkedtopiccount
      * @return array
      */
-    protected function export_next_step(array $calendars, ?stdClass $recommended, string $reasonkey, ?int $linkedtopiccount): array {
+    protected function export_next_step(
+        array $calendars,
+        ?stdClass $recommended,
+        string $reasonkey,
+        ?int $linkedtopiccount
+    ): array {
         $active = array_filter($this->blueprints, static fn($b) => !$b->isarchived);
         $step = match (true) {
             empty($this->blueprints) => ['createblueprint', '#local-courseplanner-createblueprint'],
@@ -353,7 +358,8 @@ class manage_page implements renderable, templatable {
             'sortable' => $this->topicfilter === 'ALL' && count($items) > 1,
             'blueprintoptions' => $blueprintoptions,
             'filteroptions' => $filteroptions,
-            'filterurl' => (new moodle_url('/local/courseplanner/manage.php', [], 'local-courseplanner-section-topics'))->out(false),
+            'filterurl' => (new moodle_url('/local/courseplanner/manage.php', [], 'local-courseplanner-section-topics'))
+                ->out(false),
             'deleteall' => $this->action(
                 'deletealltopics',
                 'deletealltopicsbtn',

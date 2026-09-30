@@ -10,8 +10,8 @@
   "version": "2",
   "steps": [
     {
-      "title": "Timeline rules",
-      "content": "<p>Rules describe your school-year dates: when classes start and end, which days there is no class, day swaps, and any other notes. Once rules exist you can apply them to generate week labels and closed-day markers on the builder grid.</p>",
+      "title": "School-year dates",
+      "content": "<p>Dates describe your school year: the first and last day of classes, days with no class, day swaps, and other notes. Once they are set, apply them to generate the week rows and closed-day markers on the calendar.</p>",
       "contentformat": "1",
       "targettype": "2",
       "targetvalue": "",
@@ -19,8 +19,8 @@
       "configdata": "{\"placement\":\"bottom\",\"orphan\":\"1\",\"backdrop\":\"1\"}"
     },
     {
-      "title": "Create a rule",
-      "content": "<p>Use this form when you want to add dates manually. At minimum you need a <strong>First day of classes</strong> and a <strong>Last day of classes</strong>. Add as many <strong>No class</strong> rules as you need for holidays and closures, and use <strong>Day swap</strong> for days that follow a different weekday's schedule.</p><p>The create-new form appears after the existing rules list so you can review what's already there before adding more.</p>",
+      "title": "Add a date",
+      "content": "<p>Click here to add a date. You need a <strong>First day of classes</strong> and a <strong>Last day of classes</strong>. Add a <strong>No class</strong> date for each holiday or closure, and use <strong>Day swap</strong> for days that follow a different weekday's schedule.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-createrule",
@@ -28,8 +28,8 @@
       "configdata": "{\"placement\":\"top\"}"
     },
     {
-      "title": "Existing rules",
-      "content": "<p>All your rules appear here. Toggle any rule off to exclude it from the next Apply without deleting it. Delete removes it permanently.</p><p>This list is the source of truth for the school-year dates that will be applied to the calendar.</p>",
+      "title": "Your dates",
+      "content": "<p>All of this calendar's dates. <em>Deactivate</em> leaves a date out of the next Apply without deleting it; <em>Delete</em> removes it for good.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-existingrules",
@@ -37,8 +37,8 @@
       "configdata": "{\"placement\":\"bottom\"}"
     },
     {
-      "title": "Apply rules to the calendar",
-      "content": "<p>Click <strong>Apply Rules to Calendar</strong> when you're ready. The grid will regenerate week labels, mark no-class days, and add day-swap annotations. Any manual edits you made to individual cells are preserved - only the auto-generated content is refreshed.</p><p>This action uses the current rules list.</p>",
+      "title": "Apply the dates",
+      "content": "<p>Click <strong>Apply Dates to Calendar</strong> when you're ready. The week rows, no-class markers and day-swap notes are regenerated. Anything you added to cells yourself is kept; only the generated content is refreshed.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-applyrules-form",

@@ -173,67 +173,6 @@ class topics {
     }
 
     /**
-     * Move topic by one step within blueprint ordering.
-     *
-     * @param stdClass $topic
-     * @param int $direction -1 for up, +1 for down
-     * @return bool
-     */
-    public static function move(stdClass $topic, int $direction): bool {
-        global $DB;
-
-        $topics = array_values(self::get_for_blueprint((int)$topic->blueprintid, true));
-        $index = null;
-        foreach ($topics as $i => $item) {
-            if ((int)$item->id === (int)$topic->id) {
-                $index = $i;
-                break;
-            }
-        }
-
-        if ($index === null) {
-            return false;
-        }
-
-        $targetindex = $index + $direction;
-        if ($targetindex < 0 || $targetindex >= count($topics)) {
-            return false;
-        }
-
-        $tmp = $topics[$index];
-        $topics[$index] = $topics[$targetindex];
-        $topics[$targetindex] = $tmp;
-
-        $changed = [];
-        $sort = 1;
-        foreach ($topics as $item) {
-            if ((int)$item->sortorder !== $sort) {
-                $changed[] = [
-                    'topic' => $item,
-                    'sortorder' => $sort,
-                ];
-            }
-            $sort++;
-        }
-
-        if (empty($changed)) {
-            return true;
-        }
-
-        foreach ($changed as $i => $item) {
-            $item['topic']->sortorder = 100000 + $i;
-            $DB->update_record('local_courseplanner_topics', $item['topic']);
-        }
-
-        foreach ($changed as $item) {
-            $item['topic']->sortorder = $item['sortorder'];
-            $DB->update_record('local_courseplanner_topics', $item['topic']);
-        }
-
-        return true;
-    }
-
-    /**
      * Return calendar usage rows for a topic.
      *
      * @param int $topicid

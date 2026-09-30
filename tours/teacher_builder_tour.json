@@ -37,17 +37,8 @@
       "configdata": "{\"placement\":\"bottom\"}"
     },
     {
-      "title": "Save / Undo / Redo",
-      "content": "<p>Edits you make to cells are held in your browser until you click <strong>Save All</strong> (or press Ctrl+S). Undo/Redo step through this session's changes. If you navigate away with unsaved changes, your browser will warn you.</p>",
-      "contentformat": "1",
-      "targettype": "0",
-      "targetvalue": "#local-courseplanner-toolbar",
-      "sortorder": "3",
-      "configdata": "{\"placement\":\"bottom\"}"
-    },
-    {
       "title": "Intro texts",
-      "content": "<p>Use these optional Moodle editors for student-facing text shown above the calendar. The left and right areas are useful for reminders, overview text, links, office hours, or other context students should see before the grid.</p>",
+      "content": "<p>Click <strong>Edit intro texts</strong> to add optional student-facing text shown above the calendar: reminders, an overview, links, office hours, or anything else students should see before the grid.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-section-introtexts",
@@ -56,7 +47,7 @@
     },
     {
       "title": "The calendar grid",
-      "content": "<p>The top row is the <strong>header</strong>: columns 1-3 are class days, and column 4 is homework. Each row below is one week.</p><p><strong>Drag</strong> any content cell onto another cell to swap them. Click <em>Edit cell</em> to change text content, choose a topic block, set a cell heading, or toggle highlighting and vertical centering.</p>",
+      "content": "<p>The top row is the <strong>header</strong>. Use the pencil on a column heading to rename it and choose its weekday and Lecture/Lab mode. Each row below is one week.</p><p>Click <em>Edit cell</em> to change a cell's text, place a topic, add a cell heading, or turn on highlighting. Changes are saved as soon as you click <em>Save changes</em>. <strong>Drag</strong> a content cell onto another to swap them.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-grid",
@@ -65,7 +56,7 @@
     },
     {
       "title": "Editing topic blocks",
-      "content": "<p>When a cell shows a <strong>Topic block</strong>, the cell content field is hidden because the displayed content comes from the shared blueprint topic.</p><p>The editor now shows a separate <strong>Shared blueprint topic</strong> area with a warning. Saving there updates the original topic and affects every place that topic is used. Cell heading, highlighting, and vertical centering still apply only to this one cell.</p>",
+      "content": "<p>A cell showing a <strong>topic</strong> takes its content from the blueprint topic. Its <em>Edit</em> button changes the shared topic itself, so the change appears everywhere that topic is used.</p><p>A cell's heading and highlighting (under <em>Edit cell</em>) apply only to that one cell.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-grid",
@@ -74,7 +65,7 @@
     },
     {
       "title": "You're ready to build",
-      "content": "<p>Start by adding school-year dates from <em>Manage Rules</em>, or use the auto-fill helpers once your blueprint topics are ready. Any time you want a refresher, click this <strong>Show walkthrough</strong> button to run the tour again.</p>",
+      "content": "<p>Start by adding school-year dates from <em>Manage Dates</em>, or use the auto-fill helpers once your blueprint topics are ready. Any time you want a refresher, click this <strong>Show walkthrough</strong> button to run the tour again.</p>",
       "contentformat": "1",
       "targettype": "0",
       "targetvalue": "#local-courseplanner-showtour",

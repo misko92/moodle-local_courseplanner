@@ -224,7 +224,8 @@
         {{#items}}
         <li class="local-courseplanner-blueprint-item local-courseplanner-topic-item" data-topicid="{{id}}">
             <div class="local-courseplanner-blueprint-summary">
-                {{#sortable}}<span class="local-courseplanner-drag-handle" aria-hidden="true" title="{{#str}}topicdraghandle, local_courseplanner{{/str}}">⋮⋮</span>{{/sortable}}
+                {{#sortable}}<span class="local-courseplanner-drag-handle" role="button" tabindex="0" data-drag-type="move"
+                    title="{{#str}}movetopic, local_courseplanner, {{title}}{{/str}}" aria-label="{{#str}}movetopic, local_courseplanner, {{title}}{{/str}}">{{#pix}}i/dragdrop, core{{/pix}}</span>{{/sortable}}
                 <div class="local-courseplanner-blueprint-summary-main">
                     <span class="local-courseplanner-blueprint-shortcode">{{sortorder}}</span>
                     <span class="local-courseplanner-blueprint-name">{{title}}</span>

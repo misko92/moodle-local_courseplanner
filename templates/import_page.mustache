@@ -1,0 +1,50 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_courseplanner/import_page
+
+    Import blueprint topics from a pasted HTML table.
+
+    Example context (json):
+    {
+        "manageurl": "#", "sesskey": "abc", "helpdanger": "",
+        "layouts": [{"value": "LLL", "label": "Lecture - Lecture - Lecture"}],
+        "deleteall": {"action": "deletealltopics", "label": "Delete all topics", "btnclass": "btn-danger", "sesskey": "abc"}
+    }
+}}
+<a href="{{manageurl}}" class="btn btn-secondary mb-3">{{#str}}backtomanage, local_courseplanner{{/str}}</a>
+<div class="local-courseplanner-intro alert alert-info">{{#str}}intro_importtopics, local_courseplanner{{/str}}</div>
+
+<h4 class="local-courseplanner-section-title">{{#str}}importtopicsfromhtml, local_courseplanner{{/str}}</h4>
+<form method="post" class="local-courseplanner-card">
+    <input type="hidden" name="sesskey" value="{{sesskey}}">
+    <input type="hidden" name="action" value="seedtopics">
+    <div class="mb-2">
+        <label for="local-courseplanner-importhtml" class="fw-bold">{{#str}}importtopicshtmllabel, local_courseplanner{{/str}}</label>
+        <textarea id="local-courseplanner-importhtml" name="importhtml" rows="10" class="form-control font-monospace" required></textarea>
+    </div>
+    <div class="mb-2">
+        <label for="local-courseplanner-importlayout" class="fw-bold">{{#str}}importtopicslayoutlabel, local_courseplanner{{/str}}</label>
+        <select id="local-courseplanner-importlayout" name="layout" class="form-select">
+            {{#layouts}}<option value="{{value}}">{{label}}</option>{{/layouts}}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">{{#str}}importtopicssubmit, local_courseplanner{{/str}}</button>
+</form>
+
+<h4 class="local-courseplanner-section-title">{{#str}}importdangerzone, local_courseplanner{{/str}} {{{helpdanger}}}</h4>
+{{#deleteall}}{{> local_courseplanner/action_form}}{{/deleteall}}

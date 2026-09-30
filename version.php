@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_courseplanner';
-$plugin->version   = 2026100100;
+$plugin->version   = 2026100101;
 $plugin->requires  = 2025041400; // Moodle 5.0 (Bootstrap 5).
 $plugin->supported = [500, 502];
 $plugin->maturity  = MATURITY_ALPHA;

@@ -1,80 +1,56 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * Modal confirmation shim for local_courseplanner action forms.
+ * Ask for confirmation before submitting a form, using Moodle's standard dialogs.
  *
- * Replaces the browser-native `confirm()` dialog used by the builder's
- * automation buttons (Auto-populate, Fill Problem Sessions, the two
- * delete actions) with Moodle's standard saveCancel / deleteCancel
- * modal so the prompt matches the rest of the platform UI.
+ * A form opts in with data-cc-confirm (the question), and optionally data-cc-confirm-title,
+ * data-cc-confirm-action (button label) and data-cc-confirm-style ("delete" for destructive actions).
  *
- * A form opts in by setting `data-cc-confirm` to the question text and
- * (optionally) `data-cc-confirm-title`, `data-cc-confirm-action`, and
- * `data-cc-confirm-style` (`save` for default, `delete` for destructive
- * actions). When the user confirms, the form is submitted directly so
- * the submit listener is not re-entered.
- *
- * @module local_courseplanner/confirmaction
+ * @module     local_courseplanner/confirmaction
+ * @copyright  2026 Greg Mulcair
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/notification'], function(Notification) {
-    'use strict';
 
-    var SELECTOR = 'form[data-cc-confirm]';
-    var BOUND_ATTR = 'ccConfirmBound';
+import {deleteCancelPromise, saveCancelPromise} from 'core/notification';
 
-    /**
-     * Submit a form without re-firing this module's submit listener.
-     *
-     * @param {HTMLFormElement} form
-     */
-    function submitForm(form) {
-        if (typeof form.requestSubmit === 'function') {
-            form.requestSubmit();
-        } else {
-            HTMLFormElement.prototype.submit.call(form);
-        }
+/**
+ * Initialise: intercept submits of any form with data-cc-confirm.
+ */
+export const init = () => {
+    if (document.body.dataset.ccConfirmBound) {
+        return;
     }
-
-    /**
-     * @param {HTMLFormElement} form
-     */
-    function bindForm(form) {
-        if (form.dataset[BOUND_ATTR] === '1') {
+    document.body.dataset.ccConfirmBound = '1';
+    document.addEventListener('submit', (e) => {
+        const form = e.target.closest('form[data-cc-confirm]');
+        if (!form) {
             return;
         }
-        form.dataset[BOUND_ATTR] = '1';
-
-        form.addEventListener('submit', function(e) {
-            // The user already confirmed; let the submit go through.
-            if (form.dataset.ccConfirmGo === '1') {
-                form.dataset.ccConfirmGo = '';
-                return;
-            }
-            e.preventDefault();
-
-            var message = form.dataset.ccConfirm || '';
-            var title = form.dataset.ccConfirmTitle || 'Confirm';
-            var actionLabel = form.dataset.ccConfirmAction || 'OK';
-            var dialog = (form.dataset.ccConfirmStyle === 'delete')
-                ? Notification.deleteCancel
-                : Notification.saveCancel;
-
-            dialog(title, message, actionLabel, function() {
+        if (form.dataset.ccConfirmGo === '1') {
+            form.dataset.ccConfirmGo = '';
+            return;
+        }
+        e.preventDefault();
+        const dialog = form.dataset.ccConfirmStyle === 'delete' ? deleteCancelPromise : saveCancelPromise;
+        dialog(form.dataset.ccConfirmTitle, form.dataset.ccConfirm, form.dataset.ccConfirmAction)
+            .then(() => {
                 form.dataset.ccConfirmGo = '1';
-                submitForm(form);
-            });
-        });
-    }
-
-    /**
-     * @param {ParentNode} root
-     */
-    function bindAll(root) {
-        var forms = (root || document).querySelectorAll(SELECTOR);
-        Array.prototype.forEach.call(forms, bindForm);
-    }
-
-    return {
-        init: function() {
-            bindAll(document);
-        },
-    };
-});
+                form.requestSubmit();
+                return null;
+            })
+            .catch(() => null);
+    });
+};

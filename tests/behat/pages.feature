@@ -50,6 +50,15 @@ Feature: Every course planner page works for teachers and students
     Then I should see "Inactive" in the "[data-topicid]:last-child" "css_element"
 
   @javascript
+  Scenario: Teacher reorders topics by dragging
+    Given I am on the "CHEM101" "local_courseplanner > Setup" page logged in as "teacher1"
+    When I click on "Move Problem set 1" "button"
+    And I click on "To the top of the list" "link" in the "Move Problem set 1" "dialogue"
+    And I wait until the page is ready
+    And I reload the page
+    Then "Problem set 1" "text" should appear before "Atoms and molecules" "text"
+
+  @javascript
   Scenario: Teacher adds a no-class date and re-applies the dates
     Given I am on the "2026-27" "local_courseplanner > Dates" page logged in as "teacher1"
     Then I should see "First day of classes"

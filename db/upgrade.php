@@ -29,7 +29,11 @@
  * @return bool
  */
 function xmldb_local_courseplanner_upgrade(int $oldversion): bool {
-    // Upgrade steps for versions after 2026093000 (initial fork) go here.
+    if ($oldversion < 2026100101) {
+        // Refresh the builder and dates tours for the pop-up editors.
+        \local_courseplanner\local\tours::install();
+        upgrade_plugin_savepoint(true, 2026100101, 'local', 'courseplanner');
+    }
 
     return true;
 }

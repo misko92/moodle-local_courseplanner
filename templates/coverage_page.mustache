@@ -1,0 +1,81 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_courseplanner/coverage_page
+
+    Which blueprint topics are on a calendar, which are missing, and which grid slots are empty.
+
+    Example context (json):
+    {
+        "builderurl": "#", "helpfound": "", "helpmissing": "", "helpempty": "",
+        "found": [{"title": "Atoms", "type": "LECTURE", "typeclass": "lecture", "week": 1, "day": "Monday", "mode": "Lecture"}],
+        "hasfound": true, "missing": [], "hasmissing": false, "empty": [], "hasempty": false
+    }
+}}
+<a href="{{builderurl}}" class="btn btn-secondary mb-3">{{#str}}backtobuilder, local_courseplanner{{/str}}</a>
+<div class="local-courseplanner-intro alert alert-info">{{#str}}intro_coverage, local_courseplanner{{/str}}</div>
+
+<h4 class="local-courseplanner-section-title">{{#str}}coveragefoundheading, local_courseplanner{{/str}} {{{helpfound}}}</h4>
+{{^hasfound}}<div class="alert alert-info">{{#str}}coveragenofound, local_courseplanner{{/str}}</div>{{/hasfound}}
+{{#hasfound}}
+<table class="table table-sm table-bordered">
+    <thead><tr>
+        <th scope="col">{{#str}}topic, local_courseplanner{{/str}}</th>
+        <th scope="col">{{#str}}topictypelabel, local_courseplanner{{/str}}</th>
+        <th scope="col">{{#str}}week, local_courseplanner{{/str}}</th>
+        <th scope="col">{{#str}}columnday, local_courseplanner{{/str}}</th>
+        <th scope="col">{{#str}}columnmode, local_courseplanner{{/str}}</th>
+    </tr></thead>
+    <tbody>
+    {{#found}}
+    <tr><td>{{title}}</td><td><span class="local-courseplanner-type-badge local-courseplanner-type-{{typeclass}}">{{type}}</span></td>
+        <td>{{week}}</td><td>{{day}}</td><td>{{mode}}</td></tr>
+    {{/found}}
+    </tbody>
+</table>
+{{/hasfound}}
+
+<h4 class="local-courseplanner-section-title">{{#str}}coveragemissingheading, local_courseplanner{{/str}} {{{helpmissing}}}</h4>
+{{^hasmissing}}<div class="alert alert-success">{{#str}}coveragenomissing, local_courseplanner{{/str}}</div>{{/hasmissing}}
+{{#hasmissing}}
+<table class="table table-sm table-bordered">
+    <thead><tr>
+        <th scope="col">{{#str}}topic, local_courseplanner{{/str}}</th>
+        <th scope="col">{{#str}}topictypelabel, local_courseplanner{{/str}}</th>
+    </tr></thead>
+    <tbody>
+    {{#missing}}
+    <tr><td>{{title}}</td><td><span class="local-courseplanner-type-badge local-courseplanner-type-{{typeclass}}">{{type}}</span></td></tr>
+    {{/missing}}
+    </tbody>
+</table>
+{{/hasmissing}}
+
+<h4 class="local-courseplanner-section-title">{{#str}}coverageemptyheading, local_courseplanner{{/str}} {{{helpempty}}}</h4>
+{{^hasempty}}<div class="alert alert-success">{{#str}}coveragenoempty, local_courseplanner{{/str}}</div>{{/hasempty}}
+{{#hasempty}}
+<table class="table table-sm table-bordered">
+    <thead><tr>
+        <th scope="col">{{#str}}week, local_courseplanner{{/str}}</th>
+        <th scope="col">{{#str}}columnday, local_courseplanner{{/str}}</th>
+        <th scope="col">{{#str}}columnmode, local_courseplanner{{/str}}</th>
+    </tr></thead>
+    <tbody>
+    {{#empty}}<tr><td>{{week}}</td><td>{{day}}</td><td>{{mode}}</td></tr>{{/empty}}
+    </tbody>
+</table>
+{{/hasempty}}

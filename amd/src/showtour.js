@@ -1,149 +1,80 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * "Show walkthrough" button shim for local_courseplanner.
+ * "Show walkthrough" button: restarts the page's user tour, and keeps the tour's first step clear of the
+ * navigation bars when it points at an element near the top of the page.
  *
- * Wires a user-visible button to Moodle's tool_usertours reset-tour API so
- * teachers can re-trigger the guided walkthrough on any page that ships one.
- * If tool_usertours is unavailable or the tour cannot be resolved, the
- * button is hidden so we fail gracefully.
- *
- * @module local_courseplanner/showtour
+ * @module     local_courseplanner/showtour
+ * @copyright  2026 Greg Mulcair
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/log'], function(log) {
-    'use strict';
 
-    var SCROLL_CLASS = 'local-courseplanner-tour-active';
+import {resetTourState} from 'tool_usertours/usertours';
 
-    /**
-     * Moodle's user tour clamps scrollTop to [0, maxScroll], so when a step
-     * targets an element near the top of the page, the step's tooltip and the
-     * target end up hugging the Moodle primary/secondary nav. This observer
-     * watches for the tour popover to appear, and while it's pointing at the
-     * target button (or any element near the top), it toggles a body class
-     * that reserves visual space above the content.
-     *
-     * @param {string} buttonSelector
-     */
-    function watchTourForTarget(buttonSelector) {
-        var body = document.body;
-        if (!body) {
-            return;
-        }
+const SCROLL_CLASS = 'local-courseplanner-tour-active';
 
-        var scrollObserver = null;
-        var scrollRaf = 0;
-
-        /**
-         * Toggle the reserved-space body class based on the current popover position.
-         */
-        function evaluate() {
-            scrollRaf = 0;
-            var popper = document.querySelector('[data-flexitour="container"]');
-            if (!popper) {
-                body.classList.remove(SCROLL_CLASS);
-                return;
-            }
-            var target = document.querySelector(buttonSelector);
-            if (!target) {
-                body.classList.remove(SCROLL_CLASS);
-                return;
-            }
-            var rect = target.getBoundingClientRect();
-            if (rect.top < 160) {
-                body.classList.add(SCROLL_CLASS);
-            } else {
-                body.classList.remove(SCROLL_CLASS);
-            }
-        }
-
-        /**
-         * Coalesce rapid mutations into a single evaluate() call per animation frame.
-         */
-        function queueEvaluate() {
-            if (scrollRaf) {
-                return;
-            }
-            scrollRaf = window.requestAnimationFrame(evaluate);
-        }
-
-        /**
-         * Observe changes on the tour popover so we can re-evaluate positioning.
-         *
-         * @param {Element} popper The flexitour popover node.
-         */
-        function startScrollObserver(popper) {
-            if (scrollObserver) {
-                return;
-            }
-            scrollObserver = new MutationObserver(queueEvaluate);
-            scrollObserver.observe(popper, {attributes: true, attributeFilter: ['style', 'class']});
-            queueEvaluate();
-        }
-
-        /**
-         * Tear down the popover observer and remove the reserved-space class.
-         */
-        function stopScrollObserver() {
-            if (scrollObserver) {
-                scrollObserver.disconnect();
-                scrollObserver = null;
-            }
-            body.classList.remove(SCROLL_CLASS);
-        }
-
-        var presenceObserver = new MutationObserver(function(records) {
-            var needsCheck = false;
-            for (var i = 0; i < records.length; i++) {
-                var r = records[i];
-                if ((r.addedNodes && r.addedNodes.length) || (r.removedNodes && r.removedNodes.length)) {
-                    needsCheck = true;
-                    break;
-                }
-            }
-            if (!needsCheck) {
-                return;
-            }
-            var popper = document.querySelector('[data-flexitour="container"]');
-            if (popper) {
-                startScrollObserver(popper);
-            } else {
-                stopScrollObserver();
-            }
-        });
-        presenceObserver.observe(body, {childList: true, subtree: false});
-    }
-
-    /**
-     * @param {number|null} tourId The numeric tool_usertours_tours.id, resolved in PHP.
-     * @param {string} buttonSelector CSS selector for the trigger button.
-     */
-    function init(tourId, buttonSelector) {
-        var button = document.querySelector(buttonSelector);
-        if (!button) {
-            return;
-        }
-        if (!tourId) {
-            button.style.display = 'none';
-            return;
-        }
-
-        watchTourForTarget(buttonSelector);
-
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            require(['tool_usertours/usertours'], function(userTours) {
-                if (userTours && typeof userTours.resetTourState === 'function') {
-                    userTours.resetTourState(tourId);
-                } else {
-                    log.error('local_courseplanner/showtour: tool_usertours/usertours.resetTourState not available');
-                }
-            }, function(err) {
-                log.error('local_courseplanner/showtour: failed to load tool_usertours/usertours', err);
-                button.style.display = 'none';
-            });
-        });
-    }
-
-    return {
-        init: init,
+/**
+ * While a tour popover is open and the button is near the top of the page, add a body class that reserves
+ * space above the content (Moodle's tour can't scroll above the top of the page).
+ *
+ * @param {HTMLElement} button
+ */
+const watchTour = (button) => {
+    let frame = 0;
+    let popoverObserver = null;
+    const evaluate = () => {
+        frame = 0;
+        const open = document.querySelector('[data-flexitour="container"]');
+        document.body.classList.toggle(SCROLL_CLASS, !!open && button.getBoundingClientRect().top < 160);
     };
-});
+    const queue = () => {
+        frame = frame || window.requestAnimationFrame(evaluate);
+    };
+    new MutationObserver(() => {
+        const popover = document.querySelector('[data-flexitour="container"]');
+        if (popover && !popoverObserver) {
+            popoverObserver = new MutationObserver(queue);
+            popoverObserver.observe(popover, {attributes: true, attributeFilter: ['style', 'class']});
+            queue();
+        } else if (!popover && popoverObserver) {
+            popoverObserver.disconnect();
+            popoverObserver = null;
+            document.body.classList.remove(SCROLL_CLASS);
+        }
+    }).observe(document.body, {childList: true});
+};
+
+/**
+ * Initialise.
+ *
+ * @param {number|null} tourId tool_usertours tour id, or null if the tour isn't installed.
+ * @param {string} buttonSelector
+ */
+export const init = (tourId, buttonSelector) => {
+    const button = document.querySelector(buttonSelector);
+    if (!button) {
+        return;
+    }
+    if (!tourId) {
+        button.hidden = true;
+        return;
+    }
+    watchTour(button);
+    button.addEventListener('click', (e) => {
+        e.preventDefault();
+        resetTourState(tourId);
+    });
+};
