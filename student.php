@@ -23,7 +23,8 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/locallib.php');
+
+use local_courseplanner\local\calendars;
 
 $courseid = required_param('id', PARAM_INT);
 $course = get_course($courseid);
@@ -32,7 +33,7 @@ $context = context_course::instance($courseid);
 require_login($course);
 require_capability('local/courseplanner:view', $context);
 
-$calendars = local_courseplanner_get_course_calendars($courseid);
+$calendars = calendars::get_for_course($courseid);
 $activecalendar = null;
 foreach ($calendars as $calendar) {
     if ((int)$calendar->isactive === 1) {

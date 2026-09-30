@@ -23,7 +23,11 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/locallib.php');
+
+use local_courseplanner\local\blueprints;
+use local_courseplanner\local\calendars;
+use local_courseplanner\local\timeline;
+use local_courseplanner\local\tours;
 
 $courseid = required_param('id', PARAM_INT);
 $calendarid = required_param('calendarid', PARAM_INT);
@@ -35,13 +39,13 @@ $context = context_course::instance($courseid);
 require_login($course);
 require_capability('local/courseplanner:manage', $context);
 
-$calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
-$blueprint = local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+$calendar = calendars::require_in_course($calendarid, $courseid);
+$blueprint = blueprints::require_owned((int)$calendar->blueprintid, (int)$USER->id);
 
 $pageurl = new moodle_url('/local/courseplanner/rules.php', ['id' => $courseid, 'calendarid' => $calendarid]);
 $builderurl = new moodle_url('/local/courseplanner/calendar.php', ['id' => $courseid, 'calendarid' => $calendarid]);
 
-$ruletypes = local_courseplanner_get_rule_types();
+$ruletypes = timeline::get_rule_types();
 $weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 if ($action !== '' && data_submitted()) {
@@ -81,7 +85,7 @@ if ($action !== '' && data_submitted()) {
                 }
             }
 
-            local_courseplanner_create_rule(
+            timeline::create_rule(
                 (int)$calendar->id,
                 $ruletype,
                 $ruledate,
@@ -111,19 +115,19 @@ if ($action !== '' && data_submitted()) {
             $fromday = trim(optional_param('fromday', '', PARAM_TEXT)) ?: null;
             $today = trim(optional_param('today', '', PARAM_TEXT)) ?: null;
 
-            local_courseplanner_update_rule($ruleid, $ruledate, $label, $description, $fromday, $today, (int)$USER->id);
+            timeline::update_rule($ruleid, $ruledate, $label, $description, $fromday, $today, (int)$USER->id);
             redirect($pageurl, get_string('ruleupdated', 'local_courseplanner'), null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'deleterule':
             $ruleid = required_param('ruleid', PARAM_INT);
-            local_courseplanner_delete_rule($ruleid);
+            timeline::delete_rule($ruleid);
             redirect($pageurl, get_string('ruledeleted', 'local_courseplanner'), null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'togglerule':
             $ruleid = required_param('ruleid', PARAM_INT);
-            $nowactive = local_courseplanner_toggle_rule($ruleid, (int)$USER->id);
+            $nowactive = timeline::toggle_rule($ruleid, (int)$USER->id);
             $msg = $nowactive
                 ? get_string('ruleactivated', 'local_courseplanner')
                 : get_string('ruledeactivated', 'local_courseplanner');
@@ -132,7 +136,7 @@ if ($action !== '' && data_submitted()) {
 
         case 'applyrules':
             try {
-                $summary = local_courseplanner_apply_rules((int)$calendar->id, (int)$USER->id);
+                $summary = timeline::apply((int)$calendar->id, (int)$USER->id);
                 $msg = get_string('rulesapplied', 'local_courseplanner', $summary['total_weeks']);
                 redirect($builderurl, $msg, null, \core\output\notification::NOTIFY_SUCCESS);
             } catch (moodle_exception $e) {
@@ -142,7 +146,7 @@ if ($action !== '' && data_submitted()) {
     }
 }
 
-$rules = local_courseplanner_get_calendar_rules((int)$calendar->id);
+$rules = timeline::get_rules((int)$calendar->id);
 
 $PAGE->set_url($pageurl);
 $PAGE->set_context($context);
@@ -165,7 +169,7 @@ echo html_writer::link($builderurl, get_string('backtobuilder', 'local_coursepla
 
 echo html_writer::div(get_string('intro_rules', 'local_courseplanner'), 'local-courseplanner-intro alert alert-info');
 
-$calendarlabel = local_courseplanner_calendar_label($calendar);
+$calendarlabel = calendars::label($calendar);
 echo html_writer::div(get_string('buildercontextlabel', 'local_courseplanner', $calendarlabel), 'local-courseplanner-shell mb-3');
 
 echo html_writer::tag(
@@ -446,7 +450,7 @@ echo $createrulehtml;
 
 $PAGE->requires->js_call_amd('local_courseplanner/confirmaction', 'init', []);
 
-$tourid = local_courseplanner_get_tour_id_by_name('local_courseplanner_rules');
+$tourid = tours::get_id_by_name('local_courseplanner_rules');
 $PAGE->requires->js_call_amd('local_courseplanner/showtour', 'init', [
     $tourid,
     '#local-courseplanner-showtour',

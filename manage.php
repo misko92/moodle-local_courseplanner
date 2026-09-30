@@ -23,7 +23,12 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/locallib.php');
+
+use local_courseplanner\local\blueprints;
+use local_courseplanner\local\calendars;
+use local_courseplanner\local\course_link;
+use local_courseplanner\local\topics;
+use local_courseplanner\local\tours;
 
 $courseid = required_param('id', PARAM_INT);
 $course = get_course($courseid);
@@ -35,7 +40,7 @@ require_capability('local/courseplanner:manage', $context);
 $action = optional_param('action', '', PARAM_ALPHANUMEXT);
 $selectedblueprintid = optional_param('blueprintctx', 0, PARAM_INT);
 $topicfilter = core_text::strtoupper(optional_param('topicfilter', 'ALL', PARAM_ALPHANUMEXT));
-if (!in_array($topicfilter, array_merge(['ALL'], local_courseplanner_get_topic_types()), true)) {
+if (!in_array($topicfilter, array_merge(['ALL'], topics::get_types()), true)) {
     $topicfilter = 'ALL';
 }
 
@@ -95,7 +100,7 @@ if ($action !== '' && data_submitted()) {
 
         case 'updateblueprint':
             $blueprintid = required_param('blueprintid', PARAM_INT);
-            $blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
+            $blueprint = blueprints::require_owned($blueprintid, (int)$USER->id);
 
             $name = trim(optional_param('name', '', PARAM_TEXT));
             $description = trim(optional_param('description', '', PARAM_TEXT));
@@ -139,7 +144,7 @@ if ($action !== '' && data_submitted()) {
 
         case 'togglearchive':
             $blueprintid = required_param('blueprintid', PARAM_INT);
-            $blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
+            $blueprint = blueprints::require_owned($blueprintid, (int)$USER->id);
             $blueprint->isarchived = $blueprint->isarchived ? 0 : 1;
             $blueprint->timemodified = time();
             $blueprint->usermodified = $USER->id;
@@ -156,7 +161,7 @@ if ($action !== '' && data_submitted()) {
 
         case 'linkblueprint':
             $blueprintid = required_param('blueprintid', PARAM_INT);
-            $blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
+            $blueprint = blueprints::require_owned($blueprintid, (int)$USER->id);
             if ((int)$blueprint->isarchived === 1) {
                 redirect(
                     $redirecturl,
@@ -166,7 +171,7 @@ if ($action !== '' && data_submitted()) {
                 );
             }
             $linknotes = trim(optional_param('linknotes', '', PARAM_TEXT));
-            local_courseplanner_upsert_course_blueprint_link(
+            course_link::upsert(
                 $courseid,
                 (int)$blueprint->id,
                 'MANUAL',
@@ -184,7 +189,7 @@ if ($action !== '' && data_submitted()) {
             break;
 
         case 'autolinkcourse':
-            $suggestion = local_courseplanner_get_autolink_suggestion($course, (int)$USER->id);
+            $suggestion = course_link::get_autolink_suggestion($course, (int)$USER->id);
             if (!$suggestion || !empty($suggestion['ambiguous'])) {
                 redirect(
                     $redirecturl,
@@ -195,7 +200,7 @@ if ($action !== '' && data_submitted()) {
             }
 
             $best = $suggestion['best'];
-            local_courseplanner_upsert_course_blueprint_link(
+            course_link::upsert(
                 $courseid,
                 (int)$best['blueprint']->id,
                 'AUTO',
@@ -224,7 +229,7 @@ if ($action !== '' && data_submitted()) {
 
         case 'createcalendar':
             $blueprintid = required_param('blueprintid', PARAM_INT);
-            $blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
+            $blueprint = blueprints::require_owned($blueprintid, (int)$USER->id);
             $title = trim(optional_param('title', '', PARAM_TEXT));
 
             if ($title === '') {
@@ -258,8 +263,8 @@ if ($action !== '' && data_submitted()) {
 
         case 'updatecalendar':
             $calendarid = required_param('calendarid', PARAM_INT);
-            $calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
-            local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+            $calendar = calendars::require_in_course($calendarid, $courseid);
+            blueprints::require_owned((int)$calendar->blueprintid, (int)$USER->id);
             $calendar->title = trim(optional_param('title', '', PARAM_TEXT));
             $calendar->timemodified = time();
             $calendar->usermodified = (int)$USER->id;
@@ -274,8 +279,8 @@ if ($action !== '' && data_submitted()) {
 
         case 'togglecalendaractive':
             $calendarid = required_param('calendarid', PARAM_INT);
-            $calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
-            local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+            $calendar = calendars::require_in_course($calendarid, $courseid);
+            blueprints::require_owned((int)$calendar->blueprintid, (int)$USER->id);
             $activating = (int)$calendar->isactive !== 1;
             if ($activating) {
                 $DB->set_field('local_courseplanner_calendars', 'isactive', 0, ['courseid' => $courseid]);
@@ -295,8 +300,8 @@ if ($action !== '' && data_submitted()) {
 
         case 'deletecalendar':
             $calendarid = required_param('calendarid', PARAM_INT);
-            $calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
-            local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+            $calendar = calendars::require_in_course($calendarid, $courseid);
+            blueprints::require_owned((int)$calendar->blueprintid, (int)$USER->id);
             $DB->delete_records('local_courseplanner_ruleruns', ['calendarid' => $calendar->id]);
             $DB->delete_records('local_courseplanner_blocks', ['calendarid' => $calendar->id]);
             $DB->delete_records('local_courseplanner_rules', ['calendarid' => $calendar->id]);
@@ -311,9 +316,9 @@ if ($action !== '' && data_submitted()) {
 
         case 'createtopic':
             $blueprintid = required_param('blueprintid', PARAM_INT);
-            $blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
+            $blueprint = blueprints::require_owned($blueprintid, (int)$USER->id);
             $title = trim(required_param('title', PARAM_TEXT));
-            $type = local_courseplanner_normalise_topic_type(required_param('type', PARAM_ALPHANUMEXT));
+            $type = topics::normalise_type(required_param('type', PARAM_ALPHANUMEXT));
             $contenthtml = trim(optional_param('contenthtml', '', PARAM_RAW));
 
             if ($title === '') {
@@ -351,9 +356,9 @@ if ($action !== '' && data_submitted()) {
 
         case 'updatetopic':
             $topicid = required_param('topicid', PARAM_INT);
-            $topic = local_courseplanner_require_owned_topic($topicid, (int)$USER->id);
+            $topic = topics::require_owned($topicid, (int)$USER->id);
             $topic->title = trim(required_param('title', PARAM_TEXT));
-            $topic->type = local_courseplanner_normalise_topic_type(required_param('type', PARAM_ALPHANUMEXT));
+            $topic->type = topics::normalise_type(required_param('type', PARAM_ALPHANUMEXT));
             $topic->contenthtml = trim(optional_param('contenthtml', '', PARAM_RAW));
             if ($topic->title === '') {
                 $redirecturl->param('blueprintctx', (int)$topic->blueprintid);
@@ -378,7 +383,7 @@ if ($action !== '' && data_submitted()) {
 
         case 'toggletopicactive':
             $topicid = required_param('topicid', PARAM_INT);
-            $topic = local_courseplanner_require_owned_topic($topicid, (int)$USER->id);
+            $topic = topics::require_owned($topicid, (int)$USER->id);
             $topic->isactive = $topic->isactive ? 0 : 1;
             $topic->timemodified = time();
             $topic->usermodified = $USER->id;
@@ -396,9 +401,9 @@ if ($action !== '' && data_submitted()) {
         case 'movetopicup':
         case 'movetopicdown':
             $topicid = required_param('topicid', PARAM_INT);
-            $topic = local_courseplanner_require_owned_topic($topicid, (int)$USER->id);
+            $topic = topics::require_owned($topicid, (int)$USER->id);
             $direction = ($action === 'movetopicup') ? -1 : 1;
-            local_courseplanner_move_topic($topic, $direction);
+            topics::move($topic, $direction);
             $redirecturl->param('blueprintctx', (int)$topic->blueprintid);
             redirect(
                 $redirecturl,
@@ -410,12 +415,12 @@ if ($action !== '' && data_submitted()) {
 
         case 'deletetopic':
             $topicid = required_param('topicid', PARAM_INT);
-            $topic = local_courseplanner_require_owned_topic($topicid, (int)$USER->id);
-            $usagerows = local_courseplanner_get_topic_usage_rows((int)$topic->id);
+            $topic = topics::require_owned($topicid, (int)$USER->id);
+            $usagerows = topics::get_usage_rows((int)$topic->id);
             if (!empty($usagerows)) {
                 $examples = [];
                 foreach (array_slice(array_values($usagerows), 0, 3) as $row) {
-                    $examples[] = '#' . (int)$row->id . ' (' . local_courseplanner_calendar_label($row) . ')';
+                    $examples[] = '#' . (int)$row->id . ' (' . calendars::label($row) . ')';
                 }
                 $detail = implode(', ', $examples);
                 $redirecturl->param('blueprintctx', (int)$topic->blueprintid);
@@ -431,7 +436,7 @@ if ($action !== '' && data_submitted()) {
             }
 
             $DB->delete_records('local_courseplanner_topics', ['id' => $topic->id]);
-            local_courseplanner_normalise_topic_sortorder((int)$topic->blueprintid);
+            topics::normalise_sortorder((int)$topic->blueprintid);
             $redirecturl->param('blueprintctx', (int)$topic->blueprintid);
             redirect(
                 $redirecturl,
@@ -443,9 +448,9 @@ if ($action !== '' && data_submitted()) {
 
         case 'deletealltopics':
             $blueprintid = required_param('blueprintid', PARAM_INT);
-            $blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
+            $blueprint = blueprints::require_owned($blueprintid, (int)$USER->id);
             $redirecturl->param('blueprintctx', (int)$blueprint->id);
-            $deleted = local_courseplanner_delete_all_topics((int)$blueprint->id, false);
+            $deleted = topics::delete_all((int)$blueprint->id, false);
             if ($deleted < 0) {
                 redirect(
                     $redirecturl,
@@ -464,9 +469,9 @@ if ($action !== '' && data_submitted()) {
 
         case 'forcedeletealltopics':
             $blueprintid = required_param('blueprintid', PARAM_INT);
-            $blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
+            $blueprint = blueprints::require_owned($blueprintid, (int)$USER->id);
             $redirecturl->param('blueprintctx', (int)$blueprint->id);
-            $deleted = local_courseplanner_delete_all_topics((int)$blueprint->id, true);
+            $deleted = topics::delete_all((int)$blueprint->id, true);
             redirect(
                 $redirecturl,
                 get_string('deletealltopicsdone', 'local_courseplanner', max(0, $deleted)),
@@ -485,12 +490,12 @@ $PAGE->set_title(get_string('managepageheading', 'local_courseplanner'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
 
-$allblueprints = local_courseplanner_get_teacher_blueprints((int)$USER->id, true);
+$allblueprints = blueprints::get_for_teacher((int)$USER->id, true);
 $activeblueprints = array_filter($allblueprints, static function (stdClass $record): bool {
     return (int)$record->isarchived === 0;
 });
 
-$linkrecord = local_courseplanner_get_course_link_record($courseid);
+$linkrecord = course_link::get($courseid);
 $linkedblueprint = null;
 if ($linkrecord) {
     $linkedblueprint = $DB->get_record('local_courseplanner_blueprints', ['id' => $linkrecord->blueprintid], '*', IGNORE_MISSING);
@@ -499,8 +504,8 @@ if ($linkrecord) {
     }
 }
 
-$suggestion = local_courseplanner_get_autolink_suggestion($course, (int)$USER->id);
-$calendars = local_courseplanner_get_course_calendars($courseid);
+$suggestion = course_link::get_autolink_suggestion($course, (int)$USER->id);
+$calendars = calendars::get_for_course($courseid);
 
 if ($selectedblueprintid <= 0) {
     if ($linkedblueprint) {
@@ -521,7 +526,7 @@ if ($selectedblueprintid > 0) {
 
 $topics = [];
 if ($selectedblueprint) {
-    $topics = array_values(local_courseplanner_get_blueprint_topics((int)$selectedblueprint->id, true));
+    $topics = array_values(topics::get_for_blueprint((int)$selectedblueprint->id, true));
     if ($topicfilter !== 'ALL') {
         $topics = array_values(array_filter($topics, static function (stdClass $topic) use ($topicfilter): bool {
             return $topic->type === $topicfilter;
@@ -537,12 +542,12 @@ if (!$linkedblueprint && !empty($suggestion) && empty($suggestion['ambiguous']) 
 $hasblueprints = !empty($allblueprints);
 $hasactiveblueprints = !empty($activeblueprints);
 
-[$calendars, $recommendedreasonkey] = local_courseplanner_rank_calendars($course, $calendars, time());
+[$calendars, $recommendedreasonkey] = calendars::rank($course, $calendars, time());
 $recommendedcalendar = reset($calendars) ?: null;
 
 $linkedtopiccount = null;
 if ($linkedblueprint) {
-    $linkedtopics = local_courseplanner_get_blueprint_topics((int)$linkedblueprint->id, true);
+    $linkedtopics = topics::get_for_blueprint((int)$linkedblueprint->id, true);
     $linkedtopiccount = count(array_filter($linkedtopics, static function (stdClass $topic): bool {
         return (int)$topic->isactive === 1;
     }));
@@ -845,7 +850,7 @@ if (!$linkedblueprint) {
             'name' => 'title',
             'class' => 'form-control',
             'maxlength' => 255,
-            'value' => local_courseplanner_suggest_calendar_title(time()),
+            'value' => calendars::suggest_title(time()),
             'placeholder' => get_string('calendartitleplaceholder', 'local_courseplanner'),
             'required' => 'required',
         ]);
@@ -870,7 +875,7 @@ if (!$linkedblueprint) {
             $badgekey = $isactive ? 'calendarbadgeactive' : 'calendarbadgeinactive';
             $badgeclass = $isactive ? 'local-courseplanner-badge--active' : 'local-courseplanner-badge--archived';
             $isrecommended = $recommendedcalendar && (int)$recommendedcalendar->id === (int)$calendar->id;
-            $heading = local_courseplanner_calendar_label($calendar);
+            $heading = calendars::label($calendar);
 
             echo html_writer::start_tag('li', ['class' => 'local-courseplanner-blueprint-item']);
             echo html_writer::start_tag('details', ['class' => 'local-courseplanner-blueprint-details']);
@@ -1129,7 +1134,7 @@ echo html_writer::start_tag(
     'select',
     ['id' => 'local-courseplanner-topicfilter', 'name' => 'topicfilter', 'class' => 'form-select']
 );
-$filteroptions = array_merge(['ALL'], local_courseplanner_get_topic_types());
+$filteroptions = array_merge(['ALL'], topics::get_types());
 foreach ($filteroptions as $filteroption) {
     $attrs = ['value' => $filteroption];
     if ($topicfilter === $filteroption) {
@@ -1187,7 +1192,7 @@ echo html_writer::tag(
     ['for' => 'local-courseplanner-topictype-new']
 );
 echo html_writer::start_tag('select', ['id' => 'local-courseplanner-topictype-new', 'name' => 'type', 'class' => 'form-select']);
-foreach (local_courseplanner_get_topic_types() as $topictype) {
+foreach (topics::get_types() as $topictype) {
     echo html_writer::tag('option', $topictype, ['value' => $topictype]);
 }
 echo html_writer::end_tag('select');
@@ -1286,7 +1291,7 @@ if (empty($topics)) {
         echo html_writer::start_div('mb-2');
         echo html_writer::tag('label', get_string('topictypelabel', 'local_courseplanner'));
         echo html_writer::start_tag('select', ['name' => 'type', 'class' => 'form-select']);
-        foreach (local_courseplanner_get_topic_types() as $topictype) {
+        foreach (topics::get_types() as $topictype) {
             $attrs = ['value' => $topictype];
             if ($topic->type === $topictype) {
                 $attrs['selected'] = 'selected';
@@ -1399,7 +1404,7 @@ echo $createtopichtml;
 
 $PAGE->requires->js_call_amd('local_courseplanner/confirmaction', 'init', []);
 
-$tourid = local_courseplanner_get_tour_id_by_name('local_courseplanner_setup');
+$tourid = tours::get_id_by_name('local_courseplanner_setup');
 $PAGE->requires->js_call_amd('local_courseplanner/showtour', 'init', [
     $tourid,
     '#local-courseplanner-showtour',

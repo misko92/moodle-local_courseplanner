@@ -65,7 +65,6 @@ class swap_builder_cells extends external_api {
         int $tocol
     ): array {
         global $CFG, $DB, $USER;
-        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid, 'calendarid' => $calendarid,
@@ -78,8 +77,8 @@ class swap_builder_cells extends external_api {
         self::validate_context($context);
         require_capability('local/courseplanner:manage', $context);
 
-        $calendar = local_courseplanner_require_course_calendar($params['calendarid'], (int)$course->id);
-        local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+        $calendar = \local_courseplanner\local\calendars::require_in_course($params['calendarid'], (int)$course->id);
+        \local_courseplanner\local\blueprints::require_owned((int)$calendar->blueprintid, (int)$USER->id);
 
         if (
             $params['fromrow'] <= 0 || $params['torow'] <= 0 ||

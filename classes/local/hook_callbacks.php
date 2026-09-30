@@ -35,7 +35,6 @@ class hook_callbacks {
      */
     public static function before_course_deleted(before_course_deleted $hook): void {
         global $CFG;
-        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
-        local_courseplanner_delete_course_data((int)$hook->course->id);
+        \local_courseplanner\local\calendars::delete_course_data((int)$hook->course->id);
     }
 }

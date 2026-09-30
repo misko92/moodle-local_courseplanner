@@ -18,6 +18,9 @@
 
 require_once(__DIR__ . '/../../../../lib/behat/behat_base.php');
 
+use local_courseplanner\local\populate;
+use local_courseplanner\local\timeline;
+
 /**
  * Behat steps and named pages for local_courseplanner.
  *
@@ -59,5 +62,19 @@ class behat_local_courseplanner extends behat_base {
                 return new moodle_url('/local/courseplanner/view.php', $params);
         }
         throw new Exception('Unrecognised local_courseplanner page type "' . $type . '"');
+    }
+
+    /**
+     * Apply a calendar's dates and auto-populate it from its blueprint, as the blueprint owner would.
+     *
+     * @Given the :title course planner calendar has been built
+     * @param string $title Calendar title.
+     */
+    public function the_course_planner_calendar_has_been_built(string $title): void {
+        global $CFG, $DB;
+        $calendar = $DB->get_record('local_courseplanner_calendars', ['title' => $title], '*', MUST_EXIST);
+        $ownerid = (int)$DB->get_field('local_courseplanner_blueprints', 'owneruserid', ['id' => $calendar->blueprintid]);
+        timeline::apply((int)$calendar->id, $ownerid);
+        populate::auto_populate((int)$calendar->id, (int)$calendar->blueprintid, $ownerid);
     }
 }

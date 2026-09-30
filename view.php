@@ -23,7 +23,11 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/locallib.php');
+
+use local_courseplanner\local\calendars;
+use local_courseplanner\local\course_info;
+use local_courseplanner\local\grid;
+use local_courseplanner\local\topics;
 
 $courseid = required_param('id', PARAM_INT);
 $calendarid = required_param('calendarid', PARAM_INT);
@@ -34,16 +38,16 @@ $context = context_course::instance($courseid);
 require_login($course);
 require_capability('local/courseplanner:view', $context);
 
-$calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
+$calendar = calendars::require_in_course($calendarid, $courseid);
 $blueprintid = (int)$calendar->blueprintid;
-$alltopics = local_courseplanner_get_blueprint_topics($blueprintid, true);
+$alltopics = topics::get_for_blueprint($blueprintid, true);
 
-$blocksmap = local_courseplanner_get_blocks_map((int)$calendar->id);
+$blocksmap = grid::get_blocks_map((int)$calendar->id);
 $maxrow = 0;
 foreach (array_keys($blocksmap) as $rownum) {
     $maxrow = max($maxrow, (int)$rownum);
 }
-$columns = local_courseplanner_get_grid_columns($blocksmap);
+$columns = grid::get_columns($blocksmap);
 
 $pageurl = new moodle_url('/local/courseplanner/view.php', ['id' => $courseid, 'calendarid' => $calendarid]);
 $PAGE->set_url($pageurl);
@@ -54,19 +58,19 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
 
 // Compute today cell.
-$todaycell = local_courseplanner_date_to_cell($blocksmap, $maxrow, time());
+$todaycell = grid::date_to_cell($blocksmap, $maxrow, time());
 $todayrow = $todaycell ? ($todaycell['row'] ?? null) : null;
 $todaycol = $todaycell ? ($todaycell['col'] ?? null) : null;
 $nearestonly = $todaycell && !empty($todaycell['nearest']);
 
 echo $OUTPUT->header();
 
-$calendarlabel = local_courseplanner_calendar_label($calendar);
+$calendarlabel = calendars::label($calendar);
 echo $OUTPUT->heading(get_string('studentviewheading', 'local_courseplanner'));
 echo html_writer::div($calendarlabel, 'local-courseplanner-shell mb-3');
 
 // Course info section.
-$courseinfo = local_courseplanner_get_course_info($courseid);
+$courseinfo = course_info::get($courseid);
 if ($courseinfo) {
     $introleft = trim((string)$courseinfo->introhtml);
     $introright = trim((string)$courseinfo->linkshtml);
@@ -136,7 +140,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
         }
 
         if ($blocktype === 'TOPIC' && $selectedtopic) {
-            echo local_courseplanner_topic_heading_html($selectedtopic);
+            echo topics::heading_html($selectedtopic);
             if (!empty($selectedtopic->contenthtml)) {
                 $topichtml = format_text($selectedtopic->contenthtml, FORMAT_HTML);
                 $topichtml = preg_replace('/<a\b/', '<a target="_blank"', $topichtml);

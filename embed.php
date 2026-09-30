@@ -23,7 +23,9 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/locallib.php');
+
+use local_courseplanner\local\calendars;
+use local_courseplanner\local\grid;
 
 $courseid = required_param('id', PARAM_INT);
 $calendarid = required_param('calendarid', PARAM_INT);
@@ -34,7 +36,7 @@ $context = context_course::instance($courseid);
 require_login($course);
 require_capability('local/courseplanner:view', $context);
 
-$calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
+$calendar = calendars::require_in_course($calendarid, $courseid);
 
 $PAGE->set_url(new moodle_url('/local/courseplanner/embed.php', ['id' => $courseid, 'calendarid' => $calendarid]));
 $PAGE->set_context($context);
@@ -43,5 +45,5 @@ $PAGE->set_title(get_string('embedpagetitle', 'local_courseplanner'));
 $PAGE->requires->css(new moodle_url('/local/courseplanner/styles.css'));
 
 echo $OUTPUT->header();
-echo local_courseplanner_render_calendar_grid($calendar, true);
+echo grid::render($calendar, true);
 echo $OUTPUT->footer();

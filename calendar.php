@@ -23,7 +23,14 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/locallib.php');
+
+use local_courseplanner\local\blueprints;
+use local_courseplanner\local\calendars;
+use local_courseplanner\local\course_info;
+use local_courseplanner\local\grid;
+use local_courseplanner\local\populate;
+use local_courseplanner\local\topics;
+use local_courseplanner\local\tours;
 
 $courseid = required_param('id', PARAM_INT);
 $calendarid = required_param('calendarid', PARAM_INT);
@@ -35,28 +42,28 @@ $context = context_course::instance($courseid);
 require_login($course);
 require_capability('local/courseplanner:manage', $context);
 
-$calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
-$blueprint = local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+$calendar = calendars::require_in_course($calendarid, $courseid);
+$blueprint = blueprints::require_owned((int)$calendar->blueprintid, (int)$USER->id);
 
 $pageurl = new moodle_url('/local/courseplanner/calendar.php', ['id' => $courseid, 'calendarid' => $calendarid]);
 $backurl = new moodle_url('/local/courseplanner/manage.php', ['id' => $courseid, 'blueprintctx' => $blueprint->id]);
 $headerdayoptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 $headermodeoptions = ['Lecture', 'Lab'];
-$activetopics = local_courseplanner_get_blueprint_topics((int)$blueprint->id, false);
-$alltopics = local_courseplanner_get_blueprint_topics((int)$blueprint->id, true);
+$activetopics = topics::get_for_blueprint((int)$blueprint->id, false);
+$alltopics = topics::get_for_blueprint((int)$blueprint->id, true);
 
 if ($action !== '' && data_submitted()) {
     require_sesskey();
 
     switch ($action) {
         case 'addweekrow':
-            local_courseplanner_ensure_base_grid((int)$calendar->id, (int)$USER->id);
-            local_courseplanner_add_week_row((int)$calendar->id, (int)$USER->id);
+            grid::ensure_base((int)$calendar->id, (int)$USER->id);
+            grid::add_week_row((int)$calendar->id, (int)$USER->id);
             redirect($pageurl, get_string('weekrowadded', 'local_courseplanner'), null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'removelastweekrow':
-            if (!local_courseplanner_remove_last_week_row((int)$calendar->id)) {
+            if (!grid::remove_last_week_row((int)$calendar->id)) {
                 redirect(
                     $pageurl,
                     get_string('errornoweekrowstoremove', 'local_courseplanner'),
@@ -101,7 +108,7 @@ if ($action !== '' && data_submitted()) {
                 }
             }
 
-            local_courseplanner_upsert_block(
+            grid::upsert_block(
                 (int)$calendar->id,
                 0,
                 $colnum,
@@ -129,7 +136,7 @@ if ($action !== '' && data_submitted()) {
                     \core\output\notification::NOTIFY_ERROR
                 );
             }
-            $deleted = local_courseplanner_delete_column((int)$calendar->id, $colnum);
+            $deleted = grid::delete_column((int)$calendar->id, $colnum);
             $message = $deleted
                 ? get_string('columndeleted', 'local_courseplanner')
                 : get_string('errorcannotdeletecolumn', 'local_courseplanner');
@@ -190,7 +197,7 @@ if ($action !== '' && data_submitted()) {
                         \core\output\notification::NOTIFY_ERROR
                     );
                 }
-                $topic = local_courseplanner_require_owned_topic($topicid, (int)$USER->id);
+                $topic = topics::require_owned($topicid, (int)$USER->id);
                 if ((int)$topic->blueprintid !== (int)$blueprint->id) {
                     redirect(
                         $pageurl,
@@ -213,7 +220,7 @@ if ($action !== '' && data_submitted()) {
                 redirect($pageurl, $message, null, \core\output\notification::NOTIFY_SUCCESS);
             }
 
-            local_courseplanner_upsert_block(
+            grid::upsert_block(
                 (int)$calendar->id,
                 $rownum,
                 $colnum,
@@ -232,7 +239,7 @@ if ($action !== '' && data_submitted()) {
 
         case 'updatetopicfromcell':
             $topicid = required_param('topicid', PARAM_INT);
-            $topic = local_courseplanner_require_owned_topic($topicid, (int)$USER->id);
+            $topic = topics::require_owned($topicid, (int)$USER->id);
             if ((int)$topic->blueprintid !== (int)$blueprint->id) {
                 redirect(
                     $pageurl,
@@ -243,7 +250,7 @@ if ($action !== '' && data_submitted()) {
             }
 
             $topic->title = trim(required_param('topictitle', PARAM_TEXT));
-            $topic->type = local_courseplanner_normalise_topic_type(required_param('topictype', PARAM_ALPHANUMEXT));
+            $topic->type = topics::normalise_type(required_param('topictype', PARAM_ALPHANUMEXT));
             $topic->contenthtml = trim(optional_param('topiccontenthtml', '', PARAM_RAW));
             if ($topic->title === '') {
                 redirect(
@@ -268,7 +275,7 @@ if ($action !== '' && data_submitted()) {
         case 'savecourseinfo':
             $introhtml = trim(optional_param('introhtml', '', PARAM_RAW));
             $linkshtml = trim(optional_param('linkshtml', '', PARAM_RAW));
-            local_courseplanner_save_course_info($courseid, $introhtml, $linkshtml, (int)$USER->id);
+            course_info::save($courseid, $introhtml, $linkshtml, (int)$USER->id);
             redirect(
                 $pageurl,
                 get_string('courseinfosaved', 'local_courseplanner'),
@@ -301,13 +308,13 @@ if ($action !== '' && data_submitted()) {
             break;
 
         case 'autopopulate':
-            $result = local_courseplanner_auto_populate((int)$calendar->id, (int)$blueprint->id, (int)$USER->id);
+            $result = populate::auto_populate((int)$calendar->id, (int)$blueprint->id, (int)$USER->id);
             $msg = get_string('autopopulatedone', 'local_courseplanner', $result);
             redirect($pageurl, $msg, null, \core\output\notification::NOTIFY_SUCCESS);
             break;
 
         case 'fillproblemsessions':
-            $filled = local_courseplanner_fill_problem_sessions((int)$calendar->id, (int)$USER->id);
+            $filled = populate::fill_problem_sessions((int)$calendar->id, (int)$USER->id);
             redirect(
                 $pageurl,
                 get_string('problemsessionsfilled', 'local_courseplanner', $filled),
@@ -317,7 +324,7 @@ if ($action !== '' && data_submitted()) {
             break;
 
         case 'deletenonheader':
-            $deleted = local_courseplanner_delete_non_header_blocks((int)$calendar->id);
+            $deleted = grid::delete_non_header_blocks((int)$calendar->id);
             redirect(
                 $pageurl,
                 get_string('nonheaderdeleted', 'local_courseplanner', $deleted),
@@ -327,7 +334,7 @@ if ($action !== '' && data_submitted()) {
             break;
 
         case 'deletenonheadernontext':
-            $deleted = local_courseplanner_delete_non_header_non_text_blocks((int)$calendar->id);
+            $deleted = grid::delete_non_header_non_text_blocks((int)$calendar->id);
             redirect(
                 $pageurl,
                 get_string('nonheadernontextdeleted', 'local_courseplanner', $deleted),
@@ -338,9 +345,9 @@ if ($action !== '' && data_submitted()) {
     }
 }
 
-local_courseplanner_ensure_base_grid((int)$calendar->id, (int)$USER->id);
-$blocksmap = local_courseplanner_get_blocks_map((int)$calendar->id);
-$courseinfo = local_courseplanner_get_course_info($courseid);
+grid::ensure_base((int)$calendar->id, (int)$USER->id);
+$blocksmap = grid::get_blocks_map((int)$calendar->id);
+$courseinfo = course_info::get($courseid);
 $maxrow = 0;
 foreach (array_keys($blocksmap) as $rownum) {
     $maxrow = max($maxrow, (int)$rownum);
@@ -515,7 +522,7 @@ echo html_writer::tag('button', get_string('redobtn', 'local_courseplanner'), [
 ]);
 echo html_writer::end_tag('div');
 
-$calendarlabel = local_courseplanner_calendar_label($calendar);
+$calendarlabel = calendars::label($calendar);
 echo html_writer::div(get_string('buildercontextlabel', 'local_courseplanner', $calendarlabel), 'local-courseplanner-shell');
 
 echo html_writer::tag(
@@ -573,7 +580,7 @@ echo html_writer::tag(
     . ' ' . $OUTPUT->help_icon('section_buildergrid', 'local_courseplanner'),
     ['class' => 'local-courseplanner-section-title']
 );
-$columns = local_courseplanner_get_grid_columns($blocksmap);
+$columns = grid::get_columns($blocksmap);
 $confirmtitle = get_string('confirm', 'core');
 
 $rendercolumndelete = function (int $col) use ($courseid, $calendarid, $confirmtitle, $OUTPUT) {
@@ -783,7 +790,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
                     ['class' => 'badge bg-warning text-dark']
                 );
             }
-            echo local_courseplanner_topic_heading_html($selectedtopic, $inactivetag);
+            echo topics::heading_html($selectedtopic, $inactivetag);
             if (!empty($selectedtopic->contenthtml)) {
                 echo html_writer::tag(
                     'div',
@@ -951,7 +958,7 @@ for ($row = 0; $row <= $maxrow; $row++) {
             echo html_writer::start_div('mb-2');
             echo html_writer::tag('label', get_string('topictypelabel', 'local_courseplanner'), ['for' => $topictypeid]);
             echo html_writer::start_tag('select', ['id' => $topictypeid, 'name' => 'topictype', 'class' => 'form-select']);
-            foreach (local_courseplanner_get_topic_types() as $topictype) {
+            foreach (topics::get_types() as $topictype) {
                 $attrs = ['value' => $topictype];
                 if ($selectedtopic->type === $topictype) {
                     $attrs['selected'] = 'selected';
@@ -1024,7 +1031,7 @@ echo html_writer::div(
 
 $PAGE->requires->js_call_amd('local_courseplanner/builder', 'init', [$courseid, $calendarid]);
 $PAGE->requires->js_call_amd('local_courseplanner/confirmaction', 'init', []);
-$tourid = local_courseplanner_get_tour_id_by_name('local_courseplanner_builder');
+$tourid = tours::get_id_by_name('local_courseplanner_builder');
 $PAGE->requires->js_call_amd('local_courseplanner/showtour', 'init', [
     $tourid,
     '#local-courseplanner-showtour',

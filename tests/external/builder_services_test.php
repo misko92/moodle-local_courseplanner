@@ -42,7 +42,6 @@ final class builder_services_test extends \advanced_testcase {
     protected function setUp(): void {
         global $CFG;
         parent::setUp();
-        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
         $this->resetAfterTest();
         $generator = $this->getDataGenerator();
         $plugingen = $generator->get_plugin_generator('local_courseplanner');
@@ -62,7 +61,7 @@ final class builder_services_test extends \advanced_testcase {
      * @param string $text
      */
     private function put(int $row, int $col, string $text): void {
-        local_courseplanner_upsert_block((int)$this->calendar->id, $row, $col, 'TEXT', $text, (int)$this->teacher->id);
+        \local_courseplanner\local\grid::upsert_block((int)$this->calendar->id, $row, $col, 'TEXT', $text, (int)$this->teacher->id);
     }
 
     /**
@@ -123,7 +122,7 @@ final class builder_services_test extends \advanced_testcase {
         $this->assertSame(4, $result['saved']);
         $this->assertSame(
             $neworder,
-            array_map('intval', array_keys(local_courseplanner_get_blueprint_topics((int)$this->blueprint->id)))
+            array_map('intval', array_keys(\local_courseplanner\local\topics::get_for_blueprint((int)$this->blueprint->id)))
         );
 
         // A list that doesn't match the blueprint's topics is refused.

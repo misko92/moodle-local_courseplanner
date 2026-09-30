@@ -23,7 +23,10 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/locallib.php');
+
+use local_courseplanner\local\blueprints;
+use local_courseplanner\local\calendars;
+use local_courseplanner\local\populate;
 
 $courseid = required_param('id', PARAM_INT);
 $calendarid = required_param('calendarid', PARAM_INT);
@@ -34,13 +37,13 @@ $context = context_course::instance($courseid);
 require_login($course);
 require_capability('local/courseplanner:manage', $context);
 
-$calendar = local_courseplanner_require_course_calendar($calendarid, $courseid);
-$blueprint = local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+$calendar = calendars::require_in_course($calendarid, $courseid);
+$blueprint = blueprints::require_owned((int)$calendar->blueprintid, (int)$USER->id);
 
 $pageurl = new moodle_url('/local/courseplanner/coverage.php', ['id' => $courseid, 'calendarid' => $calendarid]);
 $builderurl = new moodle_url('/local/courseplanner/calendar.php', ['id' => $courseid, 'calendarid' => $calendarid]);
 
-$result = local_courseplanner_coverage_check((int)$calendar->id, (int)$blueprint->id);
+$result = populate::coverage_check((int)$calendar->id, (int)$blueprint->id);
 
 $PAGE->set_url($pageurl);
 $PAGE->set_context($context);

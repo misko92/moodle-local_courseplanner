@@ -56,7 +56,6 @@ class reorder_blueprint_topics extends external_api {
      */
     public static function execute(int $courseid, int $blueprintid, array $topicids): array {
         global $CFG, $DB, $USER;
-        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
@@ -69,7 +68,7 @@ class reorder_blueprint_topics extends external_api {
         self::validate_context($context);
         require_capability('local/courseplanner:manage', $context);
 
-        $blueprint = local_courseplanner_require_owned_blueprint((int)$params['blueprintid'], (int)$USER->id);
+        $blueprint = \local_courseplanner\local\blueprints::require_owned((int)$params['blueprintid'], (int)$USER->id);
 
         $submittedids = array_values(array_map('intval', $params['topicids']));
         if (empty($submittedids)) {

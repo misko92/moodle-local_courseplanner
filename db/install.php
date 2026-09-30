@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_courseplanner\local\tours;
+
 /**
  * Database installation routines.
  *
@@ -31,8 +33,7 @@
  */
 function xmldb_local_courseplanner_install(): bool {
     global $CFG;
-    require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
 
-    local_courseplanner_install_user_tours();
+    tours::install();
     return true;
 }

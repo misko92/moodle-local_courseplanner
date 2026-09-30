@@ -66,7 +66,6 @@ class save_builder_grid extends external_api {
      */
     public static function execute(int $courseid, int $calendarid, array $blocks): array {
         global $CFG, $USER;
-        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
@@ -79,8 +78,8 @@ class save_builder_grid extends external_api {
         self::validate_context($context);
         require_capability('local/courseplanner:manage', $context);
 
-        $calendar = local_courseplanner_require_course_calendar($params['calendarid'], (int)$course->id);
-        $blueprint = local_courseplanner_require_owned_blueprint((int)$calendar->blueprintid, (int)$USER->id);
+        $calendar = \local_courseplanner\local\calendars::require_in_course($params['calendarid'], (int)$course->id);
+        $blueprint = \local_courseplanner\local\blueprints::require_owned((int)$calendar->blueprintid, (int)$USER->id);
 
         $saved = 0;
         foreach ($params['blocks'] as $block) {
@@ -90,7 +89,7 @@ class save_builder_grid extends external_api {
             }
             $topicid = null;
             if ($blocktype === 'TOPIC' && !empty($block['topicid'])) {
-                $topic = local_courseplanner_require_owned_topic((int)$block['topicid'], (int)$USER->id);
+                $topic = \local_courseplanner\local\topics::require_owned((int)$block['topicid'], (int)$USER->id);
                 if ((int)$topic->blueprintid !== (int)$blueprint->id) {
                     continue;
                 }
@@ -98,7 +97,7 @@ class save_builder_grid extends external_api {
             }
             $headerday = !empty($block['headerday']) ? trim($block['headerday']) : null;
             $headermode = !empty($block['headermode']) ? trim($block['headermode']) : null;
-            local_courseplanner_upsert_block(
+            \local_courseplanner\local\grid::upsert_block(
                 (int)$calendar->id,
                 (int)$block['rownum'],
                 (int)$block['colnum'],

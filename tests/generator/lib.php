@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_courseplanner\local\course_link;
+use local_courseplanner\local\timeline;
+use local_courseplanner\local\topics;
+
 /**
  * Test data generator for local_courseplanner.
  *
@@ -53,7 +57,6 @@ class local_courseplanner_generator extends component_generator_base {
      */
     public function create_topic(array $record): stdClass {
         global $CFG, $DB;
-        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
         static $count = 0;
         $count++;
         $now = time();
@@ -62,7 +65,7 @@ class local_courseplanner_generator extends component_generator_base {
             'type' => 'LECTURE',
             'contenthtml' => '',
             'isactive' => 1,
-            'sortorder' => local_courseplanner_next_topic_sortorder((int)$record['blueprintid']),
+            'sortorder' => topics::next_sortorder((int)$record['blueprintid']),
             'timecreated' => $now,
             'timemodified' => $now,
             'usermodified' => null,
@@ -80,7 +83,6 @@ class local_courseplanner_generator extends component_generator_base {
      */
     public function create_calendar(array $record): stdClass {
         global $CFG, $DB;
-        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
         $now = time();
         $startdate = $record['startdate'] ?? null;
         $enddate = $record['enddate'] ?? null;
@@ -97,8 +99,8 @@ class local_courseplanner_generator extends component_generator_base {
             $DB->set_field('local_courseplanner_calendars', 'isactive', 0, ['courseid' => $record->courseid]);
         }
         $record->id = $DB->insert_record('local_courseplanner_calendars', $record);
-        if (!local_courseplanner_get_course_link_record((int)$record->courseid)) {
-            local_courseplanner_upsert_course_blueprint_link(
+        if (!course_link::get((int)$record->courseid)) {
+            course_link::upsert(
                 (int)$record->courseid,
                 (int)$blueprint->id,
                 'MANUAL',
@@ -108,7 +110,7 @@ class local_courseplanner_generator extends component_generator_base {
             );
         }
         if ($startdate) {
-            local_courseplanner_create_rule(
+            timeline::create_rule(
                 (int)$record->id,
                 'START',
                 (int)$startdate,
@@ -120,7 +122,7 @@ class local_courseplanner_generator extends component_generator_base {
             );
         }
         if ($enddate) {
-            local_courseplanner_create_rule(
+            timeline::create_rule(
                 (int)$record->id,
                 'END',
                 (int)$enddate,

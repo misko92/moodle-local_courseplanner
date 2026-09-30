@@ -502,8 +502,7 @@ class provider implements
      */
     protected static function delete_all_course_calendar_data(int $courseid): void {
         global $CFG;
-        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
-        local_courseplanner_delete_course_data($courseid);
+        \local_courseplanner\local\calendars::delete_course_data($courseid);
     }
 
     /**

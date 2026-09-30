@@ -23,7 +23,10 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/locallib.php');
+
+use local_courseplanner\local\blueprints;
+use local_courseplanner\local\importer;
+use local_courseplanner\local\topics;
 
 $courseid = required_param('id', PARAM_INT);
 $blueprintid = required_param('blueprintid', PARAM_INT);
@@ -35,7 +38,7 @@ $context = context_course::instance($courseid);
 require_login($course);
 require_capability('local/courseplanner:manage', $context);
 
-$blueprint = local_courseplanner_require_owned_blueprint($blueprintid, (int)$USER->id);
+$blueprint = blueprints::require_owned($blueprintid, (int)$USER->id);
 
 $pageurl = new moodle_url('/local/courseplanner/import_topics.php', ['id' => $courseid, 'blueprintid' => $blueprintid]);
 $manageurl = new moodle_url('/local/courseplanner/manage.php', ['id' => $courseid, 'blueprintctx' => $blueprintid]);
@@ -57,7 +60,7 @@ if ($action !== '' && data_submitted()) {
             if (!isset($layoutoptions[$layout])) {
                 $layout = 'LLL';
             }
-            $result = local_courseplanner_seed_topics_from_html($html, $layout, $blueprintid, (int)$USER->id);
+            $result = importer::seed_topics_from_html($html, $layout, $blueprintid, (int)$USER->id);
             redirect(
                 $pageurl,
                 get_string('importtopicsdone', 'local_courseplanner', $result),
@@ -68,7 +71,7 @@ if ($action !== '' && data_submitted()) {
 
         case 'updateelessonlinks':
             $html = required_param('linkshtml', PARAM_RAW);
-            $result = local_courseplanner_bulk_update_elesson_links($html, $blueprintid);
+            $result = importer::bulk_update_elesson_links($html, $blueprintid);
             redirect(
                 $pageurl,
                 get_string('importelessonlinksdone', 'local_courseplanner', $result),
@@ -78,7 +81,7 @@ if ($action !== '' && data_submitted()) {
             break;
 
         case 'deletealltopics':
-            $count = local_courseplanner_delete_all_topics($blueprintid, true);
+            $count = topics::delete_all($blueprintid, true);
             if ($count < 0) {
                 redirect(
                     $pageurl,

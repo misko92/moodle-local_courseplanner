@@ -33,7 +33,6 @@ use core_privacy\tests\provider_testcase;
 final class provider_test extends provider_testcase {
     public function test_export_and_delete(): void {
         global $CFG, $DB;
-        require_once($CFG->dirroot . '/local/courseplanner/locallib.php');
         $this->resetAfterTest();
         $generator = $this->getDataGenerator();
         $plugingen = $generator->get_plugin_generator('local_courseplanner');
@@ -46,7 +45,7 @@ final class provider_test extends provider_testcase {
         $plugingen->create_blueprint(['owneruserid' => $other->id, 'name' => 'Theirs']);
         $calendar = $plugingen->create_calendar(['courseid' => $course->id, 'blueprintid' => $blueprint->id,
             'startdate' => strtotime('2026-09-08'), 'enddate' => strtotime('2026-12-18')]);
-        local_courseplanner_apply_rules($calendar->id, $teacher->id);
+        \local_courseplanner\local\timeline::apply($calendar->id, $teacher->id);
 
         $coursecontext = \context_course::instance($course->id);
         $usercontext = \context_user::instance($teacher->id);
