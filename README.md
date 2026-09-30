@@ -1,15 +1,22 @@
-# Course Calendar (`local_courseplanner`)
+# Course planner (`local_courseplanner`)
 
-[![Moodle Plugin CI](https://github.com/GitHubGreg/moodle-local_courseplanner/actions/workflows/moodle-ci.yml/badge.svg?branch=main)](https://github.com/GitHubGreg/moodle-local_courseplanner/actions/workflows/moodle-ci.yml)
+[![Moodle Plugin CI](https://github.com/misko92/moodle-local_courseplanner/actions/workflows/moodle-ci.yml/badge.svg?branch=main)](https://github.com/misko92/moodle-local_courseplanner/actions/workflows/moodle-ci.yml)
 
-A Moodle local plugin that lets teachers define reusable course content once, build semester calendars from that content, and publish a student-facing calendar view inside Moodle.
+A Moodle local plugin that lets teachers define reusable course content once, build a week-by-week course calendar for the school year from that content, and publish a student-facing calendar view inside Moodle.
+
+This is a fork of [Greg Mulcair's `local_coursecalendar`](https://github.com/GitHubGreg/moodle-local_coursecalendar) (v0.2.3). Changes from upstream:
+
+- **Full-year calendars.** Calendars have a title (defaults to the school year, e.g. `2026-27`) instead of a year + Fall/Winter/Summer semester. Date rules are *First day of classes* / *Last day of classes*.
+- **Bug fixes.** Drag-and-drop topic reordering and swapping two occupied builder cells both failed with a database error; the recommended calendar could outrank the active one; deleting a course left orphaned calendar data.
+- **Modernised for Moodle 5.x.** Web services in `classes/external/`, course clean-up via the Hooks API, Bootstrap 5 markup, no hardcoded timezone.
+- **Tests.** PHPUnit and Behat coverage, plus test data generators.
 
 | | |
 |---|---|
 | **Plugin type** | Local (`local_courseplanner`) |
-| **Requires** | Moodle 4.2+ (`2023042400`) |
-| **Tested on** | Moodle 5.0 (`MOODLE_501_STABLE`) |
-| **Maturity** | Beta |
+| **Requires** | Moodle 5.0+ (`2025041400`) |
+| **Tested on** | Moodle 5.2 (`MOODLE_502_STABLE`), PHP 8.4 |
+| **Maturity** | Alpha |
 | **License** | [GPL v3 or later](https://www.gnu.org/licenses/gpl-3.0.html) |
 
 ---
@@ -23,7 +30,7 @@ A Moodle local plugin that lets teachers define reusable course content once, bu
    - [Blueprints](#blueprints)
    - [Topics](#topics)
    - [Course Linking](#course-linking)
-   - [Semester Calendars](#semester-calendars)
+   - [Course Calendars](#course-calendars)
    - [The Builder](#the-builder)
    - [Academic Timeline Rules](#academic-timeline-rules)
    - [Auto-populate and Automation](#auto-populate-and-automation)
@@ -37,8 +44,9 @@ A Moodle local plugin that lets teachers define reusable course content once, bu
 6. [Database Tables](#database-tables)
 7. [Upgrading](#upgrading)
 8. [Troubleshooting](#troubleshooting)
-9. [Reporting Issues](#reporting-issues)
-10. [License](#license)
+9. [Development](#development)
+10. [Reporting Issues](#reporting-issues)
+11. [License](#license)
 
 ---
 
@@ -51,12 +59,12 @@ The repository root is the plugin directory itself, so the contents clone or ext
 From the root of your Moodle installation:
 
 ```bash
-git clone https://github.com/GitHubGreg/moodle-local_courseplanner.git local/courseplanner
+git clone https://github.com/misko92/moodle-local_courseplanner.git local/courseplanner
 ```
 
 ### Option B: Download a release zip
 
-1. Download the latest release zip from the [Releases page](https://github.com/GitHubGreg/moodle-local_courseplanner/releases).
+1. Download the latest release zip from the [Releases page](https://github.com/misko92/moodle-local_courseplanner/releases).
 2. Extract it so the plugin files (`version.php`, `db/`, `lang/`, `amd/`, etc.) live directly at `<moodle>/local/courseplanner/`.
 
 ### Finish the install
@@ -67,7 +75,7 @@ git clone https://github.com/GitHubGreg/moodle-local_courseplanner.git local/cou
 
 After installation, two course navigation links appear automatically for every course:
 
-- **Course calendar builder** (visible to editing teachers and managers)
+- **Course planner** (visible to editing teachers and managers)
 - **Course calendar** (visible to all enrolled users, including students)
 
 ---
@@ -76,12 +84,12 @@ After installation, two course navigation links appear automatically for every c
 
 The typical workflow for a new teacher is:
 
-1. **Create a blueprint** -- Go to any course > Course calendar builder > create a blueprint with a name (e.g. "Intro to CS").
+1. **Create a blueprint** -- Go to any course > More > Course planner > create a blueprint with a name (e.g. "Intro to CS").
 2. **Add topics** -- Add your lecture topics, labs, eLessons, tests, and homework assignments to the blueprint.
 3. **Link the course** -- Link the current course to the blueprint (manual or auto-link).
-4. **Create a semester calendar** -- Specify the year and semester (Fall/Winter/Summer).
+4. **Create a course calendar** -- Give it a title; it defaults to the current school year (e.g. `2026-27`).
 5. **Set up the grid** -- Open the builder, configure header columns (day-of-week and Lecture/Lab mode), add week rows.
-6. **Define academic timeline** -- Go to Manage Rules, add semester start/end dates and exceptions (holidays, day swaps), then apply rules to generate week labels.
+6. **Define academic timeline** -- Go to Manage Rules, add the first and last day of classes and exceptions (holidays, day swaps), then apply rules to generate week labels.
 7. **Place topics** -- Use Auto-populate to place topics in the grid automatically, or place them manually via cell editors.
 8. **Fill gaps** -- Use Fill Problem Sessions to populate empty lab cells, check coverage for missing topics.
 9. **Publish** -- Students see the calendar via the Course calendar navigation link. Add Welcome/Links info via Course Info.
@@ -92,7 +100,6 @@ The typical workflow for a new teacher is:
 
 | Capability | Default roles | Purpose |
 |---|---|---|
-| `local/courseplanner:managesettings` | Manager | Access plugin admin settings |
 | `local/courseplanner:manage` | Editing teacher, Manager | Full access to builder, topics, rules, automation, and course info |
 | `local/courseplanner:view` | Guest, Student, Teacher, Editing teacher, Manager | Read-only access to the student calendar view |
 
@@ -104,9 +111,9 @@ Teachers can only see and edit blueprints they own. All builder pages enforce `r
 
 ### Blueprints
 
-A blueprint is a reusable topic library owned by a teacher. It represents a subject stream (e.g. "Mechanics", "Intro to CS") and stores the canonical set of topics used across semesters.
+A blueprint is a reusable topic library owned by a teacher. It represents a subject stream (e.g. "Mechanics", "Intro to CS") and stores the canonical set of topics used across years.
 
-**Where:** Course calendar builder (`manage.php`) > Blueprint library section.
+**Where:** Course planner (`manage.php`) > Blueprint library section.
 
 **Actions:**
 - **Create blueprint** -- Name, optional shortcode, and description.
@@ -119,7 +126,7 @@ Blueprints are per-teacher. Each teacher sees only their own blueprints.
 
 Topics are the individual content items within a blueprint. Each topic has a type that determines how it is placed and styled in the calendar.
 
-**Where:** Course calendar builder (`manage.php`) > Blueprint topics section.
+**Where:** Course planner (`manage.php`) > Blueprint topics section.
 
 **Topic types:**
 
@@ -144,20 +151,20 @@ Topics are the individual content items within a blueprint. Each topic has a typ
 
 Each Moodle course links to exactly one blueprint to access its topic library.
 
-**Where:** Course calendar builder (`manage.php`) > Course to blueprint link section.
+**Where:** Course planner (`manage.php`) > Course to blueprint link section.
 
 **Linking methods:**
 - **Manual link** -- Select a blueprint from the dropdown and save.
 - **Auto-link suggestion** -- The plugin can suggest a match based on course metadata. Click "Apply auto-link suggestion" to accept.
 
-### Semester Calendars
+### Course Calendars
 
-A semester calendar is the per-course, per-semester container that holds the builder grid state.
+A course calendar is the per-course container for one run of the course (normally one school year) that holds the builder grid state.
 
-**Where:** Course calendar builder (`manage.php`) > Semester calendars section.
+**Where:** Course planner (`manage.php`) > Course calendars section.
 
 **Actions:**
-- **Create** -- Specify year, semester (Fall/Winter/Summer), and optional display title.
+- **Create** -- Give it a title. It defaults to the current school year (July to June), e.g. `2026-27`.
 - **Edit title** -- Update the display title.
 - **Open builder** -- Navigate to the full grid builder page.
 - **Toggle active** -- Deactivate calendars no longer in use.
@@ -165,7 +172,7 @@ A semester calendar is the per-course, per-semester container that holds the bui
 
 ### The Builder
 
-The builder is the main grid editing interface where teachers assemble the semester calendar.
+The builder is the main grid editing interface where teachers assemble the course calendar.
 
 **Where:** `calendar.php` (accessed via "Open builder" from manage page).
 
@@ -208,13 +215,13 @@ The builder is the main grid editing interface where teachers assemble the semes
 **Page-level links:**
 - **Manage Content** -- Back to topic management.
 - **Manage Rules** -- Academic timeline rules page.
-- **Open Semester Preview** -- Student view in a new tab.
+- **Open Student Preview** -- Student view in a new tab.
 - **Copy Iframe Code** -- Copies an embeddable iframe URL to clipboard.
 - **Coverage Check** -- Topic coverage report.
 
 ### Academic Timeline Rules
 
-Rules define the academic calendar structure: when the semester starts and ends, holidays, day swaps, and other annotations.
+Rules define the academic calendar structure: when classes start and end, holidays, day swaps, and other annotations.
 
 **Where:** `rules.php` (accessed via "Manage Rules" from builder).
 
@@ -222,8 +229,8 @@ Rules define the academic calendar structure: when the semester starts and ends,
 
 | Type | Purpose | Fields used |
 |---|---|---|
-| `SEMESTER_START` | First day of classes | Date, label |
-| `SEMESTER_END` | Last day of classes | Date, label |
+| `START` | First day of classes | Date, label |
+| `END` | Last day of classes | Date, label |
 | `NO_CLASS` | Holiday or break (no classes on this date) | Date, label, description |
 | `DAY_SWAP` | Classes follow a different day's schedule | Date, label, from-day, to-day |
 | `OTHER` | General annotation | Date, label, description |
@@ -233,7 +240,7 @@ Rules define the academic calendar structure: when the semester starts and ends,
 - **Toggle active/inactive** -- Deactivated rules are excluded from apply.
 - **Delete rule** -- Permanently remove a rule.
 - **Apply Rules to Calendar** -- Runs the rule engine:
-  1. Generates week labels from SEMESTER_START to SEMESTER_END.
+  1. Generates week labels from START to END.
   2. Adds "Classes begin" and "Last day of classes" annotations.
   3. Places NO_CLASS markers at the correct row/column based on the date and header day-of-week.
   4. Appends DAY_SWAP and OTHER annotations to week labels.
@@ -281,7 +288,7 @@ The student-facing calendar shows the full grid with live topic content.
 
 **Features:**
 - **Intro texts** -- optional left/right intro areas displayed above the calendar (if configured in the builder).
-- **Today highlighting** -- The cell matching today's date (Eastern Time) is highlighted with a blue border.
+- **Today highlighting** -- The cell matching today's date (site timezone) is highlighted with a blue border.
 - **Nearest-row highlighting** -- If today doesn't match a specific cell, the nearest week row is highlighted.
 - **Auto-scroll** -- On page load, the browser scrolls to bring the current/nearest row into view.
 - **Live content** -- TOPIC blocks render the latest `contenthtml` from the blueprint (not a snapshot).
@@ -333,13 +340,13 @@ Tools for importing existing calendar content into the plugin.
 
 | Page | URL pattern | Capability required | Purpose |
 |---|---|---|---|
-| `manage.php` | `?id={courseid}` | `managecalendar` | Blueprint, topic, and calendar management hub |
-| `calendar.php` | `?id={courseid}&calendarid={id}` | `managecalendar` | Grid builder |
-| `rules.php` | `?id={courseid}&calendarid={id}` | `managecalendar` | Academic timeline rules CRUD |
-| `coverage.php` | `?id={courseid}&calendarid={id}` | `managecalendar` | Topic coverage report |
-| `import_topics.php` | `?id={courseid}&blueprintid={id}` | `managecalendar` | HTML topic import |
-| `view.php` | `?id={courseid}&calendarid={id}` | `viewcalendar` | Student calendar view |
-| `embed.php` | `?id={courseid}&calendarid={id}` | `viewcalendar` | Iframe-friendly calendar |
+| `manage.php` | `?id={courseid}` | `manage` | Blueprint, topic, and calendar management hub |
+| `calendar.php` | `?id={courseid}&calendarid={id}` | `manage` | Grid builder |
+| `rules.php` | `?id={courseid}&calendarid={id}` | `manage` | Academic timeline rules CRUD |
+| `coverage.php` | `?id={courseid}&calendarid={id}` | `manage` | Topic coverage report |
+| `import_topics.php` | `?id={courseid}&blueprintid={id}` | `manage` | HTML topic import |
+| `view.php` | `?id={courseid}&calendarid={id}` | `view` | Student calendar view |
+| `embed.php` | `?id={courseid}&calendarid={id}` | `view` | Iframe-friendly calendar |
 
 ---
 
@@ -350,13 +357,15 @@ All tables are prefixed with `local_courseplanner_`.
 | Table | Purpose |
 |---|---|
 | `blueprints` | Teacher-owned topic libraries |
-| `blueprint_topics` | Ordered topics within a blueprint |
-| `course_blueprint_link` | Links a course to one blueprint |
-| `semester_calendars` | Per-course, per-semester calendar containers |
-| `calendar_blocks` | Individual cells in the calendar grid |
-| `timeline_exception_rules` | Academic timeline rules (start/end, holidays, swaps) |
-| `rule_apply_runs` | Traceability log of rule application runs |
-| `course_info` | Welcome text and useful links per course |
+| `topics` | Ordered topics within a blueprint |
+| `courselink` | Links a course to one blueprint |
+| `calendars` | Per-course calendar containers |
+| `blocks` | Individual cells in the calendar grid |
+| `rules` | Date rules (first/last day, holidays, swaps) |
+| `ruleruns` | Traceability log of rule application runs |
+| `courseinfo` | Welcome text and useful links per course |
+
+Deleting a course deletes its calendars, blocks, rules, course link and course info. Blueprints belong to teachers and are kept.
 
 ---
 
@@ -384,18 +393,31 @@ All tables are prefixed with `local_courseplanner_`.
 - Check that topics exist and are active in the linked blueprint.
 
 **Week labels not appearing after Apply Rules:**
-- Ensure both a SEMESTER_START and SEMESTER_END rule exist and are active.
+- Ensure both a First day of classes and a Last day of classes date exist and are active.
 - The end date must be after the start date.
 
 **Styles look broken:**
 - Purge all caches. The plugin stylesheet may be cached by Moodle's theme layer.
-- Ensure the Moodle theme supports standard Bootstrap 4 classes (Boost theme recommended).
+- Ensure the Moodle theme is Boost-based (Bootstrap 5).
 
 ---
 
+## Development
+
+Run the tests from the Moodle root:
+
+```bash
+vendor/bin/phpunit --testsuite local_courseplanner_testsuite
+vendor/bin/behat --config <behat_dataroot>/behatrun/behat/behat.yml --tags @local_courseplanner
+```
+
+Behat named pages: `I am on the "<course shortname>" "local_courseplanner > Setup" page` (also `Student view`), and `I am on the "<calendar title>" "local_courseplanner > Builder" page` (also `Dates`, `Coverage`, `Preview`). Data generators: `local_courseplanner > blueprints`, `topics`, `calendars` (with optional `startdate`/`enddate`).
+
+After changing `amd/src/`, rebuild with `npx grunt amd` from the plugin directory.
+
 ## Reporting Issues
 
-Please open an issue on [GitHub Issues](https://github.com/GitHubGreg/moodle-local_courseplanner/issues) with:
+Please open an issue on [GitHub Issues](https://github.com/misko92/moodle-local_courseplanner/issues) with:
 
 - Your Moodle version.
 - The plugin version (see `version.php`).

@@ -10,7 +10,7 @@
   "version": "4",
   "steps": [
     {
-      "title": "Welcome to Course Calendar setup",
+      "title": "Welcome to Course planner",
       "content": "<p>This page is your setup hub for the course calendar. It now adapts to where you are in the setup process instead of forcing you through a fixed wizard.</p><p>You can re-run this walkthrough any time by clicking the <strong>Show walkthrough</strong> button next to the page heading.</p>",
       "contentformat": "1",
       "targettype": "2",
