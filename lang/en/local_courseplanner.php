@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['activate'] = 'Activate';
 $string['addweekrowsubmit'] = 'Add week row';
 $string['applyfilter'] = 'Apply';
 $string['applyrulesbtn'] = 'Apply Dates to Calendar';
@@ -136,6 +137,7 @@ $string['createtopicbutton'] = 'Create new topic';
 $string['createtopicheading'] = 'Create topic';
 $string['createtopicsubmit'] = 'Create topic';
 $string['dayswapfieldshelp'] = 'The From day and To day fields are only used for day-swap dates.';
+$string['deactivate'] = 'Deactivate';
 $string['deletealltopicsblocked'] = 'Cannot delete: some topics are still referenced by calendar cells. Remove them from those calendars first, or use the "Force delete all topics" button below.';
 $string['deletealltopicsbtn'] = 'Delete All Topics';
 $string['deletealltopicsconfirm'] = 'This will permanently delete ALL topics for this blueprint. Continue?';
@@ -160,6 +162,7 @@ $string['editcellsummary'] = 'Edit cell';
 $string['editcolumn'] = 'Edit column';
 $string['editintrotexts'] = 'Edit intro texts';
 $string['editrulebutton'] = 'Edit';
+$string['edittopic'] = 'Edit topic';
 $string['edittopicbutton'] = 'Edit';
 $string['embedpagetitle'] = 'Calendar';
 $string['errorarchivedblueprintlink'] = 'Archived blueprints cannot be linked. Unarchive it first.';

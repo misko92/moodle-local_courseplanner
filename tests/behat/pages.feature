@@ -30,15 +30,24 @@ Feature: Every course planner page works for teachers and students
       | CHEM101 | Chem blueprint | 2026-27 | 2026-09-08 | 2027-06-25 |
     And the "2026-27" course planner calendar has been built
 
+  @javascript
   Scenario: Teacher manages topics on the setup page
     Given I am on the "CHEM101" "local_courseplanner > Setup" page logged in as "teacher1"
     Then I should see "Chem blueprint"
     And I should see "2026-27"
     And I should see "Atoms and molecules"
-    When I set the field "Topic title" to "Gas laws"
-    And I press "Create topic"
-    Then I should see "Topic created."
-    And I should see "Gas laws"
+    When I press "Create new topic"
+    And I set the following fields to these values:
+      | Topic title | Gas laws |
+      | Topic type  | LAB      |
+    And I click on "Save changes" "button" in the ".modal-dialog" "css_element"
+    Then I should see "Gas laws" in the "#local-courseplanner-topiclist" "css_element"
+    When I click on "Edit" "button" in the "[data-topicid]:last-child" "css_element"
+    And I set the field "Topic title" to "Ideal gas laws"
+    And I click on "Save changes" "button" in the ".modal-dialog" "css_element"
+    Then I should see "Ideal gas laws" in the "#local-courseplanner-topiclist" "css_element"
+    When I click on "Deactivate" "button" in the "[data-topicid]:last-child" "css_element"
+    Then I should see "Inactive" in the "[data-topicid]:last-child" "css_element"
 
   Scenario: Teacher adds a no-class date and re-applies the dates
     Given I am on the "2026-27" "local_courseplanner > Dates" page logged in as "teacher1"

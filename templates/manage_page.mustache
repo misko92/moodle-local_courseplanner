@@ -1,0 +1,253 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_courseplanner/manage_page
+
+    The course planner setup page. Forms POST back to manage.php; topics are created and edited in a
+    pop-up form (local_courseplanner/manage) and reordered by drag and drop (local_courseplanner/topicreorder).
+
+    Example context (json):
+    {
+        "courseid": 2, "sesskey": "abc", "stateparams": [], "hasblueprints": false, "showtopicsection": false,
+        "nextstep": {"title": "Create your first blueprint", "body": "...", "button": "Create blueprint", "url": "#"},
+        "link": {"linked": null, "choose": null}, "calendars": null, "topics": null,
+        "blueprints": {"items": [], "openform": true},
+        "helpblueprintlibrary": "", "helplinkcourse": "", "helpcalendars": "", "helptopics": ""
+    }
+}}
+<div id="local-courseplanner-manage" data-courseid="{{courseid}}">
+{{#nextstep}}
+<div class="local-courseplanner-nextstep-card{{#complete}} local-courseplanner-nextstep-card--complete{{/complete}}">
+    <div class="local-courseplanner-nextstep-label">{{#str}}setupnext_label, local_courseplanner{{/str}}</div>
+    <h3 class="local-courseplanner-nextstep-title">{{title}}</h3>
+    <p class="local-courseplanner-nextstep-body">{{body}}</p>
+    {{#reason}}<div class="local-courseplanner-recommendation-reason">{{reason}}</div>{{/reason}}
+    <a href="{{url}}" class="btn btn-primary local-courseplanner-nextstep-action">{{button}}</a>
+</div>
+{{/nextstep}}
+
+{{#hasblueprints}}
+<h3 id="local-courseplanner-section-linkcourse">{{#str}}section_linkcourse, local_courseplanner{{/str}} {{{helplinkcourse}}}</h3>
+{{#link}}
+    {{#linked}}
+    <div class="local-courseplanner-linked-blueprint-row">
+        <div class="local-courseplanner-blueprint-summary-main">
+            <span class="local-courseplanner-blueprint-name">{{name}}</span>
+            <span class="local-courseplanner-blueprint-shortcode">{{topiccount}}</span>
+            <span class="local-courseplanner-badge local-courseplanner-badge--active">{{#str}}courseblueprintlinkedbadge, local_courseplanner{{/str}}</span>
+            {{#autobadge}}<span class="local-courseplanner-blueprint-shortcode">{{autobadge}}</span>{{/autobadge}}
+        </div>
+        {{#unlink}}{{> local_courseplanner/action_form}}{{/unlink}}
+    </div>
+    {{/linked}}
+    {{^linked}}
+    <div class="alert alert-warning">{{#str}}courselinknone, local_courseplanner{{/str}}</div>
+    {{#choose}}
+    <form method="post" class="local-courseplanner-card" id="local-courseplanner-manuallink-form">
+        <h4>{{#str}}manuallinkheading, local_courseplanner{{/str}} {{{helpicon}}}</h4>
+        {{#hint}}<p class="local-courseplanner-form-hint text-muted">{{#str}}choseblueprintautohint, local_courseplanner{{/str}}</p>{{/hint}}
+        <input type="hidden" name="sesskey" value="{{sesskey}}">
+        <input type="hidden" name="action" value="linkblueprint">
+        <div class="mb-2">
+            <label for="local-courseplanner-blueprintid">{{#str}}blueprintlabel, local_courseplanner{{/str}}</label>
+            <select id="local-courseplanner-blueprintid" name="blueprintid" class="form-select">
+                {{#options}}<option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}</option>{{/options}}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">{{#str}}manuallinksubmit, local_courseplanner{{/str}}</button>
+    </form>
+    {{/choose}}
+    {{/linked}}
+{{/link}}
+
+<h3 id="local-courseplanner-section-calendars">{{#str}}section_calendars, local_courseplanner{{/str}} {{{helpcalendars}}}</h3>
+{{^calendars}}<div class="alert alert-warning">{{#str}}calendarneedslink, local_courseplanner{{/str}}</div>{{/calendars}}
+{{#calendars}}
+    {{#needstopics}}<div class="alert alert-info">{{#str}}calendarneedstopics, local_courseplanner{{/str}}</div>{{/needstopics}}
+    {{^items}}<div class="alert alert-info">{{#str}}nocalendars, local_courseplanner{{/str}}</div>{{/items}}
+    {{#items.0}}
+    <ul class="local-courseplanner-blueprint-list">
+        {{#items}}
+        <li class="local-courseplanner-blueprint-item">
+            <details class="local-courseplanner-blueprint-details">
+                <summary class="local-courseplanner-blueprint-summary">
+                    <div class="local-courseplanner-blueprint-summary-main">
+                        <span class="local-courseplanner-blueprint-name">{{label}}</span>
+                        {{#active}}<span class="local-courseplanner-badge local-courseplanner-badge--active">{{#str}}calendarbadgeactive, local_courseplanner{{/str}}</span>{{/active}}
+                        {{^active}}<span class="local-courseplanner-badge local-courseplanner-badge--archived">{{#str}}calendarbadgeinactive, local_courseplanner{{/str}}</span>{{/active}}
+                        {{#recommended}}<span class="local-courseplanner-badge local-courseplanner-badge--recommended">{{#str}}calendarrecommendedbadge, local_courseplanner{{/str}}</span>{{/recommended}}
+                    </div>
+                    <a href="{{builderurl}}" class="btn btn-primary local-courseplanner-open-builder">{{#str}}opencalendarbuilderprominent, local_courseplanner{{/str}}</a>
+                    <span class="btn btn-outline-secondary btn-sm local-courseplanner-edit-indicator" aria-hidden="true">{{#str}}editcalendarbutton, local_courseplanner{{/str}}</span>
+                </summary>
+                <div class="local-courseplanner-disclosure-body">
+                    <form method="post">
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <input type="hidden" name="action" value="updatecalendar">
+                        <input type="hidden" name="calendarid" value="{{id}}">
+                        {{#stateparams}}<input type="hidden" name="{{name}}" value="{{value}}">{{/stateparams}}
+                        <div class="mb-2">
+                            <label for="local-courseplanner-calendartitle-{{id}}">{{#str}}calendartitlelabel, local_courseplanner{{/str}}</label>
+                            <input type="text" id="local-courseplanner-calendartitle-{{id}}" name="title" class="form-control" maxlength="255" value="{{title}}" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">{{#str}}savecalendarsubmit, local_courseplanner{{/str}}</button>
+                    </form>
+                    <div class="local-courseplanner-inline-controls">
+                        {{#toggle}}{{> local_courseplanner/action_form}}{{/toggle}}
+                        {{#delete}}{{> local_courseplanner/action_form}}{{/delete}}
+                    </div>
+                </div>
+            </details>
+        </li>
+        {{/items}}
+    </ul>
+    {{/items.0}}
+    {{^needstopics}}
+    <details class="local-courseplanner-card local-courseplanner-create-blueprint" id="local-courseplanner-createcalendar">
+        <summary class="local-courseplanner-disclosure-summary local-courseplanner-disclosure-summary--primary">{{#str}}createcalendarbutton, local_courseplanner{{/str}}</summary>
+        <form method="post" id="local-courseplanner-createcalendar-form" class="local-courseplanner-disclosure-body">
+            <input type="hidden" name="sesskey" value="{{sesskey}}">
+            <input type="hidden" name="action" value="createcalendar">
+            <input type="hidden" name="blueprintid" value="{{blueprintid}}">
+            {{#stateparams}}<input type="hidden" name="{{name}}" value="{{value}}">{{/stateparams}}
+            <div class="mb-2">
+                <label for="local-courseplanner-title-new">{{#str}}calendartitlelabel, local_courseplanner{{/str}}</label>
+                <input type="text" id="local-courseplanner-title-new" name="title" class="form-control" maxlength="255"
+                    value="{{suggestedtitle}}" placeholder="{{#str}}calendartitleplaceholder, local_courseplanner{{/str}}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">{{#str}}createcalendarsubmit, local_courseplanner{{/str}}</button>
+        </form>
+    </details>
+    {{/needstopics}}
+{{/calendars}}
+{{/hasblueprints}}
+
+<h3 id="local-courseplanner-section-blueprints">{{#str}}section_blueprintlibrary, local_courseplanner{{/str}} {{{helpblueprintlibrary}}}</h3>
+{{#blueprints}}
+    {{#items.0}}
+    <ul class="local-courseplanner-blueprint-list">
+        {{#items}}
+        <li class="local-courseplanner-blueprint-item">
+            <details class="local-courseplanner-blueprint-details">
+                <summary class="local-courseplanner-blueprint-summary">
+                    <div class="local-courseplanner-blueprint-summary-main">
+                        <span class="local-courseplanner-blueprint-name">{{name}}</span>
+                        <span class="local-courseplanner-blueprint-shortcode">{{topiccount}}</span>
+                        {{#archived}}<span class="local-courseplanner-badge local-courseplanner-badge--archived">{{#str}}blueprintstatusarchived, local_courseplanner{{/str}}</span>{{/archived}}
+                        {{^archived}}<span class="local-courseplanner-badge local-courseplanner-badge--active">{{#str}}blueprintstatusactive, local_courseplanner{{/str}}</span>{{/archived}}
+                    </div>
+                    <span class="btn btn-outline-secondary btn-sm local-courseplanner-edit-indicator" aria-hidden="true">{{#str}}editblueprintbutton, local_courseplanner{{/str}}</span>
+                </summary>
+                <div class="local-courseplanner-disclosure-body">
+                    <form method="post">
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <input type="hidden" name="action" value="updateblueprint">
+                        <input type="hidden" name="blueprintid" value="{{id}}">
+                        <div class="mb-2">
+                            <label for="local-courseplanner-bpname-{{id}}">{{#str}}blueprintnamelabel, local_courseplanner{{/str}}</label>
+                            <input type="text" id="local-courseplanner-bpname-{{id}}" name="name" class="form-control" value="{{rawname}}" required>
+                        </div>
+                        <div class="mb-2">
+                            <label for="local-courseplanner-bpdesc-{{id}}">{{#str}}blueprintdescriptionlabel, local_courseplanner{{/str}}</label>
+                            <textarea id="local-courseplanner-bpdesc-{{id}}" name="description" rows="2" class="form-control">{{description}}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-secondary me-2">{{#str}}saveblueprintsubmit, local_courseplanner{{/str}}</button>
+                    </form>
+                    {{#toggle}}{{> local_courseplanner/action_form}}{{/toggle}}
+                </div>
+            </details>
+        </li>
+        {{/items}}
+    </ul>
+    {{/items.0}}
+    <details class="local-courseplanner-card local-courseplanner-create-blueprint" id="local-courseplanner-createblueprint"{{#openform}} open{{/openform}}>
+        <summary class="local-courseplanner-disclosure-summary local-courseplanner-disclosure-summary--primary">{{#str}}createblueprintbutton, local_courseplanner{{/str}}</summary>
+        <form method="post" id="local-courseplanner-createblueprint-form" class="local-courseplanner-disclosure-body">
+            <input type="hidden" name="sesskey" value="{{sesskey}}">
+            <input type="hidden" name="action" value="createblueprint">
+            <div class="mb-2">
+                <label for="local-courseplanner-name-new">{{#str}}blueprintnamelabel, local_courseplanner{{/str}}</label>
+                <input type="text" id="local-courseplanner-name-new" name="name" class="form-control" required>
+            </div>
+            <div class="mb-2">
+                <label for="local-courseplanner-description-new">{{#str}}blueprintdescriptionlabel, local_courseplanner{{/str}}</label>
+                <textarea id="local-courseplanner-description-new" name="description" rows="3" class="form-control"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">{{#str}}createblueprintsubmit, local_courseplanner{{/str}}</button>
+        </form>
+    </details>
+{{/blueprints}}
+
+{{#showtopicsection}}
+<h3 id="local-courseplanner-section-topics">{{#str}}section_topics, local_courseplanner{{/str}} {{{helptopics}}}</h3>
+{{^topics}}<div class="alert alert-info">{{#str}}notopicswithoutblueprint, local_courseplanner{{/str}}</div>{{/topics}}
+{{#topics}}
+    <form method="get" action="{{filterurl}}" class="local-courseplanner-card local-courseplanner-inline-controls">
+        <input type="hidden" name="id" value="{{courseid}}">
+        <div class="mb-2">
+            <label for="local-courseplanner-blueprintctx">{{#str}}topicblueprintcontextlabel, local_courseplanner{{/str}}</label>
+            <select id="local-courseplanner-blueprintctx" name="blueprintctx" class="form-select">
+                {{#blueprintoptions}}<option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}</option>{{/blueprintoptions}}
+            </select>
+        </div>
+        <div class="mb-2">
+            <label for="local-courseplanner-topicfilter">{{#str}}topicfilterlabel, local_courseplanner{{/str}}</label>
+            <select id="local-courseplanner-topicfilter" name="topicfilter" class="form-select">
+                {{#filteroptions}}<option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>{{/filteroptions}}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-secondary">{{#str}}applyfilter, local_courseplanner{{/str}}</button>
+    </form>
+
+    <button type="button" class="btn btn-primary mb-3" data-action="create-topic" data-blueprintid="{{blueprintid}}">
+        {{#str}}createtopicbutton, local_courseplanner{{/str}}
+    </button>
+
+    {{^hasitems}}<div class="alert alert-info">{{#str}}notopicsfound, local_courseplanner{{/str}}</div>{{/hasitems}}
+    {{#hasitems}}
+    <ul class="local-courseplanner-blueprint-list local-courseplanner-topic-list" id="local-courseplanner-topiclist"{{#sortable}} data-sortable="1"{{/sortable}}>
+        {{#items}}
+        <li class="local-courseplanner-blueprint-item local-courseplanner-topic-item" data-topicid="{{id}}">
+            <div class="local-courseplanner-blueprint-summary">
+                {{#sortable}}<span class="local-courseplanner-drag-handle" aria-hidden="true" title="{{#str}}topicdraghandle, local_courseplanner{{/str}}">⋮⋮</span>{{/sortable}}
+                <div class="local-courseplanner-blueprint-summary-main">
+                    <span class="local-courseplanner-blueprint-shortcode">{{sortorder}}</span>
+                    <span class="local-courseplanner-blueprint-name">{{title}}</span>
+                    <span class="local-courseplanner-type-badge local-courseplanner-type-{{typeclass}}">{{type}}</span>
+                    {{#active}}<span class="local-courseplanner-badge local-courseplanner-badge--active">{{#str}}topicstatusactive, local_courseplanner{{/str}}</span>{{/active}}
+                    {{^active}}<span class="local-courseplanner-badge local-courseplanner-badge--archived">{{#str}}topicstatusinactive, local_courseplanner{{/str}}</span>{{/active}}
+                </div>
+                <div class="local-courseplanner-inline-controls">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-action="edit-topic" data-topicid="{{id}}">{{#str}}edittopicbutton, local_courseplanner{{/str}}</button>
+                    {{#toggle}}{{> local_courseplanner/action_form}}{{/toggle}}
+                    {{#delete}}{{> local_courseplanner/action_form}}{{/delete}}
+                </div>
+            </div>
+        </li>
+        {{/items}}
+    </ul>
+    <div class="local-courseplanner-inline-controls mt-2">
+        {{#deleteall}}{{> local_courseplanner/action_form}}{{/deleteall}}
+        {{#forcedeleteall}}{{> local_courseplanner/action_form}}{{/forcedeleteall}}
+    </div>
+    {{/hasitems}}
+    <div class="local-courseplanner-faint-actions">
+        <a href="{{importurl}}" class="local-courseplanner-faint-link">{{#str}}importtopicslink, local_courseplanner{{/str}}</a>
+    </div>
+{{/topics}}
+{{/showtopicsection}}
+</div>
