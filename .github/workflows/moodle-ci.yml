@@ -5,6 +5,10 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
+  # Weekly, to catch changes on Moodle's side (e.g. a new release) even without our own pushes.
+  schedule:
+    - cron: "0 6 * * 1"
 
 jobs:
   test:
@@ -30,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Minimum supported: Moodle 5.0 (matches $plugin->requires = 2025041400).
+          # Minimum supported: Moodle 5.0.
           - php: "8.2"
             moodle-branch: MOODLE_500_STABLE
           - php: "8.3"
@@ -38,8 +42,13 @@ jobs:
           # Latest stable.
           - php: "8.4"
             moodle-branch: MOODLE_502_STABLE
+          # Early warning: Moodle's development branch (the next release). Allowed to fail.
+          - php: "8.4"
+            moodle-branch: main
+            experimental: true
 
     name: Moodle ${{ matrix.moodle-branch }} / PHP ${{ matrix.php }}
+    continue-on-error: ${{ matrix.experimental == true }}
 
     steps:
       - name: Check out plugin
