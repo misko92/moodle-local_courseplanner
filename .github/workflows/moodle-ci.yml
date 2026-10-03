@@ -39,10 +39,12 @@ jobs:
             moodle-branch: MOODLE_500_STABLE
           - php: "8.3"
             moodle-branch: MOODLE_501_STABLE
-          # Latest stable.
           - php: "8.4"
             moodle-branch: MOODLE_502_STABLE
-          # Early warning: Moodle's development branch (the next release). Allowed to fail.
+          # Latest stable.
+          - php: "8.4"
+            moodle-branch: MOODLE_503_STABLE
+          # Early warning: Moodle's development branch (currently 6.0dev). Allowed to fail.
           - php: "8.4"
             moodle-branch: main
             experimental: true
